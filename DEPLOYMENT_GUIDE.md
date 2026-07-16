@@ -80,7 +80,7 @@ function doGet(e) {
               citizenId: String(inmateData[i][2]).trim(),
               name: firstName,
               surname: lastName,
-              grade: String(inmateData[i][6]).trim() || "ชั้นกลาง"
+              grade: String(inmateData[i][3]).trim() || "ชั้นกลาง"
             }
           })).setMimeType(ContentService.MimeType.JSON);
         }
