@@ -31,12 +31,35 @@
                 </h3>
                 
                 <div class="form-group">
-                    <label for="inmateSearchKey">เลขบัตรประชาชน 13 หลัก หรือ รหัสประจำตัวผู้ต้องขัง *</label>
-                    <div style="display:flex; gap:0.5rem;">
-                        <input type="text" id="inmateSearchKey" class="form-control" placeholder="ระบุเลขประจำตัวประชาชน หรือ รหัสผู้ต้องขัง" required>
-                        <button type="button" class="btn btn-primary" onclick="verifyInmateCid()" style="width:auto; white-space:nowrap; padding: 0.75rem 1.5rem;">ตรวจสอบสิทธิ์</button>
+                    <label>เลขประจำตัวประชาชนผู้ต้องขัง (13 หลัก) *</label>
+                    <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem;">
+                        <div class="cid-container" style="display:inline-flex; align-items:center; gap:0.25rem;">
+                            <!-- Group 1: 1 digit -->
+                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required style="width: 26px; height: 38px; text-align: center; font-size: 1.15rem; border: 1.5px solid var(--border-light); border-radius: 6px; font-weight: bold; background: transparent; color: inherit;">
+                            <span style="font-weight:bold; color:var(--text-muted-light);">-</span>
+                            <!-- Group 2: 4 digits -->
+                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required style="width: 26px; height: 38px; text-align: center; font-size: 1.15rem; border: 1.5px solid var(--border-light); border-radius: 6px; font-weight: bold; background: transparent; color: inherit;">
+                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required style="width: 26px; height: 38px; text-align: center; font-size: 1.15rem; border: 1.5px solid var(--border-light); border-radius: 6px; font-weight: bold; background: transparent; color: inherit;">
+                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required style="width: 26px; height: 38px; text-align: center; font-size: 1.15rem; border: 1.5px solid var(--border-light); border-radius: 6px; font-weight: bold; background: transparent; color: inherit;">
+                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required style="width: 26px; height: 38px; text-align: center; font-size: 1.15rem; border: 1.5px solid var(--border-light); border-radius: 6px; font-weight: bold; background: transparent; color: inherit;">
+                            <span style="font-weight:bold; color:var(--text-muted-light);">-</span>
+                            <!-- Group 3: 5 digits -->
+                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required style="width: 26px; height: 38px; text-align: center; font-size: 1.15rem; border: 1.5px solid var(--border-light); border-radius: 6px; font-weight: bold; background: transparent; color: inherit;">
+                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required style="width: 26px; height: 38px; text-align: center; font-size: 1.15rem; border: 1.5px solid var(--border-light); border-radius: 6px; font-weight: bold; background: transparent; color: inherit;">
+                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required style="width: 26px; height: 38px; text-align: center; font-size: 1.15rem; border: 1.5px solid var(--border-light); border-radius: 6px; font-weight: bold; background: transparent; color: inherit;">
+                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required style="width: 26px; height: 38px; text-align: center; font-size: 1.15rem; border: 1.5px solid var(--border-light); border-radius: 6px; font-weight: bold; background: transparent; color: inherit;">
+                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required style="width: 26px; height: 38px; text-align: center; font-size: 1.15rem; border: 1.5px solid var(--border-light); border-radius: 6px; font-weight: bold; background: transparent; color: inherit;">
+                            <span style="font-weight:bold; color:var(--text-muted-light);">-</span>
+                            <!-- Group 4: 2 digits -->
+                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required style="width: 26px; height: 38px; text-align: center; font-size: 1.15rem; border: 1.5px solid var(--border-light); border-radius: 6px; font-weight: bold; background: transparent; color: inherit;">
+                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required style="width: 26px; height: 38px; text-align: center; font-size: 1.15rem; border: 1.5px solid var(--border-light); border-radius: 6px; font-weight: bold; background: transparent; color: inherit;">
+                            <span style="font-weight:bold; color:var(--text-muted-light);">-</span>
+                            <!-- Group 5: 1 digit -->
+                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required style="width: 26px; height: 38px; text-align: center; font-size: 1.15rem; border: 1.5px solid var(--border-light); border-radius: 6px; font-weight: bold; background: transparent; color: inherit;">
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="verifyInmateCid()" style="width:auto; white-space:nowrap; padding: 0.75rem 1.5rem; margin-left: auto;">ตรวจสอบสิทธิ์</button>
                     </div>
-                    <small id="cidFeedback" style="display:block; margin-top:0.25rem; font-weight: 500;"></small>
+                    <small id="cidFeedback" style="display:block; margin-top:0.5rem; font-weight: 500;"></small>
                 </div>
 
                 <div class="form-row">
@@ -178,14 +201,46 @@
         document.addEventListener("DOMContentLoaded", () => {
             initTheme();
             addVisitorForm(); // Add at least one visitor form initially
+
+            // Auto-focus and paste handling for 13-digit CID boxes
+            const digits = document.querySelectorAll(".cid-digit");
+            digits.forEach((input, index) => {
+                input.addEventListener("input", (e) => {
+                    const val = e.target.value;
+                    e.target.value = val.replace(/[^0-9]/g, ""); // Allow digits only
+                    
+                    if (e.target.value.length === 1 && index < digits.length - 1) {
+                        digits[index + 1].focus();
+                    }
+                });
+
+                input.addEventListener("keydown", (e) => {
+                    if (e.key === "Backspace" && e.target.value.length === 0 && index > 0) {
+                        digits[index - 1].focus();
+                    }
+                });
+
+                input.addEventListener("paste", (e) => {
+                    e.preventDefault();
+                    const text = (e.clipboardData || window.clipboardData).getData("text").replace(/[^0-9]/g, "").slice(0, 13);
+                    for (let i = 0; i < text.length; i++) {
+                        if (digits[i]) {
+                            digits[i].value = text[i];
+                        }
+                    }
+                    const targetFocus = text.length < 13 ? text.length : 12;
+                    digits[targetFocus].focus();
+                });
+            });
         });
 
         async function verifyInmateCid() {
-            const searchKey = document.getElementById("inmateSearchKey").value.trim();
+            let searchKey = "";
+            document.querySelectorAll(".cid-digit").forEach(el => searchKey += el.value.trim());
             const feedback = document.getElementById("cidFeedback");
             
-            if (!searchKey) {
-                feedback.innerText = "✖ กรุณากรอกรหัสประจำตัวผู้ต้องขัง หรือ เลขบัตรประชาชน 13 หลัก";
+            if (searchKey.length !== 13) {
+                feedback.innerText = "✖ กรุณากรอกเลขประจำตัวประชาชนผู้ต้องขังให้ครบ 13 หลัก";
                 feedback.style.color = "var(--danger)";
                 disableInmateFields(true);
                 return;
