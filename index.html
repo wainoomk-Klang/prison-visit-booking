@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ระบบลงทะเบียนจองเยี่ยมญาติใกล้ชิดออนไลน์ ทัณฑสถานวัยหนุ่มกลาง เปิดลงทะเบียนสำหรับญาติผู้ต้องขัง">
+    <title>ระบบลงทะเบียนจองเยี่ยมญาติใกล้ชิดออนไลน์ - ทัณฑสถานวัยหนุ่มกลาง</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <button class="theme-toggle" id="themeToggle">🌙 โหมดมืด</button>
+        <h1>ทัณฑสถานวัยหนุ่มกลาง</h1>
+        <p>ระบบลงทะเบียนจองเยี่ยมญาติใกล้ชิดออนไลน์ (สิทธิ์จำกัด 1 ครั้งต่อผู้ต้องขัง)</p>
+    </header>
+
+    <main>
+        <!-- Rules Alert Box -->
+        <div class="card alert alert-info">
+            <h2 style="margin-top: 0; font-family: 'Prompt', sans-serif; font-size: 1.2rem; color: #1e3a8a;">
+                <i class="fa-solid fa-circle-info"></i> ประกาศการเปิดจองเยี่ยมญาติใกล้ชิด
+            </h2>
+            <p>🗓️ <strong>ระยะเวลาเปิดจอง:</strong> 27 กรกฎาคม - 14 สิงหาคม 2569</p>
+            <p>🤝 <strong>กำหนดวันเข้าเยี่ยมใกล้ชิด:</strong> 24 - 28 สิงหาคม 2569 (จำกัดรอบละ 300 คน)</p>
+            <div class="rules-container" style="margin-top: 1rem;">
+                <strong style="display: block; margin-bottom: 0.5rem;">⚠️ กฎระเบียบและเอกสารที่ต้องจัดเตรียม (แบบไม่บีบอัดรูปถ่าย):</strong>
+                <ul class="rules-list">
+                    <li>รูปถ่ายทะเบียนบ้านและบัตรประชาชนของญาติทุกคนที่จะเข้าเยี่ยม (สูงสุด 5 ท่าน)</li>
+                    <li>เอกสารยืนยันความสัมพันธ์ตามกฎหมาย เช่น ทะเบียนสมรส สูติบัตร หรือหนังสือรับรองแฟน</li>
+                    <li>แต่งกายสุภาพเรียบร้อยในวันเข้าเยี่ยม ห้ามสวมกางเกงขาสั้น กระโปรงสั้น เสื้อกล้าม หรือเครื่องประดับ</li>
+                    <li>ห้ามนำโทรศัพท์มือถือ เงินสด และสิ่งต้องห้ามทุกชนิดเข้าพื้นที่เยี่ยมเด็ดขาด</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Menu Action Selection -->
+        <div class="menu-grid">
+            <a href="booking.html" class="menu-button">
+                <i class="fa-solid fa-calendar-check"></i>
+                <h3>ลงทะเบียนจองสิทธิ์เยี่ยม</h3>
+                <p>ลงทะเบียนออนไลน์ กรอกข้อมูลผู้ต้องขัง ญาติ และอัปโหลดรูปภาพความละเอียดสูง</p>
+            </a>
+
+            <button onclick="openTrackerModal()" class="menu-button" style="border-radius: 12px; font-family: inherit;">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <h3>ตรวจสอบสถานะการจอง</h3>
+                <p>ติดตามผลการอนุมัติเอกสารและวันเวลานัดหมายเข้าเยี่ยม</p>
+            </button>
+        </div>
+
+        <div class="card" style="text-align: center; padding: 1.5rem;">
+            <p style="margin: 0; font-size: 0.95rem;">
+                สำหรับเจ้าหน้าที่ทัณฑสถาน: 
+                <a href="admin.html" style="color: var(--primary-color); font-weight: bold; text-decoration: underline;">
+                    <i class="fa-solid fa-user-shield"></i> เข้าสู่ระบบแอดมิน (Admin Dashboard)
+                </a>
+            </p>
+        </div>
+    </main>
+
+    <!-- Tracking Modal -->
+    <div class="modal" id="trackerModal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; font-family:'Prompt', sans-serif;">🔍 ตรวจสอบสถานะการจองเยี่ยม</h3>
+            <p style="font-size:0.9rem; color:var(--text-muted-light);">กรอกเลขบัตรประชาชนของผู้ต้องขังเพื่อตรวจสอบความถูกต้องและสถานะการอนุมัติคิว</p>
+            
+            <div class="form-group" style="margin-top: 1.5rem;">
+                <label for="searchCid">เลขบัตรประชาชนผู้ต้องขัง (13 หลัก)</label>
+                <input type="text" id="searchCid" class="form-control" placeholder="1xxxxxxxxxxxx" maxlength="13">
+            </div>
+            
+            <button onclick="checkStatus()" class="btn btn-primary" style="margin-top: 0.5rem;">ค้นหาข้อมูล</button>
+            
+            <!-- Result Area -->
+            <div id="searchResult" style="margin-top: 1.5rem; display: none;"></div>
+
+            <button onclick="closeTrackerModal()" class="btn btn-secondary" style="margin-top: 1rem;">ปิดหน้าต่าง</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2026 ทัณฑสถานวัยหนุ่มกลาง กรมราชทัณฑ์ | ระบบลงทะเบียนจองสิทธิ์เยี่ยมญาติใกล้ชิด</p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            initTheme();
+        });
+
+        function openTrackerModal() {
+            document.getElementById("trackerModal").style.display = "flex";
+            document.getElementById("searchResult").style.display = "none";
+            document.getElementById("searchCid").value = "";
+        }
+
+        function closeTrackerModal() {
+            document.getElementById("trackerModal").style.display = "none";
+        }
+
+        // Close modal when clicking outside content
+        window.onclick = function(event) {
+            const modal = document.getElementById("trackerModal");
+            if (event.target == modal) {
+                closeTrackerModal();
+            }
+        }
+
+        function checkStatus() {
+            const cid = document.getElementById("searchCid").value.trim();
+            const resultDiv = document.getElementById("searchResult");
+            
+            if (cid.length !== 13 || isNaN(cid)) {
+                alert("กรุณากรอกเลขบัตรประชาชนผู้ต้องขัง 13 หลักให้ถูกต้อง");
+                return;
+            }
+
+            const bookings = getBookings();
+            const booking = bookings.find(b => b.inmateId === cid);
+
+            resultDiv.style.display = "block";
+            
+            if (!booking) {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-danger" style="margin:0;">
+                        <strong>❌ ไม่พบข้อมูลการจอง</strong><br>
+                        ไม่พบข้อมูลการจองเยี่ยมของเลขบัตรประชาชนผู้ต้องขังรายนี้ในระบบ กรุณาลงทะเบียนจองใหม่อีกครั้ง
+                    </div>
+                `;
+                return;
+            }
+
+            let statusBadge = '';
+            let statusText = '';
+            
+            if (booking.status === 'approved') {
+                statusBadge = '<span class="badge badge-success">✓ อนุมัติแล้ว</span>';
+                statusText = 'เอกสารหลักฐานผ่านเกณฑ์เรียบร้อย กรุณาเดินทางมาถึงก่อนรอบเวลาอย่างน้อย 30 นาที และแต่งกายตามกฎระเบียบอย่างเคร่งครัด';
+            } else if (booking.status === 'rejected') {
+                statusBadge = '<span class="badge badge-danger">✗ ปฏิเสธการจอง</span>';
+                statusText = `เอกสารหลักฐานของคุณไม่ผ่านการพิจารณา เนื่องจากรูปเอกสารไม่ชัดเจนหรือความสัมพันธ์ไม่ถูกต้องตามเงื่อนไข`;
+            } else {
+                statusBadge = '<span class="badge badge-pending">⏱️ อยู่ระหว่างตรวจสอบ</span>';
+                statusText = 'เจ้าหน้าที่กำลังตรวจสอบรูปถ่ายเอกสารหลักฐานความสัมพันธ์ของท่าน กรุณาเช็คสถานะอีกครั้งในภายหลัง';
+            }
+
+            resultDiv.innerHTML = `
+                <div style="border: 1px solid var(--border-light); padding:1rem; border-radius: 8px; background-color: rgba(0,0,0,0.02);">
+                    <h4 style="margin:0 0 0.5rem 0; font-family:'Prompt', sans-serif;">ผลการลงทะเบียนคิว:</h4>
+                    <p style="margin: 0.25rem 0;"><strong>ผู้ต้องขัง:</strong> ${booking.inmateTitle}${booking.inmateName} ${booking.inmateSurname} (${booking.grade})</p>
+                    <p style="margin: 0.25rem 0;"><strong>แดน/รอบเวลา:</strong> ${booking.slotText}</p>
+                    <p style="margin: 0.25rem 0;"><strong>สถานะการจอง:</strong> ${statusBadge}</p>
+                    <hr style="border:0; border-top: 1px solid var(--border-light); margin: 0.75rem 0;">
+                    <p style="margin: 0; font-size:0.85rem; line-height: 1.4;">${statusText}</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
