@@ -156,22 +156,30 @@
 
     <script src="app.js"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
+        document.addEventListener("DOMContentLoaded", async () => {
             initTheme();
-            updateStats();
-            renderBookingsTable();
+            await refreshData();
         });
 
-        function updateStats() {
-            const bookings = getBookings();
+        async function refreshData() {
+            // Show loading indicators
+            const tbody = document.getElementById("bookingsTableBody");
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--warning);"><i class="fa-solid fa-spinner fa-spin"></i> กำลังดึงข้อมูลจากระบบ Google Sheets...</td></tr>`;
+            
+            await updateStats();
+            await renderBookingsTable();
+        }
+
+        async function updateStats() {
+            const bookings = await getBookings();
             document.getElementById("totalBookings").innerText = bookings.length;
             document.getElementById("pendingBookings").innerText = bookings.filter(b => b.status === "pending").length;
             document.getElementById("approvedBookings").innerText = bookings.filter(b => b.status === "approved").length;
             document.getElementById("rejectedBookings").innerText = bookings.filter(b => b.status === "rejected").length;
         }
 
-        function renderBookingsTable() {
-            const bookings = getBookings();
+        async function renderBookingsTable() {
+            const bookings = await getBookings();
             const zoneFilter = document.getElementById("filterZone").value;
             const statusFilter = document.getElementById("filterStatus").value;
             const tbody = document.getElementById("bookingsTableBody");
@@ -202,24 +210,41 @@
                     badgeText = "ปฏิเสธการจอง";
                 }
 
+                // Parse visitors if it's a JSON string (production format)
+                let visitors = booking.visitors;
+                if (typeof visitors === 'string') {
+                    try {
+                        visitors = JSON.parse(visitors);
+                    } catch(e) {
+                        visitors = [];
+                    }
+                }
+
+                const driveUrl = booking.driveFolderUrl || booking.driveFolder || "#";
+                const hasDrive = driveUrl && driveUrl !== "#";
+
                 html += `
                     <tr>
-                        <td>${formatThaiDate(booking.dateBooked)}</td>
+                        <td>${formatThaiDate(booking.dateBooked || new Date().toISOString())}</td>
                         <td>
-                            <strong>${booking.inmateTitle}${booking.inmateName} ${booking.inmateSurname}</strong><br>
+                            <strong>${booking.inmateTitle || ''}${booking.inmateName} ${booking.inmateSurname}</strong><br>
                             <small style="color:var(--text-muted-light);">บัตร: ${booking.inmateId} | แดน ${booking.zone}</small>
                         </td>
                         <td>${booking.slotText}</td>
-                        <td>${booking.visitors.length} ท่าน</td>
+                        <td>${visitors.length} ท่าน</td>
                         <td>
-                            <a href="#" onclick="alert('จำลองการเปิดไฟล์ภาพต้นฉบับความละเอียดสูงจาก Google Drive ในแท็บใหม่ สำหรับเลขบัตรผู้ต้องขัง: ${booking.inmateId}'); return false;" style="color:var(--secondary-color); font-weight:600;">
-                                <i class="fa-solid fa-folder-open"></i> เปิดโฟลเดอร์รูปภาพ (${booking.files.length} ไฟล์)
-                            </a>
+                            ${hasDrive ? `
+                                <a href="${driveUrl}" target="_blank" style="color:var(--secondary-color); font-weight:600;">
+                                    <i class="fa-solid fa-folder-open"></i> เปิดโฟลเดอร์ Google Drive
+                                </a>
+                            ` : `
+                                <span style="color:var(--text-muted-light);">ไม่มีลิงก์ (ระบบจำลอง)</span>
+                            `}
                         </td>
                         <td><span class="badge ${badgeClass}">${badgeText}</span></td>
                         <td>
                             <div style="display:flex; gap:0.25rem;">
-                                <button class="btn btn-secondary" onclick="viewDetails('${booking.inmateId}')" style="padding:0.25rem 0.5rem; font-size:0.8rem; width:auto;">ดูรูป/เอกสาร</button>
+                                <button class="btn btn-secondary" onclick="viewDetails('${booking.inmateId}')" style="padding:0.25rem 0.5rem; font-size:0.8rem; width:auto;">ดูเอกสาร</button>
                                 ${booking.status === "pending" ? `
                                     <button class="btn btn-primary" onclick="changeStatus('${booking.inmateId}', 'approved')" style="padding:0.25rem 0.5rem; font-size:0.8rem; background-color:var(--success); width:auto;">อนุมัติ</button>
                                     <button class="btn btn-primary" onclick="changeStatus('${booking.inmateId}', 'rejected')" style="padding:0.25rem 0.5rem; font-size:0.8rem; background-color:var(--danger); width:auto;">ปฏิเสธ</button>
@@ -233,26 +258,34 @@
             tbody.innerHTML = html;
         }
 
-        function viewDetails(inmateId) {
-            const bookings = getBookings();
+        async function viewDetails(inmateId) {
+            const bookings = await getBookings();
             const booking = bookings.find(b => b.inmateId === inmateId);
             if (!booking) return;
 
             const modalBody = document.getElementById("modalDetailsBody");
             
+            let visitors = booking.visitors;
+            if (typeof visitors === 'string') {
+                try {
+                    visitors = JSON.parse(visitors);
+                } catch(e) {
+                    visitors = [];
+                }
+            }
+
             let visitorsHtml = "";
-            booking.visitors.forEach((v, idx) => {
+            visitors.forEach((v, idx) => {
                 visitorsHtml += `
                     <div style="border: 1px solid var(--border-light); border-radius:6px; padding:0.75rem; margin-top:0.5rem; background-color:rgba(0,0,0,0.01);">
                         <strong style="color:var(--primary-color);">ญาติคนที่ ${idx+1}: ${v.title}${v.name} ${v.surname}</strong> (ความสัมพันธ์: ${v.relation})<br>
                         <span>เลขบัตรประชาชน: ${v.cid} | เบอร์ติดต่อ: ${v.tel}</span>
-                        <div style="display:flex; gap:1rem; margin-top:0.5rem;">
-                            <a href="#" onclick="alert('จำลองการดาวน์โหลดรูปภาพบัตรประชาชนญาติแบบไม่บีบอัดขนาดไฟล์จริงจาก Google Drive'); return false;" style="font-size:0.85rem; color:var(--primary-color);"><i class="fa-solid fa-file-image"></i> โหลดรูปบัตรประชาชน (${v.cid}_id_card.png)</a>
-                            <a href="#" onclick="alert('จำลองการดาวน์โหลดรูปทะเบียนบ้าน/เอกสารความสัมพันธ์ญาติแบบไม่บีบอัดขนาดไฟล์จริงจาก Google Drive'); return false;" style="font-size:0.85rem; color:var(--primary-color);"><i class="fa-solid fa-file-image"></i> โหลดรูปทะเบียนบ้าน/สมรส (${v.cid}_relation.png)</a>
-                        </div>
                     </div>
                 `;
             });
+
+            const driveUrl = booking.driveFolderUrl || booking.driveFolder || "#";
+            const hasDrive = driveUrl && driveUrl !== "#";
 
             modalBody.innerHTML = `
                 <p><strong>ผู้ต้องขัง:</strong> ${booking.inmateTitle}${booking.inmateName} ${booking.inmateSurname} (แดน ${booking.zone} | ${booking.grade})</p>
@@ -274,14 +307,12 @@
             document.getElementById("detailsModal").style.display = "none";
         }
 
-        function changeStatus(inmateId, newStatus) {
-            const bookings = getBookings();
-            const booking = bookings.find(b => b.inmateId === inmateId);
-            if (booking) {
-                booking.status = newStatus;
-                saveBookings(bookings);
-                updateStats();
-                renderBookingsTable();
+        async function changeStatus(inmateId, newStatus) {
+            const success = await changeBookingStatusOnServer(inmateId, newStatus);
+            if (success) {
+                setTimeout(async () => {
+                    await refreshData();
+                }, 1000);
             }
         }
 

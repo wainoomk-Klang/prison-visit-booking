@@ -107,7 +107,7 @@
             }
         }
 
-        function checkStatus() {
+        async function checkStatus() {
             const cid = document.getElementById("searchCid").value.trim();
             const resultDiv = document.getElementById("searchResult");
             
@@ -116,10 +116,11 @@
                 return;
             }
 
-            const bookings = getBookings();
-            const booking = bookings.find(b => b.inmateId === cid);
-
             resultDiv.style.display = "block";
+            resultDiv.innerHTML = `<p style="color:var(--warning); margin:0;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบประวัติการลงทะเบียน...</p>`;
+
+            const bookings = await getBookings();
+            const booking = bookings.find(b => b.inmateId === cid);
             
             if (!booking) {
                 resultDiv.innerHTML = `
@@ -148,7 +149,7 @@
             resultDiv.innerHTML = `
                 <div style="border: 1px solid var(--border-light); padding:1rem; border-radius: 8px; background-color: rgba(0,0,0,0.02);">
                     <h4 style="margin:0 0 0.5rem 0; font-family:'Prompt', sans-serif;">ผลการลงทะเบียนคิว:</h4>
-                    <p style="margin: 0.25rem 0;"><strong>ผู้ต้องขัง:</strong> ${booking.inmateTitle}${booking.inmateName} ${booking.inmateSurname} (${booking.grade})</p>
+                    <p style="margin: 0.25rem 0;"><strong>ผู้ต้องขัง:</strong> ${booking.inmateTitle || ''}${booking.inmateName} ${booking.inmateSurname} (${booking.grade || 'ชั้นกลาง'})</p>
                     <p style="margin: 0.25rem 0;"><strong>แดน/รอบเวลา:</strong> ${booking.slotText}</p>
                     <p style="margin: 0.25rem 0;"><strong>สถานะการจอง:</strong> ${statusBadge}</p>
                     <hr style="border:0; border-top: 1px solid var(--border-light); margin: 0.75rem 0;">

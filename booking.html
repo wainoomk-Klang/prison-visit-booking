@@ -31,9 +31,9 @@
                 </h3>
                 
                 <div class="form-group">
-                    <label for="inmateCid">เลขบัตรประชาชนผู้ต้องขัง (13 หลัก) *</label>
+                    <label for="inmateSearchKey">เลขบัตรประชาชน 13 หลัก หรือ รหัสประจำตัวผู้ต้องขัง *</label>
                     <div style="display:flex; gap:0.5rem;">
-                        <input type="text" id="inmateCid" class="form-control" placeholder="เลข 13 หลัก" maxlength="13" required>
+                        <input type="text" id="inmateSearchKey" class="form-control" placeholder="ระบุเลขประจำตัวประชาชน หรือ รหัสผู้ต้องขัง" required>
                         <button type="button" class="btn btn-primary" onclick="verifyInmateCid()" style="width:auto; white-space:nowrap; padding: 0.75rem 1.5rem;">ตรวจสอบสิทธิ์</button>
                     </div>
                     <small id="cidFeedback" style="display:block; margin-top:0.25rem; font-weight: 500;"></small>
@@ -41,48 +41,38 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="inmateTitle">คำนำหน้าชื่อ *</label>
-                        <select id="inmateTitle" class="form-control" required disabled>
-                            <option value="">เลือกคำนำหน้า</option>
-                            <option value="นาย">นาย</option>
-                            <option value="ข.ช.">ข.ช. (ขุนคุก/ผู้ต้องขังชาย)</option>
-                        </select>
+                        <label for="inmateCode">รหัสผู้ต้องขัง *</label>
+                        <input type="text" id="inmateCode" class="form-control" readonly placeholder="ดึงข้อมูลอัตโนมัติ" required>
                     </div>
                     <div class="form-group">
-                        <label for="inmateName">ชื่อผู้ต้องขัง *</label>
-                        <input type="text" id="inmateName" class="form-control" required disabled>
+                        <label for="inmateCid">เลขประจำตัวประชาชนผู้ต้องขัง *</label>
+                        <input type="text" id="inmateCid" class="form-control" readonly placeholder="ดึงข้อมูลอัตโนมัติ" required>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="inmateSurname">นามสกุลผู้ต้องขัง *</label>
-                        <input type="text" id="inmateSurname" class="form-control" required disabled>
+                        <label for="inmateFullName">ชื่อ-นามสกุล ผู้ต้องขัง *</label>
+                        <input type="text" id="inmateFullName" class="form-control" readonly placeholder="ดึงข้อมูลอัตโนมัติ" required>
                     </div>
                     <div class="form-group">
-                        <label for="inmateZone">แดนคุมขัง *</label>
-                        <select id="inmateZone" class="form-control" required disabled onchange="updateTimeSlotsGrid()">
-                            <option value="">เลือกแดน</option>
-                            <option value="1">แดน 1</option>
-                            <option value="2">แดน 2</option>
-                            <option value="3">แดน 3</option>
-                            <option value="4">แดน 4</option>
-                            <option value="5">แดน 5</option>
-                            <option value="6">แดน 6</option>
-                            <option value="7">แดน 7</option>
-                            <option value="8">แดน 8</option>
-                        </select>
+                        <label for="inmateGrade">ระดับชั้นผู้ต้องขัง *</label>
+                        <input type="text" id="inmateGrade" class="form-control" readonly placeholder="ดึงข้อมูลอัตโนมัติ" required>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="inmateGrade">ระดับชั้นผู้ต้องขัง *</label>
-                    <select id="inmateGrade" class="form-control" required disabled>
-                        <option value="">เลือกระดับชั้น</option>
-                        <option value="ชั้นกลาง">ชั้นกลาง</option>
-                        <option value="ชั้นดีมาก">ชั้นดีมาก</option>
-                        <option value="ชั้นเยี่ยม">ชั้นเยี่ยม</option>
-                        <option value="ระหว่างพิจารณาคดี">ระหว่างพิจารณาคดี</option>
+                    <label for="inmateZone">แดนคุมขัง *</label>
+                    <select id="inmateZone" class="form-control" required disabled onchange="updateTimeSlotsGrid()">
+                        <option value="">เลือกแดน</option>
+                        <option value="1">แดน 1</option>
+                        <option value="2">แดน 2</option>
+                        <option value="3">แดน 3</option>
+                        <option value="4">แดน 4</option>
+                        <option value="5">แดน 5</option>
+                        <option value="6">แดน 6</option>
+                        <option value="7">แดน 7</option>
+                        <option value="8">แดน 8</option>
                     </select>
                 </div>
 
@@ -156,7 +146,7 @@
                 </h3>
 
                 <div class="alert alert-info">
-                    <p style="margin:0;">⚡ <strong>อัปโหลดเข้าสู่ Google Drive โดยตรง:</strong> ไฟล์รูปภาพความละเอียดสูงทั้งหมดของคุณ (ภาพหลักฐานประจำตัว รูปความสัมพันธ์) จะถูกจัดส่งตรงเข้าโฟลเดอร์ Google Drive หน่วยงานของทัณฑสถานเพื่อป้องกันการบีบอัดภาพและสะดวกต่อเจ้าหน้าที่ในการตรวจความชัดเจน</p>
+                    <p style="margin:0;"><i class="fa-solid fa-user-shield"></i> <strong>การคุ้มครองข้อมูลส่วนบุคคล (PDPA Notice):</strong> ไฟล์รูปภาพหลักฐานและข้อมูลส่วนบุคคลทั้งหมดของท่าน จะถูกจัดส่งเข้าระบบคลาวด์คลังข้อมูลที่ปลอดภัยของทัณฑสถาน เพื่อใช้ตรวจสอบและยืนยันสิทธิ์การเข้าเยี่ยมญาติใกล้ชิดตามระเบียบของกรมราชทัณฑ์เท่านั้น ข้อมูลของท่านจะถูกเก็บรักษาเป็นความลับสูงสุด ปลอดภัย และไม่ถูกนำไปเผยแพร่หรือเปิดเผยแก่บุคคลภายนอกโดยเด็ดขาด</p>
                 </div>
 
                 <div id="reviewContent">
@@ -190,47 +180,72 @@
             addVisitorForm(); // Add at least one visitor form initially
         });
 
-        function verifyInmateCid() {
-            const cid = document.getElementById("inmateCid").value.trim();
+        async function verifyInmateCid() {
+            const searchKey = document.getElementById("inmateSearchKey").value.trim();
             const feedback = document.getElementById("cidFeedback");
             
-            if (cid.length !== 13 || isNaN(cid)) {
-                feedback.innerText = "✖ กรุณากรอกเลขบัตรประชาชน 13 หลักให้ถูกต้อง";
+            if (!searchKey) {
+                feedback.innerText = "✖ กรุณากรอกรหัสประจำตัวผู้ต้องขัง หรือ เลขบัตรประชาชน 13 หลัก";
                 feedback.style.color = "var(--danger)";
                 disableInmateFields(true);
                 return;
             }
 
-            const bookings = getBookings();
-            const alreadyBooked = bookings.find(b => b.inmateId === cid);
+            feedback.innerText = "⏱️ กำลังตรวจสอบสิทธิ์การจองและค้นหารายชื่อ...";
+            feedback.style.color = "var(--warning)";
 
-            if (alreadyBooked) {
-                feedback.innerText = "⚠️ เลขบัตรประชาชนผู้ต้องขังรายนี้ได้รับการจองคิวเยี่ยมแล้ว ไม่สามารถจองซ้ำได้ (สิทธิ์การจองจำกัด 1 ครั้งต่อผู้ต้องขัง 1 ท่าน)";
+            // Search database
+            const searchResponse = await searchInmateOnServer(searchKey);
+
+            if (searchResponse.status !== "success" || !searchResponse.found) {
+                feedback.innerText = "✖ ไม่พบรหัสประจำตัวหรือเลขบัตรประชาชนผู้ต้องขังรายนี้ในฐานข้อมูลประวัติของทัณฑสถาน";
                 feedback.style.color = "var(--danger)";
                 disableInmateFields(true);
                 isCidVerified = false;
+                
+                // Clear fields
+                document.getElementById("inmateCode").value = "";
+                document.getElementById("inmateCid").value = "";
+                document.getElementById("inmateFullName").value = "";
+                document.getElementById("inmateGrade").value = "";
+                return;
+            }
+
+            const inmate = searchResponse.data;
+            const targetCid = inmate.citizenId;
+
+            // Check duplicate booking
+            const bookings = await getBookings();
+            const alreadyBooked = bookings.find(b => b.inmateId === targetCid && b.status !== "rejected");
+
+            if (alreadyBooked) {
+                feedback.innerText = "⚠️ ผู้ต้องขังรายนี้ได้รับการลงทะเบียนจองคิวเยี่ยมไปแล้ว ไม่สามารถจองซ้ำได้ (จำกัด 1 สิทธิ์การจองต่อผู้ต้องขัง 1 ท่าน)";
+                feedback.style.color = "var(--danger)";
+                disableInmateFields(true);
+                isCidVerified = false;
+                
+                // Show found but locked details
+                document.getElementById("inmateCode").value = inmate.inmateCode;
+                document.getElementById("inmateCid").value = inmate.citizenId;
+                document.getElementById("inmateFullName").value = `${inmate.name} ${inmate.surname}`;
+                document.getElementById("inmateGrade").value = inmate.grade;
             } else {
-                feedback.innerText = "✓ สามารถดำเนินการจองสิทธิ์ให้ผู้ต้องขังท่านนี้ได้";
+                feedback.innerText = `✓ ตรวจพบประวัติผู้ต้องขัง: ${inmate.name} ${inmate.surname} (${inmate.grade}) สามารถจองสิทธิ์เยี่ยมได้`;
                 feedback.style.color = "var(--success)";
+                
+                // Fill details
+                document.getElementById("inmateCode").value = inmate.inmateCode;
+                document.getElementById("inmateCid").value = inmate.citizenId;
+                document.getElementById("inmateFullName").value = `${inmate.name} ${inmate.surname}`;
+                document.getElementById("inmateGrade").value = inmate.grade;
+                
                 disableInmateFields(false);
                 isCidVerified = true;
-                
-                // Prefill some fields to simulate DB check or user entering detail
-                document.getElementById("inmateTitle").disabled = false;
-                document.getElementById("inmateName").disabled = false;
-                document.getElementById("inmateSurname").disabled = false;
-                document.getElementById("inmateZone").disabled = false;
-                document.getElementById("inmateGrade").disabled = false;
-                document.getElementById("inmateDoc").disabled = false;
             }
         }
 
         function disableInmateFields(disabled) {
-            document.getElementById("inmateTitle").disabled = disabled;
-            document.getElementById("inmateName").disabled = disabled;
-            document.getElementById("inmateSurname").disabled = disabled;
             document.getElementById("inmateZone").disabled = disabled;
-            document.getElementById("inmateGrade").disabled = disabled;
             document.getElementById("inmateDoc").disabled = disabled;
             document.getElementById("btnNext1").disabled = disabled;
         }
@@ -261,7 +276,7 @@
             "8": { date: "วันศุกร์ที่ 28 สิงหาคม 2569", options: ["pm"] }
         };
 
-        function updateTimeSlotsGrid() {
+        async function updateTimeSlotsGrid() {
             const zone = document.getElementById("inmateZone").value;
             const container = document.getElementById("slotsContainer");
             document.getElementById("zoneIndicator").innerText = zone || "-";
@@ -271,8 +286,10 @@
                 return;
             }
 
+            container.innerHTML = `<p style="color:var(--warning);"><i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบโควตารอบเวลาเยี่ยม...</p>`;
+
             const zoneConf = ZONE_DATA[zone];
-            const slots = getSlots();
+            const slots = await getSlots();
             let html = "";
 
             zoneConf.options.forEach(opt => {
@@ -470,13 +487,10 @@
         function goToStep(step) {
             if (step === 2) {
                 const doc = document.getElementById("inmateDoc").files[0];
-                const title = document.getElementById("inmateTitle").value;
-                const name = document.getElementById("inmateName").value;
-                const surname = document.getElementById("inmateSurname").value;
                 const zone = document.getElementById("inmateZone").value;
                 const grade = document.getElementById("inmateGrade").value;
 
-                if (!isCidVerified || !doc || !title || !name || !surname || !zone || !grade) {
+                if (!isCidVerified || !doc || !zone || !grade) {
                     alert("กรุณากรอกข้อมูลผู้ต้องขังและอัปโหลดไฟล์หลักฐานความสัมพันธ์ให้ครบถ้วนก่อนตรวจสอบสิทธิ์");
                     return;
                 }
@@ -486,7 +500,7 @@
             if (step === 4) {
                 // Compile review data
                 const reviewDiv = document.getElementById("reviewContent");
-                const inmateNameStr = `${document.getElementById("inmateTitle").value}${document.getElementById("inmateName").value} ${document.getElementById("inmateSurname").value}`;
+                const inmateNameStr = document.getElementById("inmateFullName").value;
                 const inmateCid = document.getElementById("inmateCid").value;
                 const zone = document.getElementById("inmateZone").value;
 
@@ -529,22 +543,22 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function submitBooking() {
-            // Save Booking Data to LocalStorage Simulation
-            const bookings = getBookings();
-            const slots = getSlots();
-
+        async function submitBooking() {
             const inmateCid = document.getElementById("inmateCid").value;
-            const inmateTitle = document.getElementById("inmateTitle").value;
-            const inmateName = document.getElementById("inmateName").value;
-            const inmateSurname = document.getElementById("inmateSurname").value;
+            const inmateFullName = document.getElementById("inmateFullName").value;
             const zone = document.getElementById("inmateZone").value;
             const grade = document.getElementById("inmateGrade").value;
 
-            // Fetch visitors
+            // Fetch visitors data and files
             const visitors = [];
+            const rawFiles = {
+                inmateDoc: document.getElementById("inmateDoc").files[0],
+                visitors: []
+            };
+
             const forms = document.querySelectorAll("#visitorsContainer > .card");
-            forms.forEach((form) => {
+            for (let i = 0; i < forms.length; i++) {
+                const form = forms[i];
                 visitors.push({
                     relation: form.querySelector(".visitor-relation").value,
                     title: form.querySelector(".visitor-title").value,
@@ -553,9 +567,15 @@
                     cid: form.querySelector(".visitor-cid").value,
                     tel: form.querySelector(".visitor-tel").value
                 });
-            });
 
-            const newBooking = {
+                rawFiles.visitors.push({
+                    idCard: form.querySelector(".visitor-id-card-doc").files[0],
+                    relationDoc: form.querySelector(".visitor-relation-doc").files[0],
+                    extraDoc: form.querySelector(".visitor-extra-doc") ? form.querySelector(".visitor-extra-doc").files[0] : null
+                });
+            }
+
+            const bookingData = {
                 inmateId: inmateCid,
                 inmateTitle: inmateTitle,
                 inmateName: inmateName,
@@ -564,22 +584,27 @@
                 grade: grade,
                 slot: selectedSlot,
                 slotText: selectedSlotText,
-                visitors: visitors,
-                status: "pending",
-                dateBooked: new Date().toISOString(),
-                files: [`${inmateCid}_inmate_doc.jpg`] // simulated Google Drive file link
+                visitors: visitors
             };
 
-            // Add booking
-            bookings.push(newBooking);
-            saveBookings(bookings);
+            // Show Loading Spinner overlay
+            const btnSubmit = document.querySelector("#step4 .btn-primary");
+            const btnBack = document.querySelector("#step4 .btn-secondary");
+            btnSubmit.disabled = true;
+            btnBack.disabled = true;
+            btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังอัปโหลดหลักฐานทั้งหมดขึ้น Google Drive (ห้ามปิดหน้าจอนี้)...`;
 
-            // Increment slot count
-            slots[selectedSlot] = (slots[selectedSlot] || 0) + 1;
-            saveSlots(slots);
+            const response = await uploadAndSaveBooking(bookingData, rawFiles);
 
-            alert("🎉 ส่งข้อมูลการจองเยี่ยมและส่งภาพหลักฐานไม่ย่อขนาดไปยัง Google Drive สำเร็จ! เจ้าหน้าที่จะทำการตรวจสอบข้อมูลของท่านโดยเร็วที่สุด");
-            window.location.href = "index.html";
+            if (response.status === "success") {
+                alert("🎉 ส่งข้อมูลการจองเยี่ยมและจัดส่งไฟล์ความละเอียดสูงเข้า Google Drive สำเร็จ!");
+                window.location.href = "index.html";
+            } else {
+                alert("❌ ลงทะเบียนล้มเหลว: " + response.message);
+                btnSubmit.disabled = false;
+                btnBack.disabled = false;
+                btnSubmit.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> ยืนยันจองคิวและส่งไฟล์เข้า Google Drive`;
+            }
         }
     </script>
 </body>
