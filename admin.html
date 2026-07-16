@@ -227,7 +227,7 @@
                     <tr>
                         <td>${formatThaiDate(booking.dateBooked || new Date().toISOString())}</td>
                         <td>
-                            <strong>${booking.inmateTitle || ''}${booking.inmateName} ${booking.inmateSurname}</strong><br>
+                            <strong>${booking.inmateFullName || (booking.inmateTitle + booking.inmateName + ' ' + booking.inmateSurname)}</strong><br>
                             <small style="color:var(--text-muted-light);">บัตร: ${booking.inmateId} | แดน ${booking.zone}</small>
                         </td>
                         <td>${booking.slotText}</td>
@@ -260,7 +260,7 @@
 
         async function viewDetails(inmateId) {
             const bookings = await getBookings();
-            const booking = bookings.find(b => b.inmateId === inmateId);
+            const booking = bookings.find(b => String(b.inmateId).trim() === String(inmateId).trim());
             if (!booking) return;
 
             const modalBody = document.getElementById("modalDetailsBody");
@@ -287,15 +287,27 @@
             const driveUrl = booking.driveFolderUrl || booking.driveFolder || "#";
             const hasDrive = driveUrl && driveUrl !== "#";
 
+            const inmateNameStr = booking.inmateFullName || `${booking.inmateTitle || ''}${booking.inmateName} ${booking.inmateSurname}`;
             modalBody.innerHTML = `
-                <p><strong>ผู้ต้องขัง:</strong> ${booking.inmateTitle}${booking.inmateName} ${booking.inmateSurname} (แดน ${booking.zone} | ${booking.grade})</p>
+                <p><strong>ผู้ต้องขัง:</strong> ${inmateNameStr} (แดน ${booking.zone} | ${booking.grade})</p>
                 <p><strong>รอบเวลานัดหมายเข้าเยี่ยม:</strong> ${booking.slotText}</p>
-                <div style="border-top:1px solid var(--border-light); margin-top:1rem; padding-top:1rem;">
-                    <h4 style="margin:0 0 0.5rem 0; font-family:'Prompt', sans-serif;">เอกสารหลักฐานผู้ต้องขัง:</h4>
-                    <a href="#" onclick="alert('จำลองการดาวน์โหลดทะเบียนบ้านผู้ต้องขังขนาดเต็มจาก Google Drive'); return false;" style="color:var(--primary-color); font-size:0.9rem;"><i class="fa-solid fa-file-image"></i> โหลดทะเบียนบ้านผู้ต้องขัง (${booking.inmateId}_house_reg.png)</a>
+                
+                <div style="border-top:1.5px dashed var(--border-light); margin-top:1rem; padding-top:1rem; text-align:center;">
+                    <h4 style="margin:0 0 0.5rem 0; font-family:'Prompt', sans-serif; color:var(--primary-color);">📁 ตรวจสอบเอกสารหลักฐานทั้งหมด:</h4>
+                    ${hasDrive ? `
+                        <a href="${driveUrl}" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:0.5rem; width:auto; background-color:var(--success); padding:0.6rem 1.2rem; text-decoration:none; color:white; border-radius:6px; font-weight:bold;">
+                            <i class="fa-solid fa-folder-open"></i> เปิดดูไฟล์เอกสารใน Google Drive ของคิวนี้
+                        </a>
+                        <p style="font-size:0.8rem; color:var(--text-muted-light); margin-top:0.5rem;">
+                            (เมื่อเปิดไดรฟ์จะพบไฟล์รูปภาพความละเอียดสูง ได้แก่ รูปทะเบียนบ้านผู้ต้องขัง, บัตรประชาชน/สูติบัตร และหลักฐานความสัมพันธ์ของญาติทั้งหมด)
+                        </p>
+                    ` : `
+                        <span style="color:var(--danger); font-weight:bold;">⚠️ ไม่มีลิงก์ Drive (เนื่องจากส่งในโหมดจำลองระบบ)</span>
+                    `}
                 </div>
+
                 <div style="border-top:1px solid var(--border-light); margin-top:1rem; padding-top:1rem;">
-                    <h4 style="margin:0 0 0.5rem 0; font-family:'Prompt', sans-serif;">รายละเอียดญาติผู้เข้าเยี่ยม:</h4>
+                    <h4 style="margin:0 0 0.5rem 0; font-family:'Prompt', sans-serif;">👥 รายละเอียดญาติผู้เข้าเยี่ยม (${visitors.length} ท่าน):</h4>
                     ${visitorsHtml}
                 </div>
             `;

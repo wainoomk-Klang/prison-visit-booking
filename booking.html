@@ -271,7 +271,7 @@
 
             // Check duplicate booking
             const bookings = await getBookings();
-            const alreadyBooked = bookings.find(b => b.inmateId === targetCid && b.status !== "rejected");
+            const alreadyBooked = bookings.find(b => String(b.inmateId).trim() === String(targetCid).trim() && b.status !== "rejected");
 
             if (alreadyBooked) {
                 feedback.innerText = "⚠️ ผู้ต้องขังรายนี้ได้รับการลงทะเบียนจองคิวเยี่ยมไปแล้ว ไม่สามารถจองซ้ำได้ (จำกัด 1 สิทธิ์การจองต่อผู้ต้องขัง 1 ท่าน)";
