@@ -418,7 +418,7 @@
                     </div>
                     <div class="form-group">
                         <label>เลขบัตรประชาชนญาติ *</label>
-                        <input type="text" class="form-control visitor-cid" placeholder="เลข 13 หลัก" maxlength="13" required>
+                        <input type="text" class="form-control visitor-cid" placeholder="เลข 13 หลัก" maxlength="13" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                     </div>
                 </div>
 
@@ -447,7 +447,7 @@
                     </div>
                     <div class="form-group">
                         <label>เบอร์โทรศัพท์ *</label>
-                        <input type="tel" class="form-control visitor-tel" placeholder="0xxxxxxxx" required>
+                        <input type="tel" class="form-control visitor-tel" placeholder="เบอร์โทร 10 หลัก" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                     </div>
                 </div>
 
@@ -632,9 +632,7 @@
 
             const bookingData = {
                 inmateId: inmateCid,
-                inmateTitle: inmateTitle,
-                inmateName: inmateName,
-                inmateSurname: inmateSurname,
+                inmateFullName: inmateFullName,
                 zone: zone,
                 grade: grade,
                 slot: selectedSlot,
