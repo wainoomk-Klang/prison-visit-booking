@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ลงทะเบียนจองสิทธิ์เยี่ยมญาติใกล้ชิด - ทัณฑสถานวัยหนุ่มกลาง</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <button class="theme-toggle" id="themeToggle">🌙 โหมดมืด</button>
+        <h1>ลงทะเบียนจองสิทธิ์เยี่ยมญาติ</h1>
+        <p>กรุณากรอกข้อมูลและอัปโหลดรูปเอกสารหลักฐานให้ครบถ้วนเพื่อความรวดเร็วในการพิจารณา</p>
+    </header>
+
+    <main>
+        <!-- Steps Indicator -->
+        <div class="steps-indicator">
+            <div class="step-node active" id="step1Node">1</div>
+            <div class="step-node" id="step2Node">2</div>
+            <div class="step-node" id="step3Node">3</div>
+            <div class="step-node" id="step4Node">4</div>
+        </div>
+
+        <form id="bookingForm" onsubmit="event.preventDefault();">
+            <!-- STEP 1: INMATE INFORMATION -->
+            <div class="card form-step" id="step1">
+                <h3 style="margin-top:0; font-family:'Prompt', sans-serif; border-bottom: 2px solid var(--primary-color); padding-bottom:0.5rem;">
+                    ขั้นตอนที่ 1: ข้อมูลผู้ต้องขังที่ต้องการเข้าเยี่ยม
+                </h3>
+                
+                <div class="form-group">
+                    <label for="inmateSearchKey">เลขบัตรประชาชน 13 หลัก หรือ รหัสประจำตัวผู้ต้องขัง *</label>
+                    <div style="display:flex; gap:0.5rem;">
+                        <input type="text" id="inmateSearchKey" class="form-control" placeholder="ระบุเลขประจำตัวประชาชน หรือ รหัสผู้ต้องขัง" required>
+                        <button type="button" class="btn btn-primary" onclick="verifyInmateCid()" style="width:auto; white-space:nowrap; padding: 0.75rem 1.5rem;">ตรวจสอบสิทธิ์</button>
+                    </div>
+                    <small id="cidFeedback" style="display:block; margin-top:0.25rem; font-weight: 500;"></small>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="inmateCode">รหัสผู้ต้องขัง *</label>
+                        <input type="text" id="inmateCode" class="form-control" readonly placeholder="ดึงข้อมูลอัตโนมัติ" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="inmateCid">เลขประจำตัวประชาชนผู้ต้องขัง *</label>
+                        <input type="text" id="inmateCid" class="form-control" readonly placeholder="ดึงข้อมูลอัตโนมัติ" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="inmateFullName">ชื่อ-นามสกุล ผู้ต้องขัง *</label>
+                        <input type="text" id="inmateFullName" class="form-control" readonly placeholder="ดึงข้อมูลอัตโนมัติ" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="inmateGrade">ระดับชั้นผู้ต้องขัง *</label>
+                        <input type="text" id="inmateGrade" class="form-control" readonly placeholder="ดึงข้อมูลอัตโนมัติ" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="inmateZone">แดนคุมขัง *</label>
+                    <select id="inmateZone" class="form-control" required disabled onchange="updateTimeSlotsGrid()">
+                        <option value="">เลือกแดน</option>
+                        <option value="1">แดน 1</option>
+                        <option value="2">แดน 2</option>
+                        <option value="3">แดน 3</option>
+                        <option value="4">แดน 4</option>
+                        <option value="5">แดน 5</option>
+                        <option value="6">แดน 6</option>
+                        <option value="7">แดน 7</option>
+                        <option value="8">แดน 8</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>แนบรูปถ่ายทะเบียนบ้านผู้ต้องขัง * (รูปหลักฐานความละเอียดสูง ไม่ย่อขนาด)</label>
+                    <div class="upload-zone">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <p>คลิกเพื่อเลือกไฟล์ หรือลากรูปมาวางที่นี่</p>
+                        <small>ไฟล์ JPG, PNG ขนาดสูงสุดไม่เกิน 15MB</small>
+                        <input type="file" id="inmateDoc" required disabled onchange="handleFileSelect(this, 'inmateDocPreview')">
+                    </div>
+                    <div id="inmateDocPreview" class="file-preview" style="display:none;"></div>
+                </div>
+
+                <div style="margin-top:1.5rem; text-align:right;">
+                    <button type="button" class="btn btn-primary" onclick="goToStep(2)" style="width:200px;" id="btnNext1" disabled>ถัดไป</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: CHOOSE SLOT -->
+            <div class="card form-step" id="step2" style="display:none;">
+                <h3 style="margin-top:0; font-family:'Prompt', sans-serif; border-bottom: 2px solid var(--primary-color); padding-bottom:0.5rem;">
+                    ขั้นตอนที่ 2: เลือกวันและรอบเวลาเข้าเยี่ยม
+                </h3>
+                
+                <div class="alert alert-info">
+                    <p style="margin:0;">📍 <strong>วันและรอบเวลาสำหรับแดนคุมขังของคุณ:</strong> ระบบคัดเลือกวันและรอบการเยี่ยมที่จัดแบ่งตามแดนคุมขัง (แดน <span id="zoneIndicator"></span>) ของผู้ต้องขังให้อัตโนมัติ จำกัดรอบละ 300 คน</p>
+                </div>
+
+                <div class="form-group">
+                    <label>เลือกวันและรอบเวลาที่สะดวกเข้าเยี่ยม:</label>
+                    <div class="time-grid" id="slotsContainer">
+                        <!-- slots will render dynamically -->
+                    </div>
+                </div>
+
+                <div class="form-row" style="margin-top:2rem;">
+                    <button type="button" class="btn btn-secondary" onclick="goToStep(1)">ย้อนกลับ</button>
+                    <button type="button" class="btn btn-primary" onclick="goToStep(3)" id="btnNext2" disabled>ถัดไป</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: VISITOR INFORMATION -->
+            <div class="card form-step" id="step3" style="display:none;">
+                <h3 style="margin-top:0; font-family:'Prompt', sans-serif; border-bottom: 2px solid var(--primary-color); padding-bottom:0.5rem;">
+                    ขั้นตอนที่ 3: ข้อมูลญาติผู้เข้าเยี่ยมใกล้ชิด (สูงสุด 5 ท่าน)
+                </h3>
+
+                <div class="alert alert-warning">
+                    <p style="margin:0;">👤 <strong>ญาติที่จะร่วมเข้าเยี่ยม:</strong> บิดา มารดา บุตร ภรรยา/สามี หรือคู่สมรสตามกฎหมาย โดยสามารถลงทะเบียนพร้อมกันได้ไม่เกิน 5 ท่านต่อคิวการจอง</p>
+                </div>
+
+                <div id="visitorsContainer">
+                    <!-- Dynamic Visitor Forms -->
+                </div>
+
+                <button type="button" class="btn btn-secondary" onclick="addVisitorForm()" style="margin-top:1rem; border-color:var(--secondary-color); color:var(--secondary-color);">
+                    <i class="fa-solid fa-user-plus"></i> เพิ่มรายชื่อญาติเข้าเยี่ยมอีกท่าน
+                </button>
+
+                <div class="form-row" style="margin-top:2rem;">
+                    <button type="button" class="btn btn-secondary" onclick="goToStep(2)">ย้อนกลับ</button>
+                    <button type="button" class="btn btn-primary" onclick="goToStep(4)">ถัดไป</button>
+                </div>
+            </div>
+
+            <!-- STEP 4: REVIEW AND SUBMIT -->
+            <div class="card form-step" id="step4" style="display:none;">
+                <h3 style="margin-top:0; font-family:'Prompt', sans-serif; border-bottom: 2px solid var(--primary-color); padding-bottom:0.5rem;">
+                    ขั้นตอนที่ 4: ตรวจสอบความถูกต้องและส่งข้อมูล
+                </h3>
+
+                <div class="alert alert-info">
+                    <p style="margin:0;"><i class="fa-solid fa-user-shield"></i> <strong>การคุ้มครองข้อมูลส่วนบุคคล (PDPA Notice):</strong> ไฟล์รูปภาพหลักฐานและข้อมูลส่วนบุคคลทั้งหมดของท่าน จะถูกจัดส่งเข้าระบบคลาวด์คลังข้อมูลที่ปลอดภัยของทัณฑสถาน เพื่อใช้ตรวจสอบและยืนยันสิทธิ์การเข้าเยี่ยมญาติใกล้ชิดตามระเบียบของกรมราชทัณฑ์เท่านั้น ข้อมูลของท่านจะถูกเก็บรักษาเป็นความลับสูงสุด ปลอดภัย และไม่ถูกนำไปเผยแพร่หรือเปิดเผยแก่บุคคลภายนอกโดยเด็ดขาด</p>
+                </div>
+
+                <div id="reviewContent">
+                    <!-- review summary will load dynamically -->
+                </div>
+
+                <div class="form-row" style="margin-top:2rem;">
+                    <button type="button" class="btn btn-secondary" onclick="goToStep(3)">ย้อนกลับ</button>
+                    <button type="button" class="btn btn-primary" onclick="submitBooking()" style="background-color: var(--success);">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> ยืนยันจองคิวและส่งไฟล์เข้า Google Drive
+                    </button>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <footer>
+        <p>© 2026 ทัณฑสถานวัยหนุ่มกลาง กรมราชทัณฑ์ | ระบบลงทะเบียนจองสิทธิ์เยี่ยมญาติใกล้ชิด</p>
+    </footer>
+
+    <script src="app.js"></script>
+    <script>
+        let currentStep = 1;
+        let selectedSlot = "";
+        let selectedSlotText = "";
+        let visitorCount = 0;
+        let isCidVerified = false;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            initTheme();
+            addVisitorForm(); // Add at least one visitor form initially
+        });
+
+        async function verifyInmateCid() {
+            const searchKey = document.getElementById("inmateSearchKey").value.trim();
+            const feedback = document.getElementById("cidFeedback");
+            
+            if (!searchKey) {
+                feedback.innerText = "✖ กรุณากรอกรหัสประจำตัวผู้ต้องขัง หรือ เลขบัตรประชาชน 13 หลัก";
+                feedback.style.color = "var(--danger)";
+                disableInmateFields(true);
+                return;
+            }
+
+            feedback.innerText = "⏱️ กำลังตรวจสอบสิทธิ์การจองและค้นหารายชื่อ...";
+            feedback.style.color = "var(--warning)";
+
+            // Search database
+            const searchResponse = await searchInmateOnServer(searchKey);
+
+            if (searchResponse.status !== "success" || !searchResponse.found) {
+                feedback.innerText = "✖ ไม่พบรหัสประจำตัวหรือเลขบัตรประชาชนผู้ต้องขังรายนี้ในฐานข้อมูลประวัติของทัณฑสถาน";
+                feedback.style.color = "var(--danger)";
+                disableInmateFields(true);
+                isCidVerified = false;
+                
+                // Clear fields
+                document.getElementById("inmateCode").value = "";
+                document.getElementById("inmateCid").value = "";
+                document.getElementById("inmateFullName").value = "";
+                document.getElementById("inmateGrade").value = "";
+                return;
+            }
+
+            const inmate = searchResponse.data;
+            const targetCid = inmate.citizenId;
+
+            // Check duplicate booking
+            const bookings = await getBookings();
+            const alreadyBooked = bookings.find(b => b.inmateId === targetCid && b.status !== "rejected");
+
+            if (alreadyBooked) {
+                feedback.innerText = "⚠️ ผู้ต้องขังรายนี้ได้รับการลงทะเบียนจองคิวเยี่ยมไปแล้ว ไม่สามารถจองซ้ำได้ (จำกัด 1 สิทธิ์การจองต่อผู้ต้องขัง 1 ท่าน)";
+                feedback.style.color = "var(--danger)";
+                disableInmateFields(true);
+                isCidVerified = false;
+                
+                // Show found but locked details
+                document.getElementById("inmateCode").value = inmate.inmateCode;
+                document.getElementById("inmateCid").value = inmate.citizenId;
+                document.getElementById("inmateFullName").value = `${inmate.name} ${inmate.surname}`;
+                document.getElementById("inmateGrade").value = inmate.grade;
+            } else {
+                feedback.innerText = `✓ ตรวจพบประวัติผู้ต้องขัง: ${inmate.name} ${inmate.surname} (${inmate.grade}) สามารถจองสิทธิ์เยี่ยมได้`;
+                feedback.style.color = "var(--success)";
+                
+                // Fill details
+                document.getElementById("inmateCode").value = inmate.inmateCode;
+                document.getElementById("inmateCid").value = inmate.citizenId;
+                document.getElementById("inmateFullName").value = `${inmate.name} ${inmate.surname}`;
+                document.getElementById("inmateGrade").value = inmate.grade;
+                
+                disableInmateFields(false);
+                isCidVerified = true;
+            }
+        }
+
+        function disableInmateFields(disabled) {
+            document.getElementById("inmateZone").disabled = disabled;
+            document.getElementById("inmateDoc").disabled = disabled;
+            document.getElementById("btnNext1").disabled = disabled;
+        }
+
+        function handleFileSelect(input, previewId) {
+            const preview = document.getElementById(previewId);
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                preview.style.display = "flex";
+                preview.innerHTML = `
+                    <span>📸 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                    <span style="color:var(--success); font-weight:bold;">จัดเตรียมอัปโหลดขนาดเต็ม</span>
+                `;
+            } else {
+                preview.style.display = "none";
+            }
+        }
+
+        // Map Zone to Dates/Times according to document
+        const ZONE_DATA = {
+            "1": { date: "วันจันทร์ที่ 24 สิงหาคม 2569", options: ["am", "pm"] },
+            "2": { date: "วันอังคารที่ 25 สิงหาคม 2569", options: ["am", "pm"] },
+            "3": { date: "วันพุธที่ 26 สิงหาคม 2569", options: ["am", "pm"] },
+            "4": { date: "วันพฤหัสบดีที่ 27 สิงหาคม 2569", options: ["am", "pm"] },
+            "5": { date: "วันศุกร์ที่ 28 สิงหาคม 2569", options: ["am"] },
+            "6": { date: "วันศุกร์ที่ 28 สิงหาคม 2569", options: ["am"] },
+            "7": { date: "วันศุกร์ที่ 28 สิงหาคม 2569", options: ["pm"] },
+            "8": { date: "วันศุกร์ที่ 28 สิงหาคม 2569", options: ["pm"] }
+        };
+
+        async function updateTimeSlotsGrid() {
+            const zone = document.getElementById("inmateZone").value;
+            const container = document.getElementById("slotsContainer");
+            document.getElementById("zoneIndicator").innerText = zone || "-";
+            
+            if (!zone) {
+                container.innerHTML = `<p style="color:var(--text-muted-light);">กรุณาเลือกแดนคุมขังในขั้นตอนแรกก่อน</p>`;
+                return;
+            }
+
+            container.innerHTML = `<p style="color:var(--warning);"><i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบโควตารอบเวลาเยี่ยม...</p>`;
+
+            const zoneConf = ZONE_DATA[zone];
+            const slots = await getSlots();
+            let html = "";
+
+            zoneConf.options.forEach(opt => {
+                const key = `zone${zone}_${opt}`;
+                const bookedCount = slots[key] || 0;
+                const limit = 300;
+                const isFull = bookedCount >= limit;
+                const label = opt === "am" ? "รอบเช้า (09:00 - 12:00 น.)" : "รอบบ่าย (13:00 - 16:00 น.)";
+                
+                html += `
+                    <div class="time-slot ${isFull ? 'disabled' : ''}" id="slot_${key}" onclick="selectSlot('${key}', '${zoneConf.date} ${label}', ${isFull})">
+                        <div>
+                            <strong>${zoneConf.date}</strong><br>
+                            <span>${label}</span>
+                        </div>
+                        <div>
+                            <span>${bookedCount}/${limit} ท่าน</span>
+                            <span class="slot-status"></span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            selectedSlot = "";
+            document.getElementById("btnNext2").disabled = true;
+        }
+
+        function selectSlot(key, text, isFull) {
+            if (isFull) return;
+
+            document.querySelectorAll(".time-slot").forEach(el => el.classList.remove("selected"));
+            document.getElementById(`slot_${key}`).classList.add("selected");
+            
+            selectedSlot = key;
+            selectedSlotText = text;
+            document.getElementById("btnNext2").disabled = false;
+        }
+
+        function addVisitorForm() {
+            if (visitorCount >= 5) {
+                alert("สามารถลงทะเบียนผู้เข้าเยี่ยมได้สูงสุด 5 ท่านเท่านั้น");
+                return;
+            }
+            
+            visitorCount++;
+            const container = document.getElementById("visitorsContainer");
+            const div = document.createElement("div");
+            div.className = "card";
+            div.id = `visitor_${visitorCount}`;
+            div.style.marginBottom = "1rem";
+            div.style.border = "1px solid var(--primary-color)";
+            div.style.position = "relative";
+
+            div.innerHTML = `
+                ${visitorCount > 1 ? `<button type="button" class="btn" style="position:absolute; top:0.5rem; right:0.5rem; width:auto; padding:0.25rem 0.5rem; background-color:var(--danger); color:white;" onclick="removeVisitorForm(${visitorCount})"><i class="fa-solid fa-trash"></i> ลบ</button>` : ''}
+                <h4 style="margin-top:0; font-family:'Prompt', sans-serif; color:var(--primary-color);">ญาติคนที่ ${visitorCount}</h4>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ความสัมพันธ์ *</label>
+                        <select class="form-control visitor-relation" onchange="updateRelationDocs(this, ${visitorCount})" required>
+                            <option value="">เลือกความสัมพันธ์</option>
+                            <option value="บิดา">บิดา</option>
+                            <option value="มารดา">มารดา</option>
+                            <option value="บุตร">บุตร</option>
+                            <option value="ภรรยา">ภรรยา (จดทะเบียนสมรส)</option>
+                            <option value="สามี">สามี (จดทะเบียนสมรส)</option>
+                            <option value="แฟน">แฟน (ไม่ได้จดทะเบียนสมรส)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>เลขบัตรประชาชนญาติ *</label>
+                        <input type="text" class="form-control visitor-cid" placeholder="เลข 13 หลัก" maxlength="13" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>คำนำหน้า *</label>
+                        <select class="form-control visitor-title" onchange="updateRelationDocs(document.querySelector('#visitor_${visitorCount} .visitor-relation'), ${visitorCount})" required>
+                            <option value="">เลือก</option>
+                            <option value="นาย">นาย</option>
+                            <option value="นาง">นาง</option>
+                            <option value="นางสาว">นางสาว</option>
+                            <option value="เด็กชาย">เด็กชาย</option>
+                            <option value="เด็กหญิง">เด็กหญิง</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ชื่อ *</label>
+                        <input type="text" class="form-control visitor-name" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>นามสกุล *</label>
+                        <input type="text" class="form-control visitor-surname" required>
+                    </div>
+                    <div class="form-group">
+                        <label>เบอร์โทรศัพท์ *</label>
+                        <input type="tel" class="form-control visitor-tel" placeholder="0xxxxxxxx" required>
+                    </div>
+                </div>
+
+                <!-- Dynamic Docs Section -->
+                <div id="dynamicDocs_${visitorCount}" style="margin-top: 1rem;">
+                    <!-- default document inputs -->
+                </div>
+            `;
+            
+            container.appendChild(div);
+            
+            // Trigger default docs load
+            const relSelect = div.querySelector(".visitor-relation");
+            updateRelationDocs(relSelect, visitorCount);
+        }
+
+        function updateRelationDocs(relationSelect, id) {
+            const relation = relationSelect.value;
+            const container = document.getElementById(`dynamicDocs_${id}`);
+            const titleSelect = document.querySelector(`#visitor_${id} .visitor-title`);
+            const title = titleSelect ? titleSelect.value : "";
+            
+            let idCardLabel = "แนบรูปบัตรประชาชนญาติ * (ไม่ย่อรูป)";
+            let idCardIcon = "fa-id-card";
+            if (relation === "บุตร" && (title === "เด็กชาย" || title === "เด็กหญิง")) {
+                idCardLabel = "แนบรูปสูติบัตรญาติ (กรณีเป็นเด็ก) * (ไม่ย่อรูป)";
+                idCardIcon = "fa-file-medical";
+            }
+
+            let html = `
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>${idCardLabel}</label>
+                        <div class="upload-zone">
+                            <i class="fa-solid ${idCardIcon}"></i>
+                            <p>เลือกไฟล์รูปภาพหลักฐานประจำตัว</p>
+                            <input type="file" class="visitor-id-card-doc" required onchange="handleFileSelect(this, 'preview_cid_${id}')">
+                        </div>
+                        <div id="preview_cid_${id}" class="file-preview" style="display:none;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>แนบรูปทะเบียนบ้านญาติ * (ไม่ย่อรูป)</label>
+                        <div class="upload-zone">
+                            <i class="fa-solid fa-house-chimney"></i>
+                            <p>เลือกไฟล์รูปภาพทะเบียนบ้าน</p>
+                            <input type="file" class="visitor-relation-doc" required onchange="handleFileSelect(this, 'preview_rel_${id}')">
+                        </div>
+                        <div id="preview_rel_${id}" class="file-preview" style="display:none;"></div>
+                    </div>
+                </div>
+            `;
+
+            // Extra documents based on relationship
+            if (relation === "ภรรยา" || relation === "สามี") {
+                html += `
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label>แนบรูปใบสำคัญการสมรส (ทะเบียนสมรส) * (ไม่ย่อรูป)</label>
+                        <div class="upload-zone">
+                            <i class="fa-solid fa-file-signature"></i>
+                            <p>เลือกไฟล์รูปภาพทะเบียนสมรส</p>
+                            <input type="file" class="visitor-extra-doc" required onchange="handleFileSelect(this, 'preview_extra_${id}')">
+                        </div>
+                        <div id="preview_extra_${id}" class="file-preview" style="display:none;"></div>
+                    </div>
+                `;
+            } else if (relation === "แฟน") {
+                html += `
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label>แนบรูปหนังสือรับรองแฟน (เซ็นโดย กำนัน/ผู้ใหญ่บ้าน/ผู้นำชุมชน พร้อมแนบสำเนาบัตรประจำตัวผู้รับรอง) * (ไม่ย่อรูป)</label>
+                        <div class="upload-zone">
+                            <i class="fa-solid fa-file-shield"></i>
+                            <p>เลือกไฟล์รูปภาพหนังสือรับรองและบัตรผู้ใหญ่บ้าน</p>
+                            <input type="file" class="visitor-extra-doc" required onchange="handleFileSelect(this, 'preview_extra_${id}')">
+                        </div>
+                        <div id="preview_extra_${id}" class="file-preview" style="display:none;"></div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function removeVisitorForm(id) {
+            const element = document.getElementById(`visitor_${id}`);
+            if (element) {
+                element.remove();
+                visitorCount--;
+            }
+        }
+
+
+        function goToStep(step) {
+            if (step === 2) {
+                const doc = document.getElementById("inmateDoc").files[0];
+                const zone = document.getElementById("inmateZone").value;
+                const grade = document.getElementById("inmateGrade").value;
+
+                if (!isCidVerified || !doc || !zone || !grade) {
+                    alert("กรุณากรอกข้อมูลผู้ต้องขังและอัปโหลดไฟล์หลักฐานความสัมพันธ์ให้ครบถ้วนก่อนตรวจสอบสิทธิ์");
+                    return;
+                }
+                updateTimeSlotsGrid();
+            }
+
+            if (step === 4) {
+                // Compile review data
+                const reviewDiv = document.getElementById("reviewContent");
+                const inmateNameStr = document.getElementById("inmateFullName").value;
+                const inmateCid = document.getElementById("inmateCid").value;
+                const zone = document.getElementById("inmateZone").value;
+
+                let visitorsHtml = "";
+                const forms = document.querySelectorAll("#visitorsContainer > .card");
+                forms.forEach((form, idx) => {
+                    const relation = form.querySelector(".visitor-relation").value;
+                    const name = form.querySelector(".visitor-name").value;
+                    const surname = form.querySelector(".visitor-surname").value;
+                    const title = form.querySelector(".visitor-title").value;
+                    const tel = form.querySelector(".visitor-tel").value;
+
+                    visitorsHtml += `<p style="margin: 0.25rem 0;">👤 <strong>ญาติท่านที่ ${idx+1}:</strong> ${title}${name} ${surname} (${relation}) - โทร: ${tel}</p>`;
+                });
+
+                reviewDiv.innerHTML = `
+                    <div style="border:1px solid var(--border-light); padding:1rem; border-radius:8px; background-color:rgba(0,0,0,0.01);">
+                        <h4 style="margin:0 0 0.5rem 0; font-family:'Prompt', sans-serif; color:var(--primary-color);">ข้อมูลผู้ต้องขัง:</h4>
+                        <p style="margin:0.25rem 0;"><strong>ผู้ต้องขัง:</strong> ${inmateNameStr} (แดน ${zone})</p>
+                        <p style="margin:0.25rem 0;"><strong>เลขบัตรประชาชน:</strong> ${inmateCid}</p>
+                        
+                        <h4 style="margin:1.5rem 0 0.5rem 0; font-family:'Prompt', sans-serif; color:var(--primary-color);">วันเวลาที่เข้าเยี่ยม:</h4>
+                        <p style="margin:0.25rem 0;">📅 ${selectedSlotText}</p>
+                        
+                        <h4 style="margin:1.5rem 0 0.5rem 0; font-family:'Prompt', sans-serif; color:var(--primary-color);">รายชื่อญาติเข้าเยี่ยม:</h4>
+                        ${visitorsHtml}
+                    </div>
+                `;
+            }
+
+            document.querySelectorAll(".form-step").forEach(el => el.style.display = "none");
+            document.getElementById(`step${step}`).style.display = "block";
+            
+            document.querySelectorAll(".step-node").forEach(node => node.classList.remove("active"));
+            for (let i = 1; i <= step; i++) {
+                document.getElementById(`step${i}Node`).classList.add(i === step ? "active" : "completed");
+            }
+            
+            currentStep = step;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function submitBooking() {
+            const inmateCid = document.getElementById("inmateCid").value;
+            const inmateFullName = document.getElementById("inmateFullName").value;
+            const zone = document.getElementById("inmateZone").value;
+            const grade = document.getElementById("inmateGrade").value;
+
+            // Fetch visitors data and files
+            const visitors = [];
+            const rawFiles = {
+                inmateDoc: document.getElementById("inmateDoc").files[0],
+                visitors: []
+            };
+
+            const forms = document.querySelectorAll("#visitorsContainer > .card");
+            for (let i = 0; i < forms.length; i++) {
+                const form = forms[i];
+                visitors.push({
+                    relation: form.querySelector(".visitor-relation").value,
+                    title: form.querySelector(".visitor-title").value,
+                    name: form.querySelector(".visitor-name").value,
+                    surname: form.querySelector(".visitor-surname").value,
+                    cid: form.querySelector(".visitor-cid").value,
+                    tel: form.querySelector(".visitor-tel").value
+                });
+
+                rawFiles.visitors.push({
+                    idCard: form.querySelector(".visitor-id-card-doc").files[0],
+                    relationDoc: form.querySelector(".visitor-relation-doc").files[0],
+                    extraDoc: form.querySelector(".visitor-extra-doc") ? form.querySelector(".visitor-extra-doc").files[0] : null
+                });
+            }
+
+            const bookingData = {
+                inmateId: inmateCid,
+                inmateTitle: inmateTitle,
+                inmateName: inmateName,
+                inmateSurname: inmateSurname,
+                zone: zone,
+                grade: grade,
+                slot: selectedSlot,
+                slotText: selectedSlotText,
+                visitors: visitors
+            };
+
+            // Show Loading Spinner overlay
+            const btnSubmit = document.querySelector("#step4 .btn-primary");
+            const btnBack = document.querySelector("#step4 .btn-secondary");
+            btnSubmit.disabled = true;
+            btnBack.disabled = true;
+            btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังอัปโหลดหลักฐานทั้งหมดขึ้น Google Drive (ห้ามปิดหน้าจอนี้)...`;
+
+            const response = await uploadAndSaveBooking(bookingData, rawFiles);
+
+            if (response.status === "success") {
+                alert("🎉 ส่งข้อมูลการจองเยี่ยมและจัดส่งไฟล์ความละเอียดสูงเข้า Google Drive สำเร็จ!");
+                window.location.href = "index.html";
+            } else {
+                alert("❌ ลงทะเบียนล้มเหลว: " + response.message);
+                btnSubmit.disabled = false;
+                btnBack.disabled = false;
+                btnSubmit.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> ยืนยันจองคิวและส่งไฟล์เข้า Google Drive`;
+            }
+        }
+    </script>
+</body>
+</html>
