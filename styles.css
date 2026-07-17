@@ -613,3 +613,51 @@ body.dark-mode footer {
     color: var(--text-muted-dark);
     border-top-color: var(--border-dark);
 }
+
+/* Responsive 13-digit CID input layout */
+.cid-container {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-wrap: nowrap;
+}
+
+.cid-digit {
+    width: 26px;
+    height: 38px;
+    text-align: center;
+    font-size: 1.15rem;
+    border: 1.5px solid var(--border-light);
+    border-radius: 6px;
+    font-weight: bold;
+    background: transparent;
+    color: inherit;
+    transition: var(--transition);
+}
+
+body.dark-mode .cid-digit {
+    border-color: var(--border-dark);
+}
+
+.cid-digit:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.15);
+}
+
+@media (max-width: 500px) {
+    .cid-container {
+        gap: 0.1rem !important;
+        width: 100%;
+        justify-content: space-between;
+    }
+    .cid-digit {
+        width: 18px !important;
+        height: 30px !important;
+        font-size: 0.9rem !important;
+        border-radius: 4px !important;
+    }
+    .cid-container span {
+        font-size: 0.8rem !important;
+    }
+}
