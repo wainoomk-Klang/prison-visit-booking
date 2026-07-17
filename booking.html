@@ -6,6 +6,50 @@
     <title>ลงทะเบียนจองสิทธิ์เยี่ยมญาติใกล้ชิด - ทัณฑสถานวัยหนุ่มกลาง</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .cid-container {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            flex-wrap: nowrap !important;
+        }
+        .cid-digit {
+            width: 26px !important;
+            height: 38px !important;
+            text-align: center !important;
+            font-size: 1.15rem !important;
+            border: 1.5px solid var(--border-light) !important;
+            border-radius: 6px !important;
+            font-weight: bold !important;
+            background: transparent !important;
+            color: inherit !important;
+            transition: all 0.3s ease !important;
+        }
+        body.dark-mode .cid-digit {
+            border-color: var(--border-dark) !important;
+        }
+        .cid-digit:focus {
+            outline: none !important;
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.15) !important;
+        }
+        @media (max-width: 500px) {
+            .cid-container {
+                gap: 2px !important;
+                width: 100% !important;
+                justify-content: space-between !important;
+            }
+            .cid-digit {
+                width: 18px !important;
+                height: 30px !important;
+                font-size: 0.9rem !important;
+                border-radius: 4px !important;
+            }
+            .cid-container span {
+                font-size: 0.8rem !important;
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
