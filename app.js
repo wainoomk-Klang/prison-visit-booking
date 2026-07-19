@@ -91,6 +91,35 @@ async function searchInmateOnServer(searchKey) {
     }
 }
 
+// Check status of a booking by Inmate Citizen ID (reads whole sheet in backend)
+async function checkBookingOnServer(inmateCid) {
+    if (isProduction()) {
+        try {
+            const response = await fetch(`${APPS_SCRIPT_URL}?action=check_booking&key=${encodeURIComponent(inmateCid)}`);
+            const result = await response.json();
+            return result;
+        } catch (e) {
+            console.error("Error checking booking on Sheets:", e);
+            return { status: "error", message: "เกิดข้อผิดพลาดในการดึงข้อมูล: " + e.message };
+        }
+    } else {
+        const bookings = JSON.parse(localStorage.getItem(STORAGE_BOOKINGS_KEY)) || [];
+        const found = bookings.find(b => String(b.inmateId).trim() === String(inmateCid).trim());
+        if (found) {
+            return {
+                status: "success",
+                found: true,
+                data: found
+            };
+        } else {
+            return {
+                status: "success",
+                found: false
+            };
+        }
+    }
+}
+
 // Fetch all bookings
 async function getBookings() {
     if (isProduction()) {

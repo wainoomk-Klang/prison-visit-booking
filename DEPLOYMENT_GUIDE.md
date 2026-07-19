@@ -92,6 +92,36 @@ function doGet(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
     
+    // ค้นหาสถานะการจองคิวรายบุคคลสำหรับญาติสืบค้น (ค้นหาทั้งแผ่นงานจากล่างขึ้นบน)
+    if (e.parameter.action === "check_booking") {
+      var searchKey = String(e.parameter.key).trim().replace(/\s+/g, "");
+      var sheet = ss.getSheets()[0];
+      var data = sheet.getDataRange().getValues();
+      
+      for (var i = data.length - 1; i >= 1; i--) {
+        if (String(data[i][1]).trim() === searchKey) {
+          var nameStr = String(data[i][2]);
+          return ContentService.createTextOutput(JSON.stringify({
+            status: "success",
+            found: true,
+            data: {
+              dateBooked: data[i][0],
+              inmateId: data[i][1],
+              inmateName: nameStr,
+              zone: data[i][3],
+              slotText: data[i][4],
+              driveFolderUrl: data[i][6],
+              status: data[i][7]
+            }
+          })).setMimeType(ContentService.MimeType.JSON);
+        }
+      }
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        found: false
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
     // ค้นหารหัสผ่านของแอดมินเจ้าหน้าที่
     if (e.parameter.action === "verify_password") {
       var pass = e.parameter.password;
