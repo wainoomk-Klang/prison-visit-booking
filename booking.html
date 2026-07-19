@@ -261,6 +261,8 @@
                     const val = e.target.value;
                     e.target.value = val.replace(/[^0-9]/g, ""); // Allow digits only
                     
+                    resetVerificationState();
+                    
                     if (e.target.value.length === 1 && index < digits.length - 1) {
                         digits[index + 1].focus();
                     }
@@ -274,6 +276,7 @@
 
                 input.addEventListener("paste", (e) => {
                     e.preventDefault();
+                    resetVerificationState();
                     const text = (e.clipboardData || window.clipboardData).getData("text").replace(/[^0-9]/g, "").slice(0, 13);
                     for (let i = 0; i < text.length; i++) {
                         if (digits[i]) {
@@ -285,6 +288,22 @@
                 });
             });
         });
+
+        function resetVerificationState() {
+            if (isCidVerified) {
+                isCidVerified = false;
+                disableInmateFields(true);
+                const feedback = document.getElementById("cidFeedback");
+                feedback.innerText = "⚠️ มีการแก้ไขเลขบัตรประชาชน กรุณากดตรวจสอบสิทธิ์อีกครั้ง";
+                feedback.style.color = "var(--warning)";
+                
+                // Clear filled fields
+                document.getElementById("inmateCode").value = "";
+                document.getElementById("inmateCid").value = "";
+                document.getElementById("inmateFullName").value = "";
+                document.getElementById("inmateGrade").value = "";
+            }
+        }
 
         async function verifyInmateCid() {
             let searchKey = "";
@@ -326,7 +345,10 @@
             const alreadyBooked = bookings.find(b => String(b.inmateId).trim() === String(targetCid).trim() && b.status !== "rejected");
 
             if (alreadyBooked) {
-                feedback.innerText = "⚠️ ผู้ต้องขังรายนี้ได้รับการลงทะเบียนจองคิวเยี่ยมไปแล้ว ไม่สามารถจองซ้ำได้ (จำกัด 1 สิทธิ์การจองต่อผู้ต้องขัง 1 ท่าน)";
+                const msg = `ผู้ต้องขัง <strong>${inmate.name} ${inmate.surname}</strong> ได้รับการลงทะเบียนจองสิทธิ์เข้าเยี่ยมไปแล้วในระบบ (จำกัด 1 สิทธิ์ต่อผู้ต้องขัง 1 ท่าน) ไม่สามารถจองคิวซ้ำซ้อนได้ หากเอกสารเดิมถูกปฏิเสธจึงจะสามารถลงคิวจองสิทธิ์ใหม่ได้ครับ`;
+                showBlockModal(msg);
+
+                feedback.innerText = "⚠️ ไม่สามารถจองได้: ผู้ต้องขังได้รับการลงทะเบียนจองคิวไปแล้วในระบบ";
                 feedback.style.color = "var(--danger)";
                 disableInmateFields(true);
                 isCidVerified = false;
@@ -336,8 +358,22 @@
                 document.getElementById("inmateCid").value = inmate.citizenId;
                 document.getElementById("inmateFullName").value = `${inmate.name} ${inmate.surname}`;
                 document.getElementById("inmateGrade").value = inmate.grade;
+            } else if (inmate.grade === "ชั้นต้องปรับปรุง" || inmate.grade === "ชั้นต้องปรับปรุงมาก") {
+                const msg = `ผู้ต้องขัง <strong>${inmate.name} ${inmate.surname}</strong> อยู่ในเกณฑ์ความประพฤติระดับ <strong>"${inmate.grade}"</strong> จึงทำให้ไม่ผ่านเงื่อนไขการได้รับสิทธิ์เปิดเยี่ยมญาติใกล้ชิดรอบพิเศษนี้ตามระเบียบทัณฑสถานวัยหนุ่มกลางครับ`;
+                showBlockModal(msg);
+
+                feedback.innerText = `⚠️ ไม่สามารถจองได้: ผู้ต้องขังอยู่ในกลุ่ม "${inmate.grade}" (ไม่ได้รับสิทธิ์เข้าเยี่ยม)`;
+                feedback.style.color = "var(--danger)";
+                disableInmateFields(true);
+                isCidVerified = false;
+
+                // Show found but locked details
+                document.getElementById("inmateCode").value = inmate.inmateCode;
+                document.getElementById("inmateCid").value = inmate.citizenId;
+                document.getElementById("inmateFullName").value = `${inmate.name} ${inmate.surname}`;
+                document.getElementById("inmateGrade").value = inmate.grade;
             } else {
-                feedback.innerText = `✓ ตรวจพบประวัติผู้ต้องขัง: ${inmate.name} ${inmate.surname} (${inmate.grade}) สามารถจองสิทธิ์เยี่ยมได้`;
+                feedback.innerText = `✓ ตรวจพบประวัติผู้ต้องขัง: ${inmate.name} ${inmate.surname} (${inmate.grade}) ผ่านเกณฑ์การจองสิทธิ์เยี่ยม`;
                 feedback.style.color = "var(--success)";
                 
                 // Fill details
@@ -711,6 +747,24 @@
                 btnSubmit.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> ยืนยันจองคิวและส่งไฟล์เข้า Google Drive`;
             }
         }
+        function showBlockModal(msg) {
+            document.getElementById("blockMessage").innerHTML = msg;
+            document.getElementById("blockModal").style.display = "flex";
+        }
+
+        function closeBlockModal() {
+            document.getElementById("blockModal").style.display = "none";
+        }
     </script>
+
+    <!-- Block Warning Modal -->
+    <div class="modal" id="blockModal">
+        <div class="modal-content" style="max-width: 450px; text-align: center; border-top: 5px solid var(--danger);">
+            <i class="fa-solid fa-circle-xmark" style="font-size: 4rem; color: var(--danger); margin-bottom: 1rem;"></i>
+            <h3 style="margin: 0; font-family: 'Prompt', sans-serif; color: var(--text-light); font-size: 1.35rem;">ไม่สามารถลงทะเบียนจองสิทธิ์ได้</h3>
+            <p id="blockMessage" style="margin-top: 1rem; font-size: 0.95rem; line-height: 1.6; color: var(--text-muted-light); text-align: left;"></p>
+            <button onclick="closeBlockModal()" class="btn btn-primary" style="margin-top: 1.5rem; background-color: var(--danger); border-color: var(--danger); width: auto; padding: 0.6rem 2.5rem; font-weight: bold; border-radius: 6px;">ตกลง</button>
+        </div>
+    </div>
 </body>
 </html>
