@@ -38,6 +38,40 @@
             font-weight: 700;
             color: var(--primary-color);
         }
+        @media print {
+            body {
+                background-color: white !important;
+                color: black !important;
+            }
+            body > * {
+                display: none !important;
+            }
+            #reportModal, #reportModal * {
+                display: block !important;
+                visibility: visible !important;
+            }
+            #reportModal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: white !important;
+                backdrop-filter: none !important;
+                z-index: 9999 !important;
+            }
+            .modal-content {
+                box-shadow: none !important;
+                border: none !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                background-color: white !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -108,6 +142,13 @@
                 <h4>ปฏิเสธ/เอกสารไม่ชัดเจน</h4>
                 <p id="rejectedBookings" style="color: var(--danger);">0</p>
             </div>
+        </div>
+
+        <!-- report button bar -->
+        <div style="display:flex; justify-content:flex-end; gap:1rem; margin-bottom:1rem;" class="no-print">
+            <button class="btn btn-primary" onclick="showReportModal()" style="width:auto; padding:0.6rem 1.5rem; background-color: #0d9488; border-color: #0d9488; font-family:'Prompt', sans-serif; display:inline-flex; align-items:center; gap:0.5rem; font-weight:600; font-size:0.9rem; border-radius:6px; cursor:pointer;">
+                <i class="fa-solid fa-chart-pie"></i> รายงานสรุปยอดจองเยี่ยม (รายวัน / รายแดน)
+            </button>
         </div>
 
         <!-- Google Drive Cloud Link Info Box -->
@@ -183,6 +224,13 @@
                 <!-- details go here -->
             </div>
             <button onclick="closeDetailsModal()" class="btn btn-secondary" style="margin-top:1.5rem;">ปิดหน้าต่าง</button>
+        </div>
+    </div>
+
+    <!-- Modal View Report -->
+    <div class="modal" id="reportModal">
+        <div class="modal-content" style="max-width: 750px; width: 95%;" id="reportModalBody">
+            <!-- report dynamic layout will render here -->
         </div>
     </div>
 
@@ -434,11 +482,181 @@
                 window.location.reload();
             }
         }
+        
+        async function showReportModal() {
+            const bookings = await getBookings();
+            
+            // Calculate statistics
+            // 1. Group by Date
+            const dateStats = {};
+            // 2. Group by Zone
+            const zoneStats = {};
+            for (let z = 1; z <= 8; z++) {
+                zoneStats[z] = { bookings: 0, visitors: 0 };
+            }
+            
+            let totalVisitors = 0;
+            let approvedCount = 0;
+            let pendingCount = 0;
+            let rejectedCount = 0;
+
+            bookings.forEach(b => {
+                // Parse date Booked (YYYY-MM-DD)
+                let dateStr = "ไม่ระบุวันที่";
+                if (b.dateBooked) {
+                    try {
+                        const d = new Date(b.dateBooked);
+                        dateStr = d.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+                    } catch(e) {}
+                }
+                
+                // Count status
+                if (b.status === "approved") approvedCount++;
+                else if (b.status === "pending") pendingCount++;
+                else if (b.status === "rejected") rejectedCount++;
+                
+                // Count visitors
+                let visitors = [];
+                if (typeof b.visitors === 'string') {
+                    try { visitors = JSON.parse(b.visitors); } catch(e) {}
+                } else if (Array.isArray(b.visitors)) {
+                    visitors = b.visitors;
+                }
+                const vCount = visitors.length;
+                totalVisitors += vCount;
+
+                // Group by date
+                if (!dateStats[dateStr]) {
+                    dateStats[dateStr] = { totalBookings: 0, totalVisitors: 0, zones: {} };
+                    for (let z = 1; z <= 8; z++) dateStats[dateStr].zones[z] = 0;
+                }
+                dateStats[dateStr].totalBookings++;
+                dateStats[dateStr].totalVisitors += vCount;
+                if (b.zone && b.zone >= 1 && b.zone <= 8) {
+                    dateStats[dateStr].zones[b.zone]++;
+                    zoneStats[b.zone].bookings++;
+                    zoneStats[b.zone].visitors += vCount;
+                }
+            });
+
+            // Build HTML
+            let dateRowsHtml = "";
+            Object.keys(dateStats).forEach(date => {
+                const s = dateStats[date];
+                let zoneBreakdown = [];
+                for (let z = 1; z <= 8; z++) {
+                    if (s.zones[z] > 0) {
+                        zoneBreakdown.push(`แดน ${z}: <strong>${s.zones[z]}</strong> คิว`);
+                    }
+                }
+                const zoneBreakdownText = zoneBreakdown.length > 0 ? zoneBreakdown.join(", ") : "-";
+                dateRowsHtml += `
+                    <tr>
+                        <td style="padding:0.75rem; border-bottom:1px solid var(--border-light);">${date}</td>
+                        <td style="padding:0.75rem; border-bottom:1px solid var(--border-light); text-align:center;">${s.totalBookings} คิว</td>
+                        <td style="padding:0.75rem; border-bottom:1px solid var(--border-light); text-align:center;">${s.totalVisitors} คน</td>
+                        <td style="padding:0.75rem; border-bottom:1px solid var(--border-light);">${zoneBreakdownText}</td>
+                    </tr>
+                `;
+            });
+
+            let zoneRowsHtml = "";
+            for (let z = 1; z <= 8; z++) {
+                const s = zoneStats[z];
+                zoneRowsHtml += `
+                    <tr>
+                        <td style="padding:0.75rem; border-bottom:1px solid var(--border-light); text-align:center; font-weight:bold;">แดน ${z}</td>
+                        <td style="padding:0.75rem; border-bottom:1px solid var(--border-light); text-align:center;">${s.bookings} คิว</td>
+                        <td style="padding:0.75rem; border-bottom:1px solid var(--border-light); text-align:center;">${s.visitors} คน</td>
+                    </tr>
+                `;
+            }
+
+            const reportHtml = `
+                <div id="printReportArea" style="font-family:'Prompt', sans-serif;">
+                    <div style="text-align:center; margin-bottom:1.5rem;">
+                        <img src="logo.png" alt="Logo" style="width:120px; height:120px; margin-bottom:0.5rem;">
+                        <h2 style="margin:0; font-size:1.4rem; color:var(--primary-color);">รายงานสรุปการลงทะเบียนจองเยี่ยมญาติใกล้ชิด</h2>
+                        <p style="margin:0.25rem 0 0 0; font-size:0.9rem; color:var(--text-muted-light);">ทัณฑสถานวัยหนุ่มกลาง กรมราชทัณฑ์</p>
+                    </div>
+                    
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap:1rem; margin-bottom:2rem;">
+                        <div class="card" style="padding:1rem; text-align:center; background-color:rgba(0,0,0,0.02); box-shadow:none; border:1px solid var(--border-light);">
+                            <h5 style="margin:0; font-size:0.85rem; color:var(--text-muted-light);">ลงทะเบียนสะสม</h5>
+                            <p style="margin:0.5rem 0 0 0; font-size:1.5rem; font-weight:bold; color:var(--primary-color);">${bookings.length} คิว</p>
+                        </div>
+                        <div class="card" style="padding:1rem; text-align:center; background-color:rgba(0,0,0,0.02); box-shadow:none; border:1px solid var(--border-light);">
+                            <h5 style="margin:0; font-size:0.85rem; color:var(--text-muted-light);">ญาติเข้าเยี่ยมสะสม</h5>
+                            <p style="margin:0.5rem 0 0 0; font-size:1.5rem; font-weight:bold; color:var(--secondary-color);">${totalVisitors} คน</p>
+                        </div>
+                        <div class="card" style="padding:1rem; text-align:center; background-color:rgba(0,0,0,0.02); box-shadow:none; border:1px solid var(--border-light);">
+                            <h5 style="margin:0; font-size:0.85rem; color:var(--text-muted-light);">อนุมัติแล้ว</h5>
+                            <p style="margin:0.5rem 0 0 0; font-size:1.5rem; font-weight:bold; color:var(--success);">${approvedCount} คิว</p>
+                        </div>
+                        <div class="card" style="padding:1rem; text-align:center; background-color:rgba(0,0,0,0.02); box-shadow:none; border:1px solid var(--border-light);">
+                            <h5 style="margin:0; font-size:0.85rem; color:var(--text-muted-light);">รอตรวจสอบ / ปฏิเสธ</h5>
+                            <p style="margin:0.5rem 0 0 0; font-size:1.5rem; font-weight:bold; color:var(--warning);">${pendingCount} / ${rejectedCount} คิว</p>
+                        </div>
+                    </div>
+
+                    <h4 style="border-bottom:2px solid var(--primary-color); padding-bottom:0.4rem; color:var(--primary-color); font-family:'Prompt', sans-serif;">1. สรุปความหนาแน่นรายวันและแยกตามแดน</h4>
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:2rem; font-size:0.9rem;">
+                        <thead>
+                            <tr style="background-color:rgba(0,0,0,0.05);">
+                                <th style="padding:0.75rem; text-align:left;">วันที่ทำรายการจอง</th>
+                                <th style="padding:0.75rem; text-align:center; width:100px;">จำนวนคิว</th>
+                                <th style="padding:0.75rem; text-align:center; width:100px;">จำนวนญาติ</th>
+                                <th style="padding:0.75rem; text-align:left;">สัดส่วนตามแดนคุมขัง</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${dateRowsHtml || '<tr><td colspan="4" style="text-align:center; padding:1rem;">ไม่มีข้อมูลการจองในระบบ</td></tr>'}
+                        </tbody>
+                    </table>
+
+                    <h4 style="border-bottom:2px solid var(--primary-color); padding-bottom:0.4rem; color:var(--primary-color); font-family:'Prompt', sans-serif;">2. สรุปสะสมยอดรวมตามแดนคุมขัง</h4>
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:1.5rem; font-size:0.9rem;">
+                        <thead>
+                            <tr style="background-color:rgba(0,0,0,0.05);">
+                                <th style="padding:0.75rem; text-align:center; width:120px;">แดนคุมขัง</th>
+                                <th style="padding:0.75rem; text-align:center;">จำนวนคิวการจอง</th>
+                                <th style="padding:0.75rem; text-align:center;">จำนวนญาติที่จะเข้าเยี่ยม</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${zoneRowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.5rem;" class="no-print">
+                    <button onclick="printReport()" class="btn btn-primary" style="width:auto; padding:0.6rem 1.5rem; background-color:var(--success); border-color:var(--success); display:inline-flex; align-items:center; gap:0.5rem; border-radius:6px; cursor:pointer;">
+                        <i class="fa-solid fa-print"></i> พิมพ์รายงานสรุป
+                    </button>
+                    <button onclick="closeReportModal()" class="btn btn-secondary" style="width:auto; padding:0.6rem 1.5rem; border-radius:6px; cursor:pointer;">ปิดรายงาน</button>
+                </div>
+            `;
+
+            document.getElementById("reportModalBody").innerHTML = reportHtml;
+            document.getElementById("reportModal").style.display = "flex";
+        }
+
+        function closeReportModal() {
+            document.getElementById("reportModal").style.display = "none";
+        }
+
+        function printReport() {
+            window.print();
+        }
 
         window.onclick = function(event) {
             const modal = document.getElementById("detailsModal");
+            const repModal = document.getElementById("reportModal");
             if (event.target == modal) {
                 closeDetailsModal();
+            }
+            if (event.target == repModal) {
+                closeReportModal();
             }
         }
     </script>
