@@ -144,23 +144,10 @@ async function getSlots() {
             const slots = {};
             // Start from 0
             Object.keys(INITIAL_SLOTS).forEach(k => slots[k] = 0);
-            // Count from active bookings
+            // Count from active bookings (1 inmate/booking per slot)
             bookings.forEach(b => {
                 if (b.status !== "rejected" && b.slot) {
-                    let count = 1;
-                    if (typeof b.visitors === "string") {
-                        try {
-                            const parsed = JSON.parse(b.visitors);
-                            if (Array.isArray(parsed)) count = parsed.length;
-                        } catch(e) {
-                            // If it's a multiline formatted string (e.g., historical or direct edit), count the lines
-                            const lines = b.visitors.split("\n").filter(l => l.trim().length > 0);
-                            if (lines.length > 0) count = lines.length;
-                        }
-                    } else if (Array.isArray(b.visitors)) {
-                        count = b.visitors.length;
-                    }
-                    slots[b.slot] = (slots[b.slot] || 0) + count;
+                    slots[b.slot] = (slots[b.slot] || 0) + 1;
                 }
             });
             return slots;
@@ -339,7 +326,7 @@ async function uploadAndSaveBooking(bookingData, rawFiles) {
         bookings.push(newBooking);
         localStorage.setItem(STORAGE_BOOKINGS_KEY, JSON.stringify(bookings));
 
-        slots[bookingData.slot] = (slots[bookingData.slot] || 0) + bookingData.visitors.length;
+        slots[bookingData.slot] = (slots[bookingData.slot] || 0) + 1; // 1 ผู้ต้องขังต่อ 1 คิวจอง
         localStorage.setItem(STORAGE_SLOTS_KEY, JSON.stringify(slots));
 
         return { status: "success", message: "ลงทะเบียนจองสิทธิ์ในระบบจำลองสำเร็จ" };
