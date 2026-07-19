@@ -51,14 +51,47 @@
 
     <main style="max-width: 1200px; width: 95%;">
         <!-- Back to main portal button -->
-        <div>
+        <div id="portalNav" style="display: none; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
             <a href="index.html" style="text-decoration:none; color:var(--primary-color); font-weight:600;">
                 <i class="fa-solid fa-arrow-left"></i> กลับสู่หน้าพอร์ทัลหลัก
             </a>
+            <button onclick="handleLogout()" class="btn btn-secondary" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.85rem; background-color: var(--danger); color: white; border: none; font-family: inherit; border-radius: 6px; cursor: pointer;">
+                <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
+            </button>
         </div>
 
-        <!-- System Stats Overview -->
-        <div class="stats-grid">
+        <!-- Admin Login Screen -->
+        <div id="loginScreen" style="display: flex; align-items: center; justify-content: center; min-height: 50vh; padding: 1rem 0;">
+            <div class="card" style="max-width: 400px; width: 100%; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-radius: 12px; padding: 2.5rem 2rem;">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/e/ee/Official_emblem_of_the_Department_of_Corrections_%28Thailand%29.png" alt="โลโก้กรมราชทัณฑ์" style="width: 70px; height: 70px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15)); margin-bottom: 1rem;">
+                    <h3 style="margin: 0; font-family: 'Prompt', sans-serif; color: var(--primary-color);">เข้าสู่ระบบแอดมินเจ้าหน้าที่</h3>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.85rem; color: var(--text-muted-light);">เฉพาะเจ้าหน้าที่ทัณฑสถานวัยหนุ่มกลางเท่านั้น</p>
+                </div>
+                
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="adminUsername">ชื่อผู้ใช้งาน (Username)</label>
+                        <input type="text" id="adminUsername" class="form-control" value="admin" required readonly style="background-color: #f1f5f9; cursor: not-allowed;">
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 1.25rem;">
+                        <label for="adminPassword">รหัสผ่าน (Password)</label>
+                        <input type="password" id="adminPassword" class="form-control" placeholder="กรอกรหัสผ่านเพื่อเข้าหลังบ้าน" required>
+                    </div>
+                    
+                    <div id="loginFeedback" style="color: var(--danger); font-size: 0.85rem; font-weight: 500; margin-top: 0.5rem; display: none;"></div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem; font-weight: 600; padding: 0.8rem;">
+                        <i class="fa-solid fa-right-to-bracket"></i> ยืนยันเข้าสู่ระบบ
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div id="adminDashboard" style="display: none;">
+            <!-- System Stats Overview -->
+            <div class="stats-grid">
             <div class="stat-card">
                 <h4>จำนวนการลงทะเบียนทั้งหมด</h4>
                 <p id="totalBookings">0</p>
@@ -139,6 +172,7 @@
                 </table>
             </div>
         </div>
+        </div> <!-- end of adminDashboard -->
     </main>
 
     <!-- Modal View Details -->
@@ -160,8 +194,71 @@
     <script>
         document.addEventListener("DOMContentLoaded", async () => {
             initTheme();
-            await refreshData();
+            checkLoginState();
         });
+
+        function checkLoginState() {
+            const isLoggedIn = sessionStorage.getItem("admin_logged_in") === "true";
+            if (isLoggedIn) {
+                document.getElementById("loginScreen").style.display = "none";
+                document.getElementById("adminDashboard").style.display = "block";
+                document.getElementById("portalNav").style.display = "flex";
+                refreshData();
+            } else {
+                document.getElementById("loginScreen").style.display = "flex";
+                document.getElementById("adminDashboard").style.display = "none";
+                document.getElementById("portalNav").style.display = "none";
+            }
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const password = document.getElementById("adminPassword").value.trim();
+            const feedback = document.getElementById("loginFeedback");
+            const btnSubmit = document.querySelector("#loginForm button");
+            
+            feedback.style.display = "none";
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบรหัสผ่าน...`;
+            
+            let isAuthorized = false;
+            
+            if (isProduction()) {
+                try {
+                    const response = await fetch(`${APPS_SCRIPT_URL}?action=verify_password&password=${encodeURIComponent(password)}`);
+                    const result = await response.json();
+                    if (result.status === "success" && result.authorized) {
+                        isAuthorized = true;
+                    }
+                } catch (e) {
+                    console.error("Authentication error:", e);
+                    feedback.innerText = "⚠️ เชื่อมต่อระบบตรวจสอบสิทธิ์ของ Google ล้มเหลว";
+                    feedback.style.display = "block";
+                }
+            } else {
+                // Local fallback for local storage testing
+                if (password === "admin1234") {
+                    isAuthorized = true;
+                }
+            }
+            
+            btnSubmit.disabled = false;
+            btnSubmit.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> ยืนยันเข้าสู่ระบบ`;
+            
+            if (isAuthorized) {
+                sessionStorage.setItem("admin_logged_in", "true");
+                checkLoginState();
+            } else {
+                feedback.innerText = "❌ รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง";
+                feedback.style.display = "block";
+                document.getElementById("adminPassword").value = "";
+            }
+        }
+        
+        function handleLogout() {
+            sessionStorage.removeItem("admin_logged_in");
+            checkLoginState();
+        }
 
         async function refreshData() {
             // Show loading indicators
