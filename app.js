@@ -262,23 +262,9 @@ async function uploadAndSaveBooking(bookingData, rawFiles) {
     }
 }
 
-// Global Dark Mode Control
+// Global Dark Mode Control (Disabled to keep fixed Light theme)
 function initTheme() {
-    const isDark = localStorage.getItem("theme_dark") === "true";
-    if (isDark) {
-        document.body.classList.add("dark-mode");
-    }
-    
-    const toggleBtn = document.getElementById("themeToggle");
-    if (toggleBtn) {
-        toggleBtn.innerText = document.body.classList.contains("dark-mode") ? "☀️ โหมดสว่าง" : "🌙 โหมดมืด";
-        toggleBtn.addEventListener("click", () => {
-            document.body.classList.toggle("dark-mode");
-            const dark = document.body.classList.contains("dark-mode");
-            localStorage.setItem("theme_dark", dark);
-            toggleBtn.innerText = dark ? "☀️ โหมดสว่าง" : "🌙 โหมดมืด";
-        });
-    }
+    // Fixed clean light theme
 }
 
 // Format Date string
