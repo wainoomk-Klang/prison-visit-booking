@@ -71,6 +71,12 @@
             .no-print {
                 display: none !important;
             }
+            .print-only {
+                display: flex !important;
+            }
+        }
+        .print-only {
+            display: none;
         }
     </style>
 </head>
@@ -145,9 +151,12 @@
         </div>
 
         <!-- report button bar -->
-        <div style="display:flex; justify-content:flex-end; gap:1rem; margin-bottom:1rem;" class="no-print">
+        <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;" class="no-print">
             <button class="btn btn-primary" onclick="showReportModal()" style="width:auto; padding:0.6rem 1.5rem; background-color: #0d9488; border-color: #0d9488; font-family:'Prompt', sans-serif; display:inline-flex; align-items:center; gap:0.5rem; font-weight:600; font-size:0.9rem; border-radius:6px; cursor:pointer;">
                 <i class="fa-solid fa-chart-pie"></i> รายงานสรุปยอดจองเยี่ยม (รายวัน / รายแดน)
+            </button>
+            <button class="btn btn-primary" onclick="showZonePrintModal()" style="width:auto; padding:0.6rem 1.5rem; background-color: #0284c7; border-color: #0284c7; font-family:'Prompt', sans-serif; display:inline-flex; align-items:center; gap:0.5rem; font-weight:600; font-size:0.9rem; border-radius:6px; cursor:pointer;">
+                <i class="fa-solid fa-print"></i> พิมพ์รายชื่อแยกตามแดนส่งด้านใน (ออฟไลน์)
             </button>
         </div>
 
@@ -679,6 +688,149 @@
 
         function printReport() {
             window.print();
+        }
+
+        async function showZonePrintModal() {
+            const bookings = await getBookings();
+            
+            // Build the HTML with the list of zones
+            let zonesHtml = "";
+            for (let z = 1; z <= 8; z++) {
+                // Count approved bookings in this zone
+                const approvedInZone = bookings.filter(b => b.zone == z && b.status === "approved");
+                zonesHtml += `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem; border-bottom:1px solid var(--border-light);">
+                        <span style="font-size:1.05rem; font-weight:bold; color:var(--text-light);">แดน ${z} (${approvedInZone.length} คิวที่อนุมัติแล้ว)</span>
+                        <button onclick="printInmateListForZone(${z})" class="btn btn-primary" style="width:auto; padding:0.4rem 1rem; font-size:0.85rem; background-color:var(--primary-color); border-radius:6px; cursor:pointer;" ${approvedInZone.length === 0 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
+                            <i class="fa-solid fa-print"></i> พิมพ์รายชื่อส่งแดน ${z}
+                        </button>
+                    </div>
+                `;
+            }
+
+            const modalHtml = `
+                <div style="font-family:'Prompt', sans-serif; color:var(--text-light);">
+                    <div style="text-align:center; margin-bottom:1.5rem;" class="no-print">
+                        <h3 style="margin:0; font-size:1.3rem; color:var(--primary-color);">พิมพ์รายชื่อผู้ต้องขังแยกตามแดน (ส่งแดนด้านในที่ออฟไลน์)</h3>
+                        <p style="margin:0.25rem 0 0 0; font-size:0.85rem; color:var(--text-muted-light);">พิมพ์เฉพาะรายการที่สถานะ "อนุมัติแล้ว" เพื่อส่งให้ผู้คุมด้านในใช้เช็คชื่อและเตรียมความพร้อม</p>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:0.25rem;" class="no-print">
+                        ${zonesHtml}
+                    </div>
+                    
+                    <div id="zonePrintArea" style="margin-top:1.5rem;"></div>
+                    
+                    <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.5rem;" class="no-print">
+                        <button onclick="closeReportModal()" class="btn btn-secondary" style="width:auto; padding:0.6rem 1.5rem; border-radius:6px; cursor:pointer;">ปิดหน้าต่าง</button>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById("reportModalBody").innerHTML = modalHtml;
+            document.getElementById("reportModal").style.display = "flex";
+        }
+
+        async function printInmateListForZone(zoneNum) {
+            const bookings = await getBookings();
+            const approvedBookings = bookings.filter(b => b.zone == zoneNum && b.status === "approved");
+            
+            if (approvedBookings.length === 0) {
+                alert(`ไม่มีคิวที่อนุมัติแล้วในแดน ${zoneNum}`);
+                return;
+            }
+
+            // Group by slotText to make it easier for officers
+            // Sort by slotText and then inmateName
+            approvedBookings.sort((a, b) => {
+                if (a.slotText !== b.slotText) return a.slotText.localeCompare(b.slotText);
+                return a.inmateName.localeCompare(b.inmateName);
+            });
+
+            let rowsHtml = "";
+            approvedBookings.forEach((b, idx) => {
+                // Parse visitors to display them cleanly on paper
+                let visitorsText = "";
+                if (typeof b.visitors === "string") {
+                    try {
+                        const parsed = JSON.parse(b.visitors);
+                        if (Array.isArray(parsed)) {
+                            visitorsText = parsed.map((v, i) => `${i+1}. ${v.title}${v.name} ${v.surname} (${v.relation}) โทร: ${v.tel}`).join("<br>");
+                        } else {
+                            visitorsText = b.visitors.replace(/\n/g, "<br>");
+                        }
+                    } catch(e) {
+                        visitorsText = b.visitors.replace(/\n/g, "<br>");
+                    }
+                } else if (Array.isArray(b.visitors)) {
+                    visitorsText = b.visitors.map((v, i) => `${i+1}. ${v.title}${v.name} ${v.surname} (${v.relation}) โทร: ${v.tel}`).join("<br>");
+                }
+
+                rowsHtml += `
+                    <tr>
+                        <td style="padding:0.5rem; border:1px solid #000; text-align:center;">${idx + 1}</td>
+                        <td style="padding:0.5rem; border:1px solid #000; text-align:center;">${b.inmateId}</td>
+                        <td style="padding:0.5rem; border:1px solid #000; font-weight:bold;">${b.inmateName}</td>
+                        <td style="padding:0.5rem; border:1px solid #000; font-size:0.85rem;">${b.slotText}</td>
+                        <td style="padding:0.5rem; border:1px solid #000; font-size:0.85rem; line-height:1.4;">${visitorsText}</td>
+                        <td style="padding:0.5rem; border:1px solid #000; text-align:center; font-size:0.75rem; color:#888;">[ &nbsp; ] มาเข้าเยี่ยม<br>[ &nbsp; ] ไม่มา</td>
+                    </tr>
+                `;
+            });
+
+            const printableTable = `
+                <div style="font-family:'Prompt', sans-serif; color:#000; background-color:#fff; padding:1rem; border:1px solid #ccc; border-radius:8px;">
+                    <div style="text-align:center; margin-bottom:1rem;">
+                        <h2 style="margin:0 0 0.25rem 0; font-size:1.3rem;">บัญชีรายชื่อผู้ต้องขังได้รับอนุมัติเยี่ยมญาติใกล้ชิดรอบพิเศษ</h2>
+                        <h3 style="margin:0 0 0.25rem 0; font-size:1.15rem; color:#000;">ทัณฑสถานวัยหนุ่มกลาง (แดน ${zoneNum})</h3>
+                        <p style="margin:0; font-size:0.85rem; color:#444;">พิมพ์เมื่อ: ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })} น. (แผ่นสำหรับแดน ${zoneNum} ออฟไลน์)</p>
+                    </div>
+                    
+                    <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                        <thead>
+                            <tr style="background-color:#eee;">
+                                <th style="padding:0.5rem; border:1px solid #000; text-align:center; width:40px;">ลำดับ</th>
+                                <th style="padding:0.5rem; border:1px solid #000; text-align:center; width:110px;">เลขประจำตัวผู้ต้องขัง</th>
+                                <th style="padding:0.5rem; border:1px solid #000; text-align:left; width:130px;">ชื่อ-นามสกุล ผู้ต้องขัง</th>
+                                <th style="padding:0.5rem; border:1px solid #000; text-align:left; width:170px;">รอบนัดหมาย</th>
+                                <th style="padding:0.5rem; border:1px solid #000; text-align:left;">รายชื่อญาติผู้เข้าเยี่ยม</th>
+                                <th style="padding:0.5rem; border:1px solid #000; text-align:center; width:90px;">ลงชื่อ/หมายเหตุ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                    
+                    <div style="margin-top:2.5rem; display:flex; justify-content:space-between; font-size:0.9rem;" class="print-only">
+                        <div style="text-align:center; width:220px;">
+                            ลงชื่อ........................................................<br>
+                            (........................................................)<br>
+                            เจ้าหน้าที่ผู้ตรวจสอบคิวจอง
+                        </div>
+                        <div style="text-align:center; width:220px;">
+                            ลงชื่อ........................................................<br>
+                            (........................................................)<br>
+                            ผู้รับผิดชอบงานควบคุมแดน ${zoneNum}
+                        </div>
+                    </div>
+                    
+                    <div style="display:flex; justify-content:center; gap:0.5rem; margin-top:1.5rem;" class="no-print">
+                        <button onclick="window.print()" class="btn btn-primary" style="width:auto; padding:0.6rem 1.5rem; background-color:#22c55e; border-color:#22c55e; display:inline-flex; align-items:center; gap:0.5rem; border-radius:6px; cursor:pointer;">
+                            <i class="fa-solid fa-print"></i> ยืนยันการสั่งพิมพ์แดน ${zoneNum}
+                        </button>
+                        <button onclick="showZonePrintModal()" class="btn btn-secondary" style="width:auto; padding:0.6rem 1.5rem; border-radius:6px; cursor:pointer;">ย้อนกลับ</button>
+                    </div>
+                </div>
+            `;
+
+            // Insert printable table into area
+            document.getElementById("zonePrintArea").innerHTML = printableTable;
+            
+            // Hide the zones selection list to leave only the printable table visible for the print dialog
+            const listEl = document.querySelector("#reportModalBody > div > div:nth-child(2)");
+            if (listEl) listEl.style.display = "none";
+            const titleEl = document.querySelector("#reportModalBody > div > div:nth-child(1)");
+            if (titleEl) titleEl.style.display = "none";
         }
 
         window.onclick = function(event) {
