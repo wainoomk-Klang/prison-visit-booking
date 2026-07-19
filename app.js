@@ -147,7 +147,20 @@ async function getSlots() {
             // Count from active bookings
             bookings.forEach(b => {
                 if (b.status !== "rejected" && b.slot) {
-                    slots[b.slot] = (slots[b.slot] || 0) + b.visitors.length;
+                    let count = 1;
+                    if (typeof b.visitors === "string") {
+                        try {
+                            const parsed = JSON.parse(b.visitors);
+                            if (Array.isArray(parsed)) count = parsed.length;
+                        } catch(e) {
+                            // If it's a multiline formatted string (e.g., historical or direct edit), count the lines
+                            const lines = b.visitors.split("\n").filter(l => l.trim().length > 0);
+                            if (lines.length > 0) count = lines.length;
+                        }
+                    } else if (Array.isArray(b.visitors)) {
+                        count = b.visitors.length;
+                    }
+                    slots[b.slot] = (slots[b.slot] || 0) + count;
                 }
             });
             return slots;
