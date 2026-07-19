@@ -238,7 +238,7 @@
                 <div class="form-row" style="margin-top:2rem;">
                     <button type="button" class="btn btn-secondary" onclick="goToStep(3)">ย้อนกลับ</button>
                     <button type="button" class="btn btn-primary" onclick="submitBooking()" style="background-color: var(--success);">
-                        <i class="fa-solid fa-cloud-arrow-up"></i> ยืนยันจองคิวและส่งไฟล์เข้า Google Drive
+                        <i class="fa-solid fa-paper-plane"></i> ยืนยันการส่งข้อมูลการจองเยี่ยม
                     </button>
                 </div>
             </div>
@@ -742,18 +742,18 @@
             const btnBack = document.querySelector("#step4 .btn-secondary");
             btnSubmit.disabled = true;
             btnBack.disabled = true;
-            btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังอัปโหลดหลักฐานทั้งหมดขึ้น Google Drive (ห้ามปิดหน้าจอนี้)...`;
+            btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งข้อมูลการจองเยี่ยม (ห้ามปิดหน้าจอนี้)...`;
 
             const response = await uploadAndSaveBooking(bookingData, rawFiles);
 
             if (response.status === "success") {
-                alert("🎉 ส่งข้อมูลการจองเยี่ยมและจัดส่งไฟล์ความละเอียดสูงเข้า Google Drive สำเร็จ!");
+                alert("🎉 ส่งข้อมูลการจองเยี่ยมสำเร็จเรียบร้อย!");
                 window.location.href = "index.html";
             } else {
                 alert("❌ ลงทะเบียนล้มเหลว: " + response.message);
                 btnSubmit.disabled = false;
                 btnBack.disabled = false;
-                btnSubmit.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> ยืนยันจองคิวและส่งไฟล์เข้า Google Drive`;
+                btnSubmit.innerHTML = `<i class="fa-solid fa-paper-plane"></i> ยืนยันการส่งข้อมูลการจองเยี่ยม`;
             }
         }
         function showBlockModal(msg) {
