@@ -92,6 +92,16 @@ function doGet(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
     
+    // ค้นหารหัสผ่านของแอดมินเจ้าหน้าที่
+    if (e.parameter.action === "verify_password") {
+      var pass = e.parameter.password;
+      var correctPass = "admin1234"; // สามารถเปลี่ยนรหัสผ่านแอดมินได้ตรงนี้
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        authorized: (pass === correctPass)
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
     // กรณีที่ 2: ดึงข้อมูลประวัติการจองทั้งหมดในระบบ (สำหรับหน้า Admin และเช็คผลคิว)
     var sheet = ss.getSheets()[0]; // ดึงแผ่นงานหน้าแรก (ฐานข้อมูลการจอง)
     var data = sheet.getDataRange().getValues();
