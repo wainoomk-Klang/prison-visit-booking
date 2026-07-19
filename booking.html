@@ -366,7 +366,7 @@
                 document.getElementById("inmateFullName").value = `${inmate.name} ${inmate.surname}`;
                 document.getElementById("inmateGrade").value = inmate.grade;
             } else if (inmate.grade === "ชั้นต้องปรับปรุง" || inmate.grade === "ชั้นต้องปรับปรุงมาก") {
-                const msg = `ผู้ต้องขัง <strong>${inmate.name} ${inmate.surname}</strong> อยู่ในเกณฑ์ความประพฤติระดับ <strong>"${inmate.grade}"</strong> จึงทำให้ไม่ผ่านเงื่อนไขการได้รับสิทธิ์เปิดเยี่ยมญาติใกล้ชิดรอบพิเศษนี้ตามระเบียบทัณฑสถานวัยหนุ่มกลางครับ`;
+                const msg = `ผู้ต้องขัง <strong>${inmate.name} ${inmate.surname}</strong> อยู่ในเกณฑ์ความประพฤติระดับ <strong>"${inmate.grade}"</strong> จึงทำให้ไม่ผ่านเงื่อนไขการได้รับสิทธิ์เปิดเยี่ยมญาติใกล้ชิดรอบพิเศษนี้ตามระเบียบกรมราชทัณฑ์`;
                 showBlockModal(msg);
 
                 feedback.innerText = `⚠️ ไม่สามารถจองได้: ผู้ต้องขังอยู่ในกลุ่ม "${inmate.grade}" (ไม่ได้รับสิทธิ์เข้าเยี่ยม)`;
@@ -761,6 +761,7 @@
 
         function closeBlockModal() {
             document.getElementById("blockModal").style.display = "none";
+            window.location.href = "index.html"; // เด้งกลับหน้าหลักทันที
         }
     </script>
 
