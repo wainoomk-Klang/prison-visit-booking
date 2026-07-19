@@ -150,6 +150,9 @@ async function getSlots() {
                     slots[b.slot] = (slots[b.slot] || 0) + 1;
                 }
             });
+            // 🧪 คำสั่งจำลองสำหรับทดสอบ: บังคับให้ แดน 1 รอบเช้า เต็ม (300/300) ทันที
+            slots["zone1_am"] = 300;
+            
             return slots;
         } catch (e) {
             console.error("Error computing slots from production:", e);
