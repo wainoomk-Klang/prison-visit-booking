@@ -159,7 +159,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>แนบรูปถ่ายทะเบียนบ้านผู้ต้องขัง * (รูปหลักฐานความละเอียดสูง ไม่ย่อขนาด)</label>
+                    <label>แนบรูปถ่ายทะเบียนบ้านผู้ต้องขัง *</label>
                     <div class="upload-zone">
                         <i class="fa-solid fa-cloud-arrow-up"></i>
                         <p>คลิกเพื่อเลือกไฟล์ หรือลากรูปมาวางที่นี่</p>
@@ -567,10 +567,10 @@
             const titleSelect = document.querySelector(`#visitor_${id} .visitor-title`);
             const title = titleSelect ? titleSelect.value : "";
             
-            let idCardLabel = "แนบรูปบัตรประชาชนญาติ * (ไม่ย่อรูป)";
+            let idCardLabel = "แนบรูปบัตรประชาชนญาติ *";
             let idCardIcon = "fa-id-card";
             if (relation === "บุตร" && (title === "เด็กชาย" || title === "เด็กหญิง")) {
-                idCardLabel = "แนบรูปสูติบัตรญาติ (กรณีเป็นเด็ก) * (ไม่ย่อรูป)";
+                idCardLabel = "แนบรูปสูติบัตรญาติ (กรณีเป็นเด็ก) *";
                 idCardIcon = "fa-file-medical";
             }
 
@@ -586,7 +586,7 @@
                         <div id="preview_cid_${id}" class="file-preview" style="display:none;"></div>
                     </div>
                     <div class="form-group">
-                        <label>แนบรูปทะเบียนบ้านญาติ * (ไม่ย่อรูป)</label>
+                        <label>แนบรูปทะเบียนบ้านญาติ *</label>
                         <div class="upload-zone">
                             <i class="fa-solid fa-house-chimney"></i>
                             <p>เลือกไฟล์รูปภาพทะเบียนบ้าน</p>
@@ -597,12 +597,12 @@
                 </div>
             `;
 
-            // Extra documents based on relationship (Wife, Husband, Partner now require BOTH Marriage Certificate and Certification Letter)
-            if (relation === "ภรรยา" || relation === "สามี" || relation === "แฟน") {
+            // Extra documents based on relationship (Wife, Husband vs Unregistered Partner)
+            if (relation === "ภรรยา" || relation === "สามี") {
                 html += `
                     <div class="form-row" style="margin-top: 1rem;">
                         <div class="form-group">
-                            <label>แนบรูปใบสำคัญการสมรส (ทะเบียนสมรส) * (ไม่ย่อรูป)</label>
+                            <label>แนบรูปใบสำคัญการสมรส (ทะเบียนสมรส) *</label>
                             <div class="upload-zone">
                                 <i class="fa-solid fa-file-signature"></i>
                                 <p>เลือกไฟล์รูปภาพทะเบียนสมรส</p>
@@ -610,11 +610,25 @@
                             </div>
                             <div id="preview_extra1_${id}" class="file-preview" style="display:none;"></div>
                         </div>
+                    </div>
+                `;
+            } else if (relation === "แฟน") {
+                html += `
+                    <div class="form-row" style="margin-top: 1rem;">
                         <div class="form-group">
-                            <label>แนบรูปหนังสือรับรองความสัมพันธ์ / หนังสือรับรองแฟน * (ไม่ย่อรูป)</label>
+                            <label>แนบรูปหนังสือรับรองความสัมพันธ์ / หนังสือรับรองแฟน *</label>
                             <div class="upload-zone">
                                 <i class="fa-solid fa-file-shield"></i>
-                                <p>เลือกไฟล์หนังสือรับรอง (เซ็นโดยผู้นำชุมชน + แนบบัตรผู้รับรอง)</p>
+                                <p>เลือกไฟล์รูปภาพหนังสือรับรองความสัมพันธ์</p>
+                                <input type="file" class="visitor-extra-doc" required onchange="handleFileSelect(this, 'preview_extra1_${id}')">
+                            </div>
+                            <div id="preview_extra1_${id}" class="file-preview" style="display:none;"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>แนบรูปสำเนาบัตรแสดงตำแหน่งของผู้นำชุมชน *</label>
+                            <div class="upload-zone">
+                                <i class="fa-solid fa-id-card-clip"></i>
+                                <p>เลือกไฟล์รูปภาพบัตรแสดงตำแหน่ง</p>
                                 <input type="file" class="visitor-extra-doc-2" required onchange="handleFileSelect(this, 'preview_extra2_${id}')">
                             </div>
                             <div id="preview_extra2_${id}" class="file-preview" style="display:none;"></div>
