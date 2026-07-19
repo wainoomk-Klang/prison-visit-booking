@@ -121,10 +121,9 @@
             resultDiv.style.display = "block";
             resultDiv.innerHTML = `<p style="color:var(--warning); margin:0;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบประวัติการลงทะเบียน...</p>`;
 
-            const bookings = await getBookings();
-            const booking = bookings.find(b => String(b.inmateId).trim() === String(cid).trim());
+            const response = await checkBookingOnServer(cid);
             
-            if (!booking) {
+            if (response.status !== "success" || !response.found) {
                 resultDiv.innerHTML = `
                     <div class="alert alert-danger" style="margin:0;">
                         <strong>❌ ไม่พบข้อมูลการจอง</strong><br>
@@ -134,6 +133,7 @@
                 return;
             }
 
+            const booking = response.data;
             let statusBadge = '';
             let statusText = '';
             
@@ -148,10 +148,12 @@
                 statusText = 'เจ้าหน้าที่กำลังตรวจสอบรูปถ่ายเอกสารหลักฐานความสัมพันธ์ของท่าน กรุณาเช็คสถานะอีกครั้งในภายหลัง';
             }
 
+            const inmateNameDisplay = booking.inmateFullName || booking.inmateName || "";
+
             resultDiv.innerHTML = `
                 <div style="border: 1px solid var(--border-light); padding:1rem; border-radius: 8px; background-color: rgba(0,0,0,0.02);">
                     <h4 style="margin:0 0 0.5rem 0; font-family:'Prompt', sans-serif;">ผลการลงทะเบียนคิว:</h4>
-                    <p style="margin: 0.25rem 0;"><strong>ผู้ต้องขัง:</strong> ${booking.inmateTitle || ''}${booking.inmateName} ${booking.inmateSurname} (${booking.grade || 'ชั้นกลาง'})</p>
+                    <p style="margin: 0.25rem 0;"><strong>ผู้ต้องขัง:</strong> ${inmateNameDisplay}</p>
                     <p style="margin: 0.25rem 0;"><strong>แดน/รอบเวลา:</strong> ${booking.slotText}</p>
                     <p style="margin: 0.25rem 0;"><strong>สถานะการจอง:</strong> ${statusBadge}</p>
                     <hr style="border:0; border-top: 1px solid var(--border-light); margin: 0.75rem 0;">
