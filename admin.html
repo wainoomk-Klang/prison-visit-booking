@@ -187,6 +187,10 @@
                         <option value="rejected">ปฏิเสธการจอง</option>
                     </select>
 
+                    <button class="btn btn-primary" onclick="refreshData()" style="width:auto; padding:0.5rem 1rem; background-color: var(--primary-color); border-color: var(--primary-color); display:inline-flex; align-items:center; gap:0.5rem; color:white; border-radius:6px; cursor:pointer; font-weight:600;">
+                        <i class="fa-solid fa-arrows-rotate"></i> ดึงข้อมูลคิวใหม่
+                    </button>
+
                     <button class="btn btn-secondary" onclick="resetDemoData()" style="width:auto; padding:0.5rem 1rem;">
                         <i class="fa-solid fa-sync"></i> รีเซ็ตข้อมูลทดสอบ
                     </button>
@@ -243,6 +247,15 @@
         document.addEventListener("DOMContentLoaded", async () => {
             initTheme();
             checkLoginState();
+
+            // ตรวจจับและดึงคิวใหม่จาก Google Sheets เงียบๆ เบื้องหลังทุกๆ 30 วินาที
+            // เพื่อแชร์สถานะระหว่างเจ้าหน้าที่ 5-10 คนให้ตรงกันโดยไม่รบกวนหน้าต่างที่กำลังจ้องตรวจอยู่
+            setInterval(async () => {
+                const isLoggedIn = sessionStorage.getItem("admin_logged_in") === "true";
+                if (isLoggedIn) {
+                    await silentRefreshData();
+                }
+            }, 30000);
         });
 
         function checkLoginState() {
@@ -308,30 +321,44 @@
             checkLoginState();
         }
 
+        let bookingsCache = [];
+
         async function refreshData() {
             // Show loading indicators
             const tbody = document.getElementById("bookingsTableBody");
             tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--warning);"><i class="fa-solid fa-spinner fa-spin"></i> กำลังดึงข้อมูลจากระบบ Google Sheets...</td></tr>`;
             
-            await updateStats();
-            await renderBookingsTable();
+            bookingsCache = await getBookings();
+            
+            updateStats();
+            renderBookingsTable();
         }
 
-        async function updateStats() {
-            const bookings = await getBookings();
-            document.getElementById("totalBookings").innerText = bookings.length;
-            document.getElementById("pendingBookings").innerText = bookings.filter(b => b.status === "pending").length;
-            document.getElementById("approvedBookings").innerText = bookings.filter(b => b.status === "approved").length;
-            document.getElementById("rejectedBookings").innerText = bookings.filter(b => b.status === "rejected").length;
+        async function silentRefreshData() {
+            // ดึงข้อมูลเงียบๆ จาก Sheets เพื่ออัปเดตในความทรงจำเบราว์เซอร์
+            // วิธีนี้จะไม่แสดงหน้าต่างโหลดสีเหลือง และไม่กระตุกรบกวนหน้าจอเจ้าหน้าที่
+            try {
+                bookingsCache = await getBookings();
+                updateStats();
+                renderBookingsTable();
+            } catch(e) {
+                console.error("Silent background refresh failed:", e);
+            }
         }
 
-        async function renderBookingsTable() {
-            const bookings = await getBookings();
+        function updateStats() {
+            document.getElementById("totalBookings").innerText = bookingsCache.length;
+            document.getElementById("pendingBookings").innerText = bookingsCache.filter(b => b.status === "pending").length;
+            document.getElementById("approvedBookings").innerText = bookingsCache.filter(b => b.status === "approved").length;
+            document.getElementById("rejectedBookings").innerText = bookingsCache.filter(b => b.status === "rejected").length;
+        }
+
+        function renderBookingsTable() {
             const zoneFilter = document.getElementById("filterZone").value;
             const statusFilter = document.getElementById("filterStatus").value;
             const tbody = document.getElementById("bookingsTableBody");
             
-            let filtered = bookings;
+            let filtered = bookingsCache;
 
             if (zoneFilter) {
                 filtered = filtered.filter(b => b.zone === zoneFilter);
@@ -467,12 +494,17 @@
         }
 
         async function changeStatus(inmateId, newStatus) {
-            const success = await changeBookingStatusOnServer(inmateId, newStatus);
-            if (success) {
-                setTimeout(async () => {
-                    await refreshData();
-                }, 1000);
+            // 1. อัปเดตข้อมูลสถานะในความทรงจำเบราว์เซอร์ทันที (Optimistic local update)
+            const booking = bookingsCache.find(b => String(b.inmateId).trim() === String(inmateId).trim());
+            if (booking) {
+                booking.status = newStatus;
+                updateStats();
+                renderBookingsTable();
             }
+            
+            // 2. ส่งคำสั่งไปแก้ไขที่ตาราง Google Sheets เงียบๆ ด้านหลัง (Background save)
+            // วิธีนี้เจ้าหน้าที่จะเห็นการอนุมัติทันทีใน 0.01 วินาที โดยไม่เกิดหน้าจอค้าง เลื่อน หรือหมุนติ้วๆ
+            changeBookingStatusOnServer(inmateId, newStatus);
         }
 
         function resetDemoData() {
