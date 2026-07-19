@@ -247,6 +247,15 @@
         document.addEventListener("DOMContentLoaded", async () => {
             initTheme();
             checkLoginState();
+
+            // ตรวจจับและดึงคิวใหม่จาก Google Sheets เงียบๆ เบื้องหลังทุกๆ 30 วินาที
+            // เพื่อแชร์สถานะระหว่างเจ้าหน้าที่ 5-10 คนให้ตรงกันโดยไม่รบกวนหน้าต่างที่กำลังจ้องตรวจอยู่
+            setInterval(async () => {
+                const isLoggedIn = sessionStorage.getItem("admin_logged_in") === "true";
+                if (isLoggedIn) {
+                    await silentRefreshData();
+                }
+            }, 30000);
         });
 
         function checkLoginState() {
@@ -323,6 +332,18 @@
             
             updateStats();
             renderBookingsTable();
+        }
+
+        async function silentRefreshData() {
+            // ดึงข้อมูลเงียบๆ จาก Sheets เพื่ออัปเดตในความทรงจำเบราว์เซอร์
+            // วิธีนี้จะไม่แสดงหน้าต่างโหลดสีเหลือง และไม่กระตุกรบกวนหน้าจอเจ้าหน้าที่
+            try {
+                bookingsCache = await getBookings();
+                updateStats();
+                renderBookingsTable();
+            } catch(e) {
+                console.error("Silent background refresh failed:", e);
+            }
         }
 
         function updateStats() {
