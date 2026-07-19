@@ -102,29 +102,39 @@ function doGet(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
     
-    // กรณีที่ 2: ดึงข้อมูลประวัติการจองทั้งหมดในระบบ (สำหรับหน้า Admin และเช็คผลคิว)
+    // กรณีที่ 2: ดึงข้อมูลประวัติการจองทั้งหมดในระบบ (สำหรับหน้า Admin และเช็คผลคิว - จำกัดล่าสุด 300 คิวเพื่อความเร็วสูงสุด)
     var sheet = ss.getSheets()[0]; // ดึงแผ่นงานหน้าแรก (ฐานข้อมูลการจอง)
-    var data = sheet.getDataRange().getValues();
+    var lastRow = sheet.getLastRow();
+    var startRow = Math.max(2, lastRow - 300); // โหลดเฉพาะ 300 รายการล่าสุด
+    var numRows = lastRow - startRow + 1;
     var bookings = [];
     
-    for (var i = 1; i < data.length; i++) {
-      var row = data[i];
-      var nameStr = String(row[2]);
+    if (numRows > 0) {
+      var range = sheet.getRange(startRow, 1, numRows, 8);
+      var data = range.getValues();
       
-      bookings.push({
-        dateBooked: row[0],
-        inmateId: row[1],
-        inmateName: nameStr.split(" ").slice(1).join(" ") || nameStr,
-        inmateTitle: nameStr.split(" ")[0] || "",
-        inmateSurname: nameStr.split(" ").slice(-1)[0] || "",
-        zone: row[3],
-        slotText: row[4],
-        visitors: row[5],
-        driveFolderUrl: row[6],
-        status: row[7],
-        slot: getSlotCode(row[3], row[4])
-      });
+      for (var i = 0; i < data.length; i++) {
+        var row = data[i];
+        var nameStr = String(row[2]);
+        
+        bookings.push({
+          dateBooked: row[0],
+          inmateId: row[1],
+          inmateName: nameStr.split(" ").slice(1).join(" ") || nameStr,
+          inmateTitle: nameStr.split(" ")[0] || "",
+          inmateSurname: nameStr.split(" ").slice(-1)[0] || "",
+          zone: row[3],
+          slotText: row[4],
+          visitors: row[5],
+          driveFolderUrl: row[6],
+          status: row[7],
+          slot: getSlotCode(row[3], row[4])
+        });
+      }
     }
+    
+    // เรียงคิวล่าสุดให้อยู่ด้านบนสุด (Sort descending)
+    bookings.reverse();
     
     return ContentService.createTextOutput(JSON.stringify({
       status: "success",

@@ -160,13 +160,52 @@ async function changeBookingStatusOnServer(inmateId, newStatus) {
     }
 }
 
-// Convert files to base64
+// Convert files to base64 with client-side image compression to speed up mobile uploads
 function getBase64(file) {
     return new Promise((resolve, reject) => {
+        if (!file) {
+            resolve("");
+            return;
+        }
+        // If not an image, resolve normally with original base64
+        if (!file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+            return;
+        }
+
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                // Max width of 1200px keeps texts very sharp and readable
+                const maxWidth = 1200;
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Export as compressed JPEG with 0.7 quality (shrinks file size by 90%+)
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                resolve(dataUrl);
+            };
+            img.onerror = (err) => reject(err);
+        };
+        reader.onerror = (err) => reject(err);
     });
 }
 
