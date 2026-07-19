@@ -457,9 +457,9 @@
                             <strong>${zoneConf.date}</strong><br>
                             <span>${label}</span>
                         </div>
-                        <div>
-                            <span>${bookedCount}/${limit} ท่าน</span>
-                            <span class="slot-status"></span>
+                        <div style="text-align: right;">
+                            <span>${bookedCount}/${limit} ท่าน</span><br>
+                            <span class="slot-status" style="color:var(--danger); font-weight:bold; font-size:0.85rem;">${isFull ? '● เต็มแล้ว' : ''}</span>
                         </div>
                     </div>
                 `;
