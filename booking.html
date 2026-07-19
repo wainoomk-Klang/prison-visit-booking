@@ -59,8 +59,11 @@
 </head>
 <body>
     <header>
-        <h1>ลงทะเบียนจองสิทธิ์เยี่ยมญาติ</h1>
-        <p>กรุณากรอกข้อมูลและอัปโหลดรูปเอกสารหลักฐานให้ครบถ้วนเพื่อความรวดเร็วในการพิจารณา</p>
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0.75rem;">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/ee/Official_emblem_of_the_Department_of_Corrections_%28Thailand%29.png" alt="โลโก้กรมราชทัณฑ์" style="width:80px; height:80px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.2));">
+            <h1 style="margin:0; font-family:'Prompt', sans-serif; font-size:2rem; font-weight:700; text-align:center;">ลงทะเบียนจองสิทธิ์เยี่ยมญาติ</h1>
+            <p style="margin:0; font-size:1rem; opacity:0.9; text-align:center;">กรุณากรอกข้อมูลและอัปโหลดรูปเอกสารหลักฐานให้ครบถ้วนเพื่อความรวดเร็วในการพิจารณา</p>
+        </div>
     </header>
 
     <main>
@@ -549,29 +552,28 @@
                 </div>
             `;
 
-            // Extra documents based on relationship
-            if (relation === "ภรรยา" || relation === "สามี") {
+            // Extra documents based on relationship (Wife, Husband, Partner now require BOTH Marriage Certificate and Certification Letter)
+            if (relation === "ภรรยา" || relation === "สามี" || relation === "แฟน") {
                 html += `
-                    <div class="form-group" style="margin-top: 1rem;">
-                        <label>แนบรูปใบสำคัญการสมรส (ทะเบียนสมรส) * (ไม่ย่อรูป)</label>
-                        <div class="upload-zone">
-                            <i class="fa-solid fa-file-signature"></i>
-                            <p>เลือกไฟล์รูปภาพทะเบียนสมรส</p>
-                            <input type="file" class="visitor-extra-doc" required onchange="handleFileSelect(this, 'preview_extra_${id}')">
+                    <div class="form-row" style="margin-top: 1rem;">
+                        <div class="form-group">
+                            <label>แนบรูปใบสำคัญการสมรส (ทะเบียนสมรส) * (ไม่ย่อรูป)</label>
+                            <div class="upload-zone">
+                                <i class="fa-solid fa-file-signature"></i>
+                                <p>เลือกไฟล์รูปภาพทะเบียนสมรส</p>
+                                <input type="file" class="visitor-extra-doc" required onchange="handleFileSelect(this, 'preview_extra1_${id}')">
+                            </div>
+                            <div id="preview_extra1_${id}" class="file-preview" style="display:none;"></div>
                         </div>
-                        <div id="preview_extra_${id}" class="file-preview" style="display:none;"></div>
-                    </div>
-                `;
-            } else if (relation === "แฟน") {
-                html += `
-                    <div class="form-group" style="margin-top: 1rem;">
-                        <label>แนบรูปหนังสือรับรองแฟน (เซ็นโดย กำนัน/ผู้ใหญ่บ้าน/ผู้นำชุมชน พร้อมแนบสำเนาบัตรประจำตัวผู้รับรอง) * (ไม่ย่อรูป)</label>
-                        <div class="upload-zone">
-                            <i class="fa-solid fa-file-shield"></i>
-                            <p>เลือกไฟล์รูปภาพหนังสือรับรองและบัตรผู้ใหญ่บ้าน</p>
-                            <input type="file" class="visitor-extra-doc" required onchange="handleFileSelect(this, 'preview_extra_${id}')">
+                        <div class="form-group">
+                            <label>แนบรูปหนังสือรับรองความสัมพันธ์ / หนังสือรับรองแฟน * (ไม่ย่อรูป)</label>
+                            <div class="upload-zone">
+                                <i class="fa-solid fa-file-shield"></i>
+                                <p>เลือกไฟล์หนังสือรับรอง (เซ็นโดยผู้นำชุมชน + แนบบัตรผู้รับรอง)</p>
+                                <input type="file" class="visitor-extra-doc-2" required onchange="handleFileSelect(this, 'preview_extra2_${id}')">
+                            </div>
+                            <div id="preview_extra2_${id}" class="file-preview" style="display:none;"></div>
                         </div>
-                        <div id="preview_extra_${id}" class="file-preview" style="display:none;"></div>
                     </div>
                 `;
             }
@@ -675,7 +677,8 @@
                 rawFiles.visitors.push({
                     idCard: form.querySelector(".visitor-id-card-doc").files[0],
                     relationDoc: form.querySelector(".visitor-relation-doc").files[0],
-                    extraDoc: form.querySelector(".visitor-extra-doc") ? form.querySelector(".visitor-extra-doc").files[0] : null
+                    extraDoc: form.querySelector(".visitor-extra-doc") ? form.querySelector(".visitor-extra-doc").files[0] : null,
+                    extraDoc2: form.querySelector(".visitor-extra-doc-2") ? form.querySelector(".visitor-extra-doc-2").files[0] : null
                 });
             }
 
