@@ -327,8 +327,11 @@
             feedback.innerText = "⏱️ กำลังตรวจสอบสิทธิ์การจองและค้นหารายชื่อ...";
             feedback.style.color = "var(--warning)";
 
-            // Search database
-            const searchResponse = await searchInmateOnServer(searchKey);
+            // Search and check duplicates in parallel!
+            const [searchResponse, bookings] = await Promise.all([
+                searchInmateOnServer(searchKey),
+                getBookings()
+            ]);
 
             if (searchResponse.status !== "success" || !searchResponse.found) {
                 feedback.innerText = "✖ ไม่พบรหัสประจำตัวหรือเลขบัตรประชาชนผู้ต้องขังรายนี้ในฐานข้อมูลประวัติของทัณฑสถาน";
@@ -347,8 +350,7 @@
             const inmate = searchResponse.data;
             const targetCid = inmate.citizenId;
 
-            // Check duplicate booking
-            const bookings = await getBookings();
+            // Check duplicate booking (already fetched in parallel)
             const alreadyBooked = bookings.find(b => String(b.inmateId).trim() === String(targetCid).trim() && b.status !== "rejected");
 
             if (alreadyBooked) {
