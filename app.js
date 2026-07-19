@@ -215,6 +215,9 @@ async function uploadAndSaveBooking(bookingData, rawFiles) {
                 if (rawVisFiles.extraDoc) {
                     visPayload.extraBase64 = await getBase64(rawVisFiles.extraDoc);
                 }
+                if (rawVisFiles.extraDoc2) {
+                    visPayload.extra2Base64 = await getBase64(rawVisFiles.extraDoc2);
+                }
 
                 payload.visitors.push(visPayload);
             }

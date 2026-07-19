@@ -182,7 +182,10 @@ function doPost(e) {
         saveFileToDrive(inmateFolder, "ญาติ_" + (idx+1) + "_ทะเบียนบ้าน_" + visitor.cid, visitor.relationBase64);
       }
       if (visitor.extraBase64) {
-        saveFileToDrive(inmateFolder, "ญาติ_" + (idx+1) + "_เอกสารสมรสหรือรับรอง_" + visitor.cid, visitor.extraBase64);
+        saveFileToDrive(inmateFolder, "ญาติ_" + (idx+1) + "_ทะเบียนสมรส_" + visitor.cid, visitor.extraBase64);
+      }
+      if (visitor.extra2Base64) {
+        saveFileToDrive(inmateFolder, "ญาติ_" + (idx+1) + "_หนังสือรับรองความสัมพันธ์_" + visitor.cid, visitor.extra2Base64);
       }
     });
 
