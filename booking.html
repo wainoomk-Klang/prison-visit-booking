@@ -781,7 +781,7 @@
                     window.location.href = "index.html";
                 });
             } else {
-                showCustomAlert("ลงทะเบียนล้มเหลว", response.message, "danger");
+                showCustomAlert("ส่งข้อมูลไม่สำเร็จ", "ขออภัยด้วยครับ ระบบอาจจะหนาแน่นหรืออินเทอร์เน็ตขัดข้องชั่วคราว<br><br>💡 <strong>คำแนะนำ:</strong> กรุณาตรวจสอบสัญญาณเน็ตของท่าน และกดปุ่ม <strong>'ยืนยันการส่งข้อมูลการจองเยี่ยม'</strong> อีกครั้งหนึ่งเพื่อส่งใหม่ได้ทันทีโดยไม่ต้องกรอกข้อมูลใหม่ครับ", "danger");
                 btnSubmit.disabled = false;
                 btnBack.disabled = false;
                 btnSubmit.innerHTML = `<i class="fa-solid fa-paper-plane"></i> ยืนยันการส่งข้อมูลการจองเยี่ยม`;
@@ -859,8 +859,9 @@
             <i class="fa-solid fa-spinner fa-spin" style="font-size: 4rem; color: var(--primary-color); margin-bottom: 1.5rem;"></i>
             <h3 style="margin: 0; font-family: 'Prompt', sans-serif; color: var(--text-light); font-size: 1.35rem;">กำลังส่งข้อมูลลงทะเบียน</h3>
             <p style="margin-top: 1rem; font-size: 0.95rem; line-height: 1.6; color: var(--text-muted-light);">
-                ระบบกำลังบันทึกข้อมูลและอัปโหลดไฟล์เอกสารเข้าคลาวด์ไดรฟ์<br>
-                <strong style="color: var(--danger); font-size: 1.05rem; display: block; margin-top: 0.5rem;">กรุณารอสักครู่ และห้ามปิดหน้าจอนี้จนกว่าจะเสร็จสิ้น!</strong>
+                ระบบกำลังส่งข้อมูลและอัปโหลดไฟล์หลักฐานไปยังคลาวด์ไดรฟ์<br>
+                <span style="font-size: 0.85rem; color: var(--text-muted-light); display: block; margin-top: 0.5rem;">*ความเร็วขึ้นอยู่กับขนาดรูปภาพและอินเทอร์เน็ตของท่าน*</span>
+                <strong style="color: var(--danger); font-size: 1.02rem; display: block; margin-top: 0.75rem;">กรุณารอสักครู่ และห้ามปิดหรือรีเฟรชหน้าจอนี้เด็ดขาด!</strong>
             </p>
         </div>
     </div>
