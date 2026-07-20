@@ -46,9 +46,12 @@
             body > * {
                 display: none !important;
             }
-            #reportModal, #reportModal * {
+            #reportModal {
                 display: block !important;
                 visibility: visible !important;
+            }
+            #reportModal .no-print {
+                display: none !important;
             }
             #reportModal {
                 position: absolute;
@@ -710,17 +713,17 @@
 
             const modalHtml = `
                 <div style="font-family:'Prompt', sans-serif; color:var(--text-light);">
-                    <div style="text-align:center; margin-bottom:1.5rem;" class="no-print">
+                    <div id="zonePrintTitle" style="text-align:center; margin-bottom:1.5rem;" class="no-print">
                         <h3 style="margin:0; font-size:1.3rem; color:var(--primary-color);">พิมพ์รายชื่อผู้ต้องขังแยกตามแดน (ส่งแดนด้านในที่ออฟไลน์)</h3>
                         <p style="margin:0.25rem 0 0 0; font-size:0.85rem; color:var(--text-muted-light);">พิมพ์เฉพาะรายการที่สถานะ "อนุมัติแล้ว" เพื่อส่งให้ผู้คุมด้านในใช้เช็คชื่อและเตรียมความพร้อม</p>
                     </div>
-                    <div style="display:flex; flex-direction:column; gap:0.25rem;" class="no-print">
+                    <div id="zonePrintList" style="display:flex; flex-direction:column; gap:0.25rem;" class="no-print">
                         ${zonesHtml}
                     </div>
                     
                     <div id="zonePrintArea" style="margin-top:1.5rem;"></div>
                     
-                    <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.5rem;" class="no-print">
+                    <div id="zonePrintCloseBtn" style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.5rem;" class="no-print">
                         <button onclick="closeReportModal()" class="btn btn-secondary" style="width:auto; padding:0.6rem 1.5rem; border-radius:6px; cursor:pointer;">ปิดหน้าต่าง</button>
                     </div>
                 </div>
@@ -805,11 +808,13 @@
             // Insert printable table into area
             document.getElementById("zonePrintArea").innerHTML = printableTable;
             
-            // Hide the zones selection list to leave only the printable table visible for the print dialog
-            const listEl = document.querySelector("#reportModalBody > div > div:nth-child(2)");
-            if (listEl) listEl.style.display = "none";
-            const titleEl = document.querySelector("#reportModalBody > div > div:nth-child(1)");
+            // Hide the zones selection list and other elements to leave only the printable table visible
+            const titleEl = document.getElementById("zonePrintTitle");
             if (titleEl) titleEl.style.display = "none";
+            const listEl = document.getElementById("zonePrintList");
+            if (listEl) listEl.style.display = "none";
+            const closeBtnEl = document.getElementById("zonePrintCloseBtn");
+            if (closeBtnEl) closeBtnEl.style.display = "none";
         }
 
         window.onclick = function(event) {
