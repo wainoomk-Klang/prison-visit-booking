@@ -141,15 +141,7 @@
                         <div id="stepDot3" class="absolute -left-[20px] w-[12px] h-[12px] rounded-full border-2 border-white bg-slate-300 ring-4 ring-slate-50"></div>
                         <div>
                             <h5 id="stepText3" class="text-sm font-semibold text-slate-400">ผลการอนุมัติคิว</h5>
-                            <p class="text-xs text-slate-400">ยืนยันผลการพิจารณา</p>
-                        </div>
-                    </div>
-                    <!-- Step 4 -->
-                    <div class="relative flex items-start gap-4">
-                        <div id="stepDot4" class="absolute -left-[20px] w-[12px] h-[12px] rounded-full border-2 border-white bg-slate-300 ring-4 ring-slate-50"></div>
-                        <div>
-                            <h5 id="stepText4" class="text-sm font-semibold text-slate-400">เข้าเยี่ยมผู้ต้องขัง</h5>
-                            <p class="text-xs text-slate-400">เดินทางมาเยี่ยมตามวันนัดหมาย</p>
+                            <p class="text-xs text-slate-400">ยืนยันผลการพิจารณา (อนุมัติ / ปฏิเสธ)</p>
                         </div>
                     </div>
                 </div>
@@ -319,7 +311,7 @@
                 statusIconBg.className = "p-4 rounded-full bg-emerald-100 text-success";
                 statusIcon.setAttribute("data-lucide", "check-circle-2");
                 statusTitle.innerText = "อนุมัติแล้ว";
-                statusDesc.innerText = "เอกสารหลักฐานผ่านเกณฑ์เรียบร้อย กรุณาเดินทางมาเยี่ยมชมตามเวลานัดหมาย";
+                statusDesc.innerText = "เอกสารหลักฐานผ่านเกณฑ์เรียบร้อย กรุณาเดินทางมาเยี่ยมตามเวลานัดหมาย";
                 step = 3;
             } else if (status === 'rejected') {
                 statusCard.className = "rounded-card p-6 shadow-sm text-center border bg-rose-50/50 border-danger/20 text-rose-700";
@@ -341,7 +333,7 @@
                 statusIcon.setAttribute("data-lucide", "award");
                 statusTitle.innerText = "จองคิวสำเร็จ";
                 statusDesc.innerText = "ยืนยันการจัดเตรียมสิทธิ์เยี่ยมเรียบร้อยแล้ว";
-                step = 4;
+                step = 3;
             } else { // 'pending' or default
                 statusCard.className = "rounded-card p-6 shadow-sm text-center border bg-amber-50/50 border-warning/20 text-amber-800";
                 statusIconBg.className = "p-4 rounded-full bg-amber-100 text-warning";
@@ -380,7 +372,7 @@
         }
 
         function updateTimeline(activeStep) {
-            for (let i = 1; i <= 4; i++) {
+            for (let i = 1; i <= 3; i++) {
                 const dot = document.getElementById(`stepDot${i}`);
                 const text = document.getElementById(`stepText${i}`);
                 
