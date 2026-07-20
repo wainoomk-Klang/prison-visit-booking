@@ -391,15 +391,17 @@
                 document.getElementById("inmateFullName").value = `${inmate.name} ${inmate.surname}`;
                 document.getElementById("inmateGrade").value = inmate.grade;
                 
+                disableInmateFields(false);
+                isCidVerified = true;
+
                 const detectedZone = String(inmate.zone || inmate["แดน"] || inmate.inmateZone || inmate["แดนคุมขัง"] || "").replace(/[^0-9]/g, "");
                 if (detectedZone && ["1", "2", "3", "4", "5", "6", "7", "8"].includes(detectedZone)) {
                     document.getElementById("inmateZone").value = detectedZone;
+                    document.getElementById("inmateZone").disabled = true; // Lock it so they don't have to select it
                 } else {
                     document.getElementById("inmateZone").value = "";
+                    document.getElementById("inmateZone").disabled = false; // Keep it enabled if not found
                 }
-                
-                disableInmateFields(false);
-                isCidVerified = true;
             }
         }
 
