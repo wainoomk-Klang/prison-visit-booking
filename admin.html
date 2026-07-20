@@ -766,7 +766,7 @@
                     <div style="text-align:center; margin-bottom:0.75rem;">
                         <h2 style="margin:0 0 0.2rem 0; font-size:1.25rem;">บัญชีรายชื่อผู้ต้องขังที่ผ่านการอนุมัติเยี่ยมญาติใกล้ชิดรอบพิเศษ</h2>
                         <h3 style="margin:0 0 0.2rem 0; font-size:1.1rem; color:#000;">ทัณฑสถานวัยหนุ่มกลาง (แดน ${zoneNum})</h3>
-                        <p style="margin:0; font-size:0.8rem; color:#444;">พิมพ์เมื่อ: ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })} น. (แผ่นสำหรับแดน ${zoneNum} ออฟไลน์)</p>
+                        <p style="margin:0; font-size:0.8rem; color:#444;">พิมพ์เมื่อ: ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })} น.</p>
                     </div>
                     
                     <table style="width:100%; border-collapse:collapse; font-size:10pt; line-height:1.2;">
@@ -782,19 +782,6 @@
                             ${rowsHtml}
                         </tbody>
                     </table>
-                    
-                    <div style="margin-top:2rem; display:flex; justify-content:space-between; font-size:9pt;" class="print-only">
-                        <div style="text-align:center; width:220px;">
-                            ลงชื่อ........................................................<br>
-                            (........................................................)<br>
-                            เจ้าหน้าที่ผู้ตรวจสอบคิวจอง
-                        </div>
-                        <div style="text-align:center; width:220px;">
-                            ลงชื่อ........................................................<br>
-                            (........................................................)<br>
-                            ผู้รับผิดชอบงานควบคุมแดน ${zoneNum}
-                        </div>
-                    </div>
                     
                     <div style="display:flex; justify-content:center; gap:0.5rem; margin-top:1.5rem;" class="no-print">
                         <button onclick="window.print()" class="btn btn-primary" style="width:auto; padding:0.6rem 1.5rem; background-color:#22c55e; border-color:#22c55e; display:inline-flex; align-items:center; gap:0.5rem; border-radius:6px; cursor:pointer;">
