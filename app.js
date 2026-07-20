@@ -56,11 +56,11 @@ if (!localStorage.getItem(STORAGE_SLOTS_KEY)) {
 
 // Fallback Mock Inmates Database (Matching user Excel spreadsheet format)
 const MOCK_INMATES = [
-    { inmateCode: "6911300978", name: "กิตติพันธ์", surname: "ทิพเสถียร", citizenId: "1468100000373", grade: "ชั้นต้องปรับปรุง" },
-    { inmateCode: "6911300977", name: "วุฒิเดช", surname: "ขำพุด", citizenId: "1460400061117", grade: "ชั้นต้องปรับปรุง" },
-    { inmateCode: "6911300975", name: "อภิวัฒน์", surname: "สมบัติหล้า", citizenId: "1407700009061", grade: "ชั้นดีมาก" },
-    { inmateCode: "6911300974", name: "สุชารัตน์", surname: "ศรีเมือง", citizenId: "1119902051313", grade: "ชั้นกลาง" },
-    { inmateCode: "6911300972", name: "อิทธิฤทธิ์", surname: "นาทันเลิศ", citizenId: "1460301248227", grade: "ชั้นต้องปรับปรุง" }
+    { inmateCode: "6911300978", name: "กิตติพันธ์", surname: "ทิพเสถียร", citizenId: "1468100000373", grade: "ชั้นต้องปรับปรุง", zone: "1" },
+    { inmateCode: "6911300977", name: "วุฒิเดช", surname: "ขำพุด", citizenId: "1460400061117", grade: "ชั้นต้องปรับปรุง", zone: "2" },
+    { inmateCode: "6911300975", name: "อภิวัฒน์", surname: "สมบัติหล้า", citizenId: "1407700009061", grade: "ชั้นดีมาก", zone: "1" },
+    { inmateCode: "6911300974", name: "สุชารัตน์", surname: "ศรีเมือง", citizenId: "1119902051313", grade: "ชั้นกลาง", zone: "3" },
+    { inmateCode: "6911300972", name: "อิทธิฤทธิ์", surname: "นาทันเลิศ", citizenId: "1460301248227", grade: "ชั้นต้องปรับปรุง", zone: "4" }
 ];
 
 async function searchInmateOnServer(searchKey) {
