@@ -80,12 +80,43 @@ function doGet(e) {
               citizenId: String(inmateData[i][2]).trim(),
               name: firstName,
               surname: lastName,
-              grade: String(inmateData[i][3]).trim() || "ชั้นกลาง"
+              grade: String(inmateData[i][6]).trim() || "ชั้นกลาง",
+              zone: String(inmateData[i][8]).trim() || ""
             }
           })).setMimeType(ContentService.MimeType.JSON);
         }
       }
       
+      return ContentService.createTextOutput(JSON.stringify({
+        status: "success",
+        found: false
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // ค้นหาสถานะการจองคิวรายบุคคลสำหรับญาติสืบค้น (ค้นหาทั้งแผ่นงานจากล่างขึ้นบน)
+    if (e.parameter.action === "check_booking") {
+      var searchKey = String(e.parameter.key).trim().replace(/\s+/g, "");
+      var sheet = ss.getSheets()[0];
+      var data = sheet.getDataRange().getValues();
+      
+      for (var i = data.length - 1; i >= 1; i--) {
+        if (String(data[i][1]).trim() === searchKey) {
+          var nameStr = String(data[i][2]);
+          return ContentService.createTextOutput(JSON.stringify({
+            status: "success",
+            found: true,
+            data: {
+              dateBooked: data[i][0],
+              inmateId: data[i][1],
+              inmateName: nameStr,
+              zone: data[i][3],
+              slotText: data[i][4],
+              driveFolderUrl: data[i][6],
+              status: data[i][7]
+            }
+          })).setMimeType(ContentService.MimeType.JSON);
+        }
+      }
       return ContentService.createTextOutput(JSON.stringify({
         status: "success",
         found: false
@@ -102,29 +133,39 @@ function doGet(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
     
-    // กรณีที่ 2: ดึงข้อมูลประวัติการจองทั้งหมดในระบบ (สำหรับหน้า Admin และเช็คผลคิว)
+    // กรณีที่ 2: ดึงข้อมูลประวัติการจองทั้งหมดในระบบ (สำหรับหน้า Admin และเช็คผลคิว - จำกัดล่าสุด 300 คิวเพื่อความเร็วสูงสุด)
     var sheet = ss.getSheets()[0]; // ดึงแผ่นงานหน้าแรก (ฐานข้อมูลการจอง)
-    var data = sheet.getDataRange().getValues();
+    var lastRow = sheet.getLastRow();
+    var startRow = Math.max(2, lastRow - 300); // โหลดเฉพาะ 300 รายการล่าสุด
+    var numRows = lastRow - startRow + 1;
     var bookings = [];
     
-    for (var i = 1; i < data.length; i++) {
-      var row = data[i];
-      var nameStr = String(row[2]);
+    if (numRows > 0) {
+      var range = sheet.getRange(startRow, 1, numRows, 9); // โหลด 9 คอลัมน์ (รวมคอลัมน์ JSON ของระบบหลังบ้าน)
+      var data = range.getValues();
       
-      bookings.push({
-        dateBooked: row[0],
-        inmateId: row[1],
-        inmateName: nameStr.split(" ").slice(1).join(" ") || nameStr,
-        inmateTitle: nameStr.split(" ")[0] || "",
-        inmateSurname: nameStr.split(" ").slice(-1)[0] || "",
-        zone: row[3],
-        slotText: row[4],
-        visitors: row[5],
-        driveFolderUrl: row[6],
-        status: row[7],
-        slot: getSlotCode(row[3], row[4])
-      });
+      for (var i = 0; i < data.length; i++) {
+        var row = data[i];
+        var nameStr = String(row[2]);
+        
+        bookings.push({
+          dateBooked: row[0],
+          inmateId: row[1],
+          inmateName: nameStr.split(" ").slice(1).join(" ") || nameStr,
+          inmateTitle: nameStr.split(" ")[0] || "",
+          inmateSurname: nameStr.split(" ").slice(-1)[0] || "",
+          zone: row[3],
+          slotText: row[4],
+          visitors: row[8] || row[5], // หากมีคอลัมน์ที่ 9 จะใช้ JSON ระบบ แต่ถ้าไม่มีจะดึงจากคอลัมน์ที่ 6
+          driveFolderUrl: row[6],
+          status: row[7],
+          slot: getSlotCode(row[3], row[4])
+        });
+      }
     }
+    
+    // เรียงคิวล่าสุดให้อยู่ด้านบนสุด (Sort descending)
+    bookings.reverse();
     
     return ContentService.createTextOutput(JSON.stringify({
       status: "success",
@@ -199,6 +240,14 @@ function doPost(e) {
       }
     });
 
+    // แปลงข้อมูลรายชื่อญาติทั้งหมดให้อยู่ในรูปแบบที่อ่านง่ายใน Google Sheets
+    var visitorsText = "";
+    if (data.visitors && data.visitors.length > 0) {
+      visitorsText = data.visitors.map(function(visitor, idx) {
+        return (idx + 1) + ". " + visitor.title + visitor.name + " " + visitor.surname + " (" + visitor.relation + ") โทร: " + visitor.tel;
+      }).join("\n");
+    }
+
     // บันทึกข้อมูลทั้งหมดลงสเปรดชีต
     sheet.appendRow([
       new Date(),
@@ -206,9 +255,10 @@ function doPost(e) {
       data.inmateFullName,
       data.zone,
       data.slotText,
-      JSON.stringify(data.visitors),
-      inmateFolder.getUrl(), // ลิงก์ตรงของโฟลเดอร์บน Google Drive
-      "pending" // สถานะเริ่มต้นเป็นรอตรวจสอบเอกสาร
+      visitorsText, // คอลัมน์ที่ 6 (F): ชื่อญาติทั้งหมดแบบอ่านง่ายจัดเรียงให้อัตโนมัติ
+      inmateFolder.getUrl(), // คอลัมน์ที่ 7 (G): ลิงก์ตรงของโฟลเดอร์บน Google Drive
+      "pending", // คอลัมน์ที่ 8 (H): สถานะเริ่มต้นเป็นรอตรวจสอบเอกสาร
+      JSON.stringify(data.visitors) // คอลัมน์ที่ 9 (I): ข้อมูล JSON ดิบสำหรับเว็บระบบหลังบ้านนำไปแสดงผล
     ]);
 
     return ContentService.createTextOutput(JSON.stringify({
