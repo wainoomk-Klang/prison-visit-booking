@@ -398,6 +398,7 @@
                 if (detectedZone && ["1", "2", "3", "4", "5", "6", "7", "8"].includes(detectedZone)) {
                     document.getElementById("inmateZone").value = detectedZone;
                     document.getElementById("inmateZone").disabled = true; // Lock it so they don't have to select it
+                    updateTimeSlotsGrid(); // Trigger slot grid update
                 } else {
                     document.getElementById("inmateZone").value = "";
                     document.getElementById("inmateZone").disabled = false; // Keep it enabled if not found
@@ -765,9 +766,15 @@
             const btnBack = document.querySelector("#step4 .btn-secondary");
             btnSubmit.disabled = true;
             btnBack.disabled = true;
-            btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งข้อมูลการจองเยี่ยม (ห้ามปิดหน้าจอนี้)...`;
+            btnSubmit.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งข้อมูลการจองเยี่ยม...`;
+
+            // Show full-screen loading modal
+            document.getElementById("loadingModal").style.display = "flex";
 
             const response = await uploadAndSaveBooking(bookingData, rawFiles);
+
+            // Hide full-screen loading modal
+            document.getElementById("loadingModal").style.display = "none";
 
             if (response.status === "success") {
                 alert("🎉 ส่งข้อมูลการจองเยี่ยมสำเร็จเรียบร้อย!");
@@ -797,6 +804,18 @@
             <h3 style="margin: 0; font-family: 'Prompt', sans-serif; color: var(--text-light); font-size: 1.35rem;">ไม่สามารถลงทะเบียนจองสิทธิ์ได้</h3>
             <p id="blockMessage" style="margin-top: 1rem; font-size: 0.95rem; line-height: 1.6; color: var(--text-muted-light); text-align: left;"></p>
             <button onclick="closeBlockModal()" class="btn btn-primary" style="margin-top: 1.5rem; background-color: var(--danger); border-color: var(--danger); width: auto; padding: 0.6rem 2.5rem; font-weight: bold; border-radius: 6px;">ตกลง</button>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div class="modal" id="loadingModal">
+        <div class="modal-content" style="max-width: 450px; text-align: center; border-top: 5px solid var(--primary-color);">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size: 4rem; color: var(--primary-color); margin-bottom: 1.5rem;"></i>
+            <h3 style="margin: 0; font-family: 'Prompt', sans-serif; color: var(--text-light); font-size: 1.35rem;">กำลังส่งข้อมูลลงทะเบียน</h3>
+            <p style="margin-top: 1rem; font-size: 0.95rem; line-height: 1.6; color: var(--text-muted-light);">
+                ระบบกำลังบันทึกข้อมูลและอัปโหลดไฟล์เอกสารเข้าคลาวด์ไดรฟ์<br>
+                <strong style="color: var(--danger); font-size: 1.05rem; display: block; margin-top: 0.5rem;">กรุณารอสักครู่ และห้ามปิดหน้าจอนี้จนกว่าจะเสร็จสิ้น!</strong>
+            </p>
         </div>
     </div>
 </body>
