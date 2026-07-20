@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตรวจสอบสถานะการจองเยี่ยม - ทัณฑสถานวัยหนุ่มกลาง</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1a56db',
+                        'primary-hover': '#1e429f',
+                        success: '#22c55e',
+                        warning: '#eab308',
+                        danger: '#ef4444',
+                        info: '#3b82f6',
+                        muted: '#64748b'
+                    },
+                    borderRadius: {
+                        'card': '18px'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: #f8fafc;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between">
+
+    <!-- Header Section -->
+    <header class="bg-gradient-to-r from-blue-900 to-indigo-900 text-white py-6 px-4 text-center shadow-md">
+        <div class="max-w-md mx-auto flex flex-col items-center gap-2">
+            <img src="logo.png" alt="โลโก้ทัณฑสถานวัยหนุ่มกลาง" class="w-20 h-20 filter drop-shadow-md">
+            <h1 class="text-xl font-bold mt-2">ทัณฑสถานวัยหนุ่มกลาง</h1>
+            <p class="text-xs text-blue-200">กรมราชทัณฑ์ กระทรวงยุติธรรม</p>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-grow max-w-md w-full mx-auto px-4 py-8">
+        
+        <!-- Search Card -->
+        <div id="searchCard" class="bg-white rounded-card shadow-sm border border-slate-100 p-6 transition-all duration-300">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-3 bg-blue-50 rounded-full text-primary">
+                    <i data-lucide="search" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800">ตรวจสอบสถานะการจองเยี่ยม</h2>
+                    <p class="text-xs text-slate-500">กรอกเลขบัตรประชาชนผู้ต้องขังเพื่อเช็คคิวและสถานะ</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1" for="searchCid">
+                        เลขบัตรประชาชนผู้ต้องขัง (13 หลัก)
+                    </label>
+                    <input type="text" id="searchCid" 
+                           class="w-full px-4 py-3.5 text-lg border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-300 tracking-wider" 
+                           placeholder="กรอกเลขบัตรประชาชนผู้ต้องขัง (13 หลัก)" 
+                           maxlength="13" 
+                           inputmode="numeric">
+                </div>
+
+                <button onclick="checkStatus()" 
+                        class="w-full bg-primary hover:bg-primary-hover text-white font-semibold py-3.5 rounded-xl shadow-md shadow-primary/10 transition-all duration-200 flex items-center justify-center gap-2 text-base">
+                    <i data-lucide="search" class="w-5 h-5"></i>
+                    ตรวจสอบสถานะ
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="hidden text-center py-12">
+            <div class="inline-block animate-spin text-primary mb-3">
+                <i data-lucide="loader-2" class="w-8 h-8"></i>
+            </div>
+            <p class="text-sm text-slate-500 font-medium">กำลังค้นหาข้อมูลการลงทะเบียน...</p>
+        </div>
+
+        <!-- Result Area (Cards Grid) -->
+        <div id="resultArea" class="hidden space-y-4 mt-6 fade-in">
+            
+            <!-- 1. Status Card -->
+            <div id="statusCard" class="rounded-card p-6 shadow-sm text-center border">
+                <div class="flex justify-center mb-3">
+                    <div id="statusIconBg" class="p-4 rounded-full">
+                        <i id="statusIcon" class="w-12 h-12"></i>
+                    </div>
+                </div>
+                <h3 id="statusTitle" class="text-xl font-bold mb-2"></h3>
+                <p id="statusDesc" class="text-sm leading-relaxed"></p>
+            </div>
+
+            <!-- 2. Timeline Card -->
+            <div class="bg-white rounded-card p-6 shadow-sm border border-slate-100">
+                <h4 class="text-sm font-bold text-slate-700 mb-6 flex items-center gap-2">
+                    <i data-lucide="git-commit" class="w-4 h-4 text-primary"></i>
+                    ขั้นตอนการจองสิทธิ์เยี่ยม
+                </h4>
+                
+                <div class="relative pl-6 space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100">
+                    <!-- Step 1 -->
+                    <div class="relative flex items-start gap-4">
+                        <div id="stepDot1" class="absolute -left-[20px] w-[12px] h-[12px] rounded-full border-2 border-white bg-slate-300 ring-4 ring-slate-50"></div>
+                        <div>
+                            <h5 id="stepText1" class="text-sm font-semibold text-slate-400">ลงทะเบียนจองสิทธิ์</h5>
+                            <p class="text-xs text-slate-400">ส่งคำขอจองเยี่ยมเข้าระบบ</p>
+                        </div>
+                    </div>
+                    <!-- Step 2 -->
+                    <div class="relative flex items-start gap-4">
+                        <div id="stepDot2" class="absolute -left-[20px] w-[12px] h-[12px] rounded-full border-2 border-white bg-slate-300 ring-4 ring-slate-50"></div>
+                        <div>
+                            <h5 id="stepText2" class="text-sm font-semibold text-slate-400">ตรวจสอบเอกสารหลักฐาน</h5>
+                            <p class="text-xs text-slate-400">เจ้าหน้าที่ตรวจความถูกต้องความสัมพันธ์และรูปเอกสาร</p>
+                        </div>
+                    </div>
+                    <!-- Step 3 -->
+                    <div class="relative flex items-start gap-4">
+                        <div id="stepDot3" class="absolute -left-[20px] w-[12px] h-[12px] rounded-full border-2 border-white bg-slate-300 ring-4 ring-slate-50"></div>
+                        <div>
+                            <h5 id="stepText3" class="text-sm font-semibold text-slate-400">ผลการอนุมัติคิว</h5>
+                            <p class="text-xs text-slate-400">ยืนยันผลการพิจารณา</p>
+                        </div>
+                    </div>
+                    <!-- Step 4 -->
+                    <div class="relative flex items-start gap-4">
+                        <div id="stepDot4" class="absolute -left-[20px] w-[12px] h-[12px] rounded-full border-2 border-white bg-slate-300 ring-4 ring-slate-50"></div>
+                        <div>
+                            <h5 id="stepText4" class="text-sm font-semibold text-slate-400">เข้าเยี่ยมผู้ต้องขัง</h5>
+                            <p class="text-xs text-slate-400">เดินทางมาเยี่ยมตามวันนัดหมาย</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Inmate Info Card -->
+            <div class="bg-white rounded-card p-5 shadow-sm border border-slate-100 flex items-center gap-4">
+                <div class="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                    <i data-lucide="user" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 block font-medium">ผู้ต้องขัง</span>
+                    <strong id="inmateName" class="text-base text-slate-800"></strong>
+                </div>
+            </div>
+
+            <!-- 4. Visit Appointment Card -->
+            <div class="bg-white rounded-card p-5 shadow-sm border border-slate-100 flex items-center gap-4">
+                <div class="p-3 bg-emerald-50 text-emerald-600 rounded-2xl">
+                    <i data-lucide="calendar" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 block font-medium">วันและรอบเวลาเยี่ยม</span>
+                    <strong id="visitTime" class="text-sm text-slate-800 leading-snug block"></strong>
+                </div>
+            </div>
+
+            <!-- 5. Remarks/Details Card -->
+            <div id="remarkCard" class="bg-white rounded-card p-5 shadow-sm border border-slate-100 flex items-start gap-4">
+                <div class="p-3 bg-amber-50 text-amber-600 rounded-2xl mt-0.5">
+                    <i data-lucide="file-text" class="w-6 h-6"></i>
+                </div>
+                <div class="flex-1">
+                    <span class="text-xs text-slate-400 block font-medium">รายละเอียด / ข้อความจากเจ้าหน้าที่</span>
+                    <p id="remarkText" class="text-sm text-slate-600 mt-1 leading-relaxed"></p>
+                </div>
+            </div>
+
+            <!-- 6. Reference ID & Updated Timestamp -->
+            <div class="bg-slate-100/70 rounded-card p-5 border border-slate-200/50 flex flex-col gap-2">
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-400 font-medium">เลขรหัสจองอ้างอิง (REF ID):</span>
+                    <strong id="refId" class="text-slate-700 font-bold uppercase tracking-wider"></strong>
+                </div>
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-400 font-medium">อัปเดตข้อมูลล่าสุด:</span>
+                    <span id="lastUpdated" class="text-slate-600"></span>
+                </div>
+            </div>
+
+            <!-- 7. Bottom Actions -->
+            <div class="space-y-2 pt-2">
+                <button onclick="resetSearch()" 
+                        class="w-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold py-3.5 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    ตรวจสอบใหม่
+                </button>
+                <a href="index.html" 
+                   class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-3.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-center">
+                    <i data-lucide="home" class="w-4 h-4"></i>
+                    กลับหน้าหลัก
+                </a>
+                <a href="tel:021234567" 
+                   class="w-full bg-blue-50 hover:bg-blue-100 text-primary font-semibold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 text-center">
+                    <i data-lucide="phone" class="w-4 h-4"></i>
+                    ติดต่อเจ้าหน้าที่ทัณฑสถาน
+                </a>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-500 py-6 px-4 text-center text-xs border-t border-slate-800">
+        <p>© 2026 ทัณฑสถานวัยหนุ่มกลาง กรมราชทัณฑ์ | ระบบลงทะเบียนจองสิทธิ์เยี่ยมญาติใกล้ชิด</p>
+    </footer>
+
+    <!-- App Engine Script -->
+    <script src="app.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+        });
+
+        function resetSearch() {
+            document.getElementById("searchCid").value = "";
+            document.getElementById("searchCard").classList.remove("hidden");
+            document.getElementById("resultArea").classList.add("hidden");
+            document.getElementById("loadingIndicator").classList.add("hidden");
+        }
+
+        async function checkStatus() {
+            const cid = document.getElementById("searchCid").value.trim();
+            const searchCard = document.getElementById("searchCard");
+            const loadingIndicator = document.getElementById("loadingIndicator");
+            const resultArea = document.getElementById("resultArea");
+            
+            if (cid.length !== 13 || isNaN(cid)) {
+                alert("กรุณากรอกเลขบัตรประชาชนผู้ต้องขัง 13 หลักให้ถูกต้อง");
+                return;
+            }
+
+            // Hide search, show loading
+            searchCard.classList.add("hidden");
+            loadingIndicator.classList.remove("hidden");
+            resultArea.classList.add("hidden");
+
+            try {
+                const response = await checkBookingOnServer(cid);
+                loadingIndicator.classList.add("hidden");
+
+                if (response.status !== "success" || !response.found) {
+                    // Show error state in status card
+                    resultArea.classList.remove("hidden");
+                    renderErrorState(cid);
+                    lucide.createIcons();
+                    return;
+                }
+
+                const booking = response.data;
+                renderBookingData(booking);
+                resultArea.classList.remove("hidden");
+                lucide.createIcons();
+
+            } catch (e) {
+                console.error(e);
+                loadingIndicator.classList.add("hidden");
+                searchCard.classList.remove("hidden");
+                alert("เกิดข้อผิดพลาดในการค้นหาข้อมูล กรุณาลองอีกครั้งภายหลัง");
+            }
+        }
+
+        function renderErrorState(cid) {
+            // Status Card (Error)
+            const statusCard = document.getElementById("statusCard");
+            statusCard.className = "rounded-card p-6 shadow-sm text-center border bg-rose-50/50 border-danger/20 text-danger";
+            
+            document.getElementById("statusIconBg").className = "p-4 rounded-full bg-rose-100 text-danger";
+            document.getElementById("statusIcon").setAttribute("data-lucide", "alert-circle");
+            document.getElementById("statusTitle").innerText = "ไม่พบข้อมูลการลงทะเบียน";
+            document.getElementById("statusDesc").innerText = `ไม่พบรายการจองสิทธิ์เยี่ยมสำหรับเลขประจำตัวประชาชนนี้ กรุณาลงทะเบียนจองสิทธิ์ก่อน`;
+
+            // Reset other info
+            document.getElementById("inmateName").innerText = "-";
+            document.getElementById("visitTime").innerText = "-";
+            document.getElementById("remarkText").innerText = "ไม่พบข้อมูล กรุณาลงทะเบียนหรือติดต่อเจ้าหน้าที่หากมั่นใจว่าได้ทำรายการลงทะเบียนเรียบร้อยแล้ว";
+            document.getElementById("refId").innerText = "-";
+            document.getElementById("lastUpdated").innerText = "-";
+
+            // Reset Timeline Dots (All greyed out)
+            updateTimeline(0);
+        }
+
+        function renderBookingData(booking) {
+            const statusCard = document.getElementById("statusCard");
+            const statusIconBg = document.getElementById("statusIconBg");
+            const statusIcon = document.getElementById("statusIcon");
+            const statusTitle = document.getElementById("statusTitle");
+            const statusDesc = document.getElementById("statusDesc");
+
+            let status = (booking.status || 'pending').toLowerCase();
+            let step = 2; // Default is reviewing document step
+
+            if (status === 'approved') {
+                statusCard.className = "rounded-card p-6 shadow-sm text-center border bg-emerald-50/50 border-success/20 text-emerald-700";
+                statusIconBg.className = "p-4 rounded-full bg-emerald-100 text-success";
+                statusIcon.setAttribute("data-lucide", "check-circle-2");
+                statusTitle.innerText = "อนุมัติแล้ว";
+                statusDesc.innerText = "เอกสารหลักฐานผ่านเกณฑ์เรียบร้อย กรุณาเดินทางมาเยี่ยมชมตามเวลานัดหมาย";
+                step = 3;
+            } else if (status === 'rejected') {
+                statusCard.className = "rounded-card p-6 shadow-sm text-center border bg-rose-50/50 border-danger/20 text-rose-700";
+                statusIconBg.className = "p-4 rounded-full bg-rose-100 text-danger";
+                statusIcon.setAttribute("data-lucide", "x-circle");
+                statusTitle.innerText = "ไม่ผ่านการอนุมัติ";
+                statusDesc.innerText = "เอกสารไม่สมบูรณ์ หรือความสัมพันธ์ไม่ตรงตามเกณฑ์ กรุณาจองใหม่";
+                step = 3;
+            } else if (status === 'cancelled') {
+                statusCard.className = "rounded-card p-6 shadow-sm text-center border bg-slate-50 border-slate-200 text-slate-700";
+                statusIconBg.className = "p-4 rounded-full bg-slate-200 text-slate-600";
+                statusIcon.setAttribute("data-lucide", "slash");
+                statusTitle.innerText = "ยกเลิกคิวแล้ว";
+                statusDesc.innerText = "คิวจองเยี่ยมนี้ถูกยกเลิกเนื่องจากเจ้าหน้าที่หรือการยื่นขอยกเลิก";
+                step = 3;
+            } else if (status === 'success') {
+                statusCard.className = "rounded-card p-6 shadow-sm text-center border bg-blue-50/50 border-info/20 text-blue-700";
+                statusIconBg.className = "p-4 rounded-full bg-blue-100 text-info";
+                statusIcon.setAttribute("data-lucide", "award");
+                statusTitle.innerText = "จองคิวสำเร็จ";
+                statusDesc.innerText = "ยืนยันการจัดเตรียมสิทธิ์เยี่ยมเรียบร้อยแล้ว";
+                step = 4;
+            } else { // 'pending' or default
+                statusCard.className = "rounded-card p-6 shadow-sm text-center border bg-amber-50/50 border-warning/20 text-amber-800";
+                statusIconBg.className = "p-4 rounded-full bg-amber-100 text-warning";
+                statusIcon.setAttribute("data-lucide", "clock");
+                statusTitle.innerText = "อยู่ระหว่างตรวจสอบ";
+                statusDesc.innerText = "เจ้าหน้าที่กำลังเร่งพิจารณาเอกสารของท่าน กรุณาเช็คใหม่อีกครั้งในภายหลัง";
+                step = 2;
+            }
+
+            // Fill cards
+            document.getElementById("inmateName").innerText = booking.inmateFullName || booking.inmateName || "-";
+            document.getElementById("visitTime").innerText = booking.slotText || "-";
+            
+            // Set message
+            let msg = booking.remarks || "";
+            if (!msg) {
+                if (status === 'approved') msg = "เอกสารหลักฐานผ่านเกณฑ์เรียบร้อย กรุณาเดินทางมาถึงก่อนเวลาอย่างน้อย 30 นาที และกรุณาแต่งกายสุภาพเรียบร้อย (งดเสื้อยืดกางเกงยีนส์รัดรูป)";
+                else if (status === 'rejected') msg = "เอกสารหลักฐานไม่สมบูรณ์ หรือความสัมพันธ์ไม่ตรงเงื่อนไข กรุณาติดต่อตรวจสอบหรือทำการจองลงทะเบียนใหม่อีกครั้ง";
+                else msg = "ระบบได้รับข้อมูลของคุณแล้ว กำลังอยู่ในกระบวนการตรวจสอบเอกสารรูปภาพ บัตรประชาชน และทะเบียนบ้าน";
+            }
+            document.getElementById("remarkText").innerText = msg;
+
+            // Ref IDs and updated date
+            document.getElementById("refId").innerText = String(booking.inmateId).slice(-6) || "REF-" + Math.floor(Math.random()*9000 + 1000);
+            
+            let updatedDate = "-";
+            if (booking.dateBooked) {
+                updatedDate = new Date(booking.dateBooked).toLocaleString('th-TH', { 
+                    year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+                }) + " น.";
+            }
+            document.getElementById("lastUpdated").innerText = updatedDate;
+
+            // Set Timeline Active state
+            updateTimeline(step);
+        }
+
+        function updateTimeline(activeStep) {
+            for (let i = 1; i <= 4; i++) {
+                const dot = document.getElementById(`stepDot${i}`);
+                const text = document.getElementById(`stepText${i}`);
+                
+                if (i <= activeStep) {
+                    dot.className = "absolute -left-[20px] w-[12px] h-[12px] rounded-full border-2 border-white bg-primary ring-4 ring-blue-100";
+                    text.className = "text-sm font-bold text-slate-800";
+                } else {
+                    dot.className = "absolute -left-[20px] w-[12px] h-[12px] rounded-full border-2 border-white bg-slate-300 ring-4 ring-slate-50";
+                    text.className = "text-sm font-semibold text-slate-400";
+                }
+            }
+        }
+    </script>
+</body>
+</html>
