@@ -141,15 +141,7 @@
                         <div id="stepDot3" class="absolute -left-[20px] w-[12px] h-[12px] rounded-full border-2 border-white bg-slate-300 ring-4 ring-slate-50"></div>
                         <div>
                             <h5 id="stepText3" class="text-sm font-semibold text-slate-400">ผลการอนุมัติคิว</h5>
-                            <p class="text-xs text-slate-400">ยืนยันผลการพิจารณา</p>
-                        </div>
-                    </div>
-                    <!-- Step 4 -->
-                    <div class="relative flex items-start gap-4">
-                        <div id="stepDot4" class="absolute -left-[20px] w-[12px] h-[12px] rounded-full border-2 border-white bg-slate-300 ring-4 ring-slate-50"></div>
-                        <div>
-                            <h5 id="stepText4" class="text-sm font-semibold text-slate-400">เข้าเยี่ยมผู้ต้องขัง</h5>
-                            <p class="text-xs text-slate-400">เดินทางมาเยี่ยมตามวันนัดหมาย</p>
+                            <p class="text-xs text-slate-400">ยืนยันผลการพิจารณา (อนุมัติ / ปฏิเสธ)</p>
                         </div>
                     </div>
                 </div>
@@ -313,14 +305,16 @@
 
             let status = (booking.status || 'pending').toLowerCase();
             let step = 2; // Default is reviewing document step
+            let statusColor = 'warning';
 
             if (status === 'approved') {
                 statusCard.className = "rounded-card p-6 shadow-sm text-center border bg-emerald-50/50 border-success/20 text-emerald-700";
                 statusIconBg.className = "p-4 rounded-full bg-emerald-100 text-success";
                 statusIcon.setAttribute("data-lucide", "check-circle-2");
                 statusTitle.innerText = "อนุมัติแล้ว";
-                statusDesc.innerText = "เอกสารหลักฐานผ่านเกณฑ์เรียบร้อย กรุณาเดินทางมาเยี่ยมชมตามเวลานัดหมาย";
+                statusDesc.innerText = "เอกสารหลักฐานผ่านเกณฑ์เรียบร้อย กรุณาเดินทางมาเยี่ยมตามเวลานัดหมาย";
                 step = 3;
+                statusColor = 'success';
             } else if (status === 'rejected') {
                 statusCard.className = "rounded-card p-6 shadow-sm text-center border bg-rose-50/50 border-danger/20 text-rose-700";
                 statusIconBg.className = "p-4 rounded-full bg-rose-100 text-danger";
@@ -328,6 +322,7 @@
                 statusTitle.innerText = "ไม่ผ่านการอนุมัติ";
                 statusDesc.innerText = "เอกสารไม่สมบูรณ์ หรือความสัมพันธ์ไม่ตรงตามเกณฑ์ กรุณาจองใหม่";
                 step = 3;
+                statusColor = 'danger';
             } else if (status === 'cancelled') {
                 statusCard.className = "rounded-card p-6 shadow-sm text-center border bg-slate-50 border-slate-200 text-slate-700";
                 statusIconBg.className = "p-4 rounded-full bg-slate-200 text-slate-600";
@@ -335,13 +330,15 @@
                 statusTitle.innerText = "ยกเลิกคิวแล้ว";
                 statusDesc.innerText = "คิวจองเยี่ยมนี้ถูกยกเลิกเนื่องจากเจ้าหน้าที่หรือการยื่นขอยกเลิก";
                 step = 3;
+                statusColor = 'muted';
             } else if (status === 'success') {
                 statusCard.className = "rounded-card p-6 shadow-sm text-center border bg-blue-50/50 border-info/20 text-blue-700";
                 statusIconBg.className = "p-4 rounded-full bg-blue-100 text-info";
                 statusIcon.setAttribute("data-lucide", "award");
                 statusTitle.innerText = "จองคิวสำเร็จ";
                 statusDesc.innerText = "ยืนยันการจัดเตรียมสิทธิ์เยี่ยมเรียบร้อยแล้ว";
-                step = 4;
+                step = 3;
+                statusColor = 'info';
             } else { // 'pending' or default
                 statusCard.className = "rounded-card p-6 shadow-sm text-center border bg-amber-50/50 border-warning/20 text-amber-800";
                 statusIconBg.className = "p-4 rounded-full bg-amber-100 text-warning";
@@ -349,6 +346,7 @@
                 statusTitle.innerText = "อยู่ระหว่างตรวจสอบ";
                 statusDesc.innerText = "เจ้าหน้าที่กำลังเร่งพิจารณาเอกสารของท่าน กรุณาเช็คใหม่อีกครั้งในภายหลัง";
                 step = 2;
+                statusColor = 'warning';
             }
 
             // Fill cards
@@ -376,18 +374,44 @@
             document.getElementById("lastUpdated").innerText = updatedDate;
 
             // Set Timeline Active state
-            updateTimeline(step);
+            updateTimeline(step, statusColor);
         }
 
-        function updateTimeline(activeStep) {
-            for (let i = 1; i <= 4; i++) {
+        function updateTimeline(activeStep, statusColor) {
+            for (let i = 1; i <= 3; i++) {
                 const dot = document.getElementById(`stepDot${i}`);
                 const text = document.getElementById(`stepText${i}`);
                 
-                if (i <= activeStep) {
+                if (i < activeStep) {
+                    // Past completed steps (always blue)
                     dot.className = "absolute -left-[20px] w-[12px] h-[12px] rounded-full border-2 border-white bg-primary ring-4 ring-blue-100";
                     text.className = "text-sm font-bold text-slate-800";
+                } else if (i === activeStep) {
+                    // Current step with dynamic status color
+                    let dotColorClass = "bg-primary ring-blue-100";
+                    let textColorClass = "text-slate-800 font-bold";
+                    
+                    if (statusColor === 'success') {
+                        dotColorClass = "bg-success ring-emerald-100";
+                        textColorClass = "text-success font-bold";
+                    } else if (statusColor === 'danger') {
+                        dotColorClass = "bg-danger ring-rose-100";
+                        textColorClass = "text-danger font-bold";
+                    } else if (statusColor === 'warning') {
+                        dotColorClass = "bg-warning ring-amber-100";
+                        textColorClass = "text-amber-600 font-bold";
+                    } else if (statusColor === 'muted') {
+                        dotColorClass = "bg-slate-400 ring-slate-100";
+                        textColorClass = "text-slate-500 font-bold";
+                    } else if (statusColor === 'info') {
+                        dotColorClass = "bg-info ring-blue-100";
+                        textColorClass = "text-info font-bold";
+                    }
+                    
+                    dot.className = `absolute -left-[20px] w-[12px] h-[12px] rounded-full border-2 border-white ${dotColorClass}`;
+                    text.className = `text-sm ${textColorClass}`;
                 } else {
+                    // Future steps
                     dot.className = "absolute -left-[20px] w-[12px] h-[12px] rounded-full border-2 border-white bg-slate-300 ring-4 ring-slate-50";
                     text.className = "text-sm font-semibold text-slate-400";
                 }
