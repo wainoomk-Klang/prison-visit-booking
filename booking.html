@@ -493,7 +493,7 @@
 
         function addVisitorForm() {
             if (visitorCount >= 5) {
-                alert("สามารถลงทะเบียนผู้เข้าเยี่ยมได้สูงสุด 5 ท่านเท่านั้น");
+                showCustomAlert("แจ้งเตือน", "สามารถลงทะเบียนผู้เข้าเยี่ยมได้สูงสุด 5 ท่านเท่านั้น", "warning");
                 return;
             }
             
@@ -666,7 +666,7 @@
                 const grade = document.getElementById("inmateGrade").value;
 
                 if (!isCidVerified || !doc || !zone || !grade) {
-                    alert("กรุณากรอกข้อมูลผู้ต้องขังและอัปโหลดไฟล์หลักฐานความสัมพันธ์ให้ครบถ้วนก่อนตรวจสอบสิทธิ์");
+                    showCustomAlert("กรุณากรอกข้อมูลให้ครบถ้วน", "กรุณากรอกข้อมูลผู้ต้องขังและอัปโหลดไฟล์หลักฐานความสัมพันธ์ให้ครบถ้วนก่อนไปขั้นตอนถัดไป", "warning");
                     return;
                 }
                 updateTimeSlotsGrid();
@@ -777,10 +777,11 @@
             document.getElementById("loadingModal").style.display = "none";
 
             if (response.status === "success") {
-                alert("🎉 ส่งข้อมูลการจองเยี่ยมสำเร็จเรียบร้อย!");
-                window.location.href = "index.html";
+                showCustomAlert("ส่งข้อมูลสำเร็จ", "ส่งข้อมูลการจองเยี่ยมสำเร็จเรียบร้อยแล้วครับ!", "success", () => {
+                    window.location.href = "index.html";
+                });
             } else {
-                alert("❌ ลงทะเบียนล้มเหลว: " + response.message);
+                showCustomAlert("ลงทะเบียนล้มเหลว", response.message, "danger");
                 btnSubmit.disabled = false;
                 btnBack.disabled = false;
                 btnSubmit.innerHTML = `<i class="fa-solid fa-paper-plane"></i> ยืนยันการส่งข้อมูลการจองเยี่ยม`;
@@ -794,6 +795,51 @@
         function closeBlockModal() {
             document.getElementById("blockModal").style.display = "none";
             window.location.href = "index.html"; // เด้งกลับหน้าหลักทันที
+        }
+
+        function showCustomAlert(title, message, type = 'success', callback = null) {
+            const modal = document.getElementById("customAlertModal");
+            const modalContent = document.getElementById("customAlertContent");
+            const icon = document.getElementById("customAlertIcon");
+            const titleEl = document.getElementById("customAlertTitle");
+            const messageEl = document.getElementById("customAlertMessage");
+            const btn = document.getElementById("customAlertBtn");
+
+            titleEl.innerText = title;
+            messageEl.innerHTML = message;
+
+            if (type === 'success') {
+                modalContent.style.borderTop = "5px solid var(--success)";
+                icon.className = "fa-solid fa-circle-check";
+                icon.style.color = "var(--success)";
+                btn.style.backgroundColor = "var(--success)";
+                btn.style.borderColor = "var(--success)";
+            } else if (type === 'danger') {
+                modalContent.style.borderTop = "5px solid var(--danger)";
+                icon.className = "fa-solid fa-circle-xmark";
+                icon.style.color = "var(--danger)";
+                btn.style.backgroundColor = "var(--danger)";
+                btn.style.borderColor = "var(--danger)";
+            } else if (type === 'warning') {
+                modalContent.style.borderTop = "5px solid var(--warning)";
+                icon.className = "fa-solid fa-circle-exclamation";
+                icon.style.color = "var(--warning)";
+                btn.style.backgroundColor = "var(--warning)";
+                btn.style.borderColor = "var(--warning)";
+            } else {
+                modalContent.style.borderTop = "5px solid var(--primary-color)";
+                icon.className = "fa-solid fa-circle-info";
+                icon.style.color = "var(--primary-color)";
+                btn.style.backgroundColor = "var(--primary-color)";
+                btn.style.borderColor = "var(--primary-color)";
+            }
+
+            btn.onclick = function() {
+                modal.style.display = "none";
+                if (callback) callback();
+            };
+
+            modal.style.display = "flex";
         }
     </script>
 
@@ -816,6 +862,16 @@
                 ระบบกำลังบันทึกข้อมูลและอัปโหลดไฟล์เอกสารเข้าคลาวด์ไดรฟ์<br>
                 <strong style="color: var(--danger); font-size: 1.05rem; display: block; margin-top: 0.5rem;">กรุณารอสักครู่ และห้ามปิดหน้าจอนี้จนกว่าจะเสร็จสิ้น!</strong>
             </p>
+        </div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div class="modal" id="customAlertModal">
+        <div class="modal-content" id="customAlertContent" style="max-width: 450px; text-align: center;">
+            <i class="fa-solid fa-circle-check" id="customAlertIcon" style="font-size: 4rem; margin-bottom: 1rem;"></i>
+            <h3 id="customAlertTitle" style="margin: 0; font-family: 'Prompt', sans-serif; color: var(--text-light); font-size: 1.35rem;">แจ้งเตือน</h3>
+            <p id="customAlertMessage" style="margin-top: 1rem; font-size: 0.95rem; line-height: 1.6; color: var(--text-muted-light);"></p>
+            <button id="customAlertBtn" class="btn btn-primary" style="margin-top: 1.5rem; width: auto; padding: 0.6rem 2.5rem; font-weight: bold; border-radius: 6px;">ตกลง</button>
         </div>
     </div>
 </body>
