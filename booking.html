@@ -459,7 +459,7 @@
                 const bookedCount = slots[key] || 0;
                 const limit = 300;
                 const isFull = bookedCount >= limit;
-                const label = opt === "am" ? "รอบเช้า (09:00 - 12:00 น.)" : "รอบบ่าย (13:00 - 16:00 น.)";
+                const label = opt === "am" ? "รอบเช้า (08.30 - 11.00 น.)" : "รอบบ่าย (12.30 - 15.00 น.)";
                 
                 html += `
                     <div class="time-slot ${isFull ? 'disabled' : ''}" id="slot_${key}" onclick="selectSlot('${key}', '${zoneConf.date} ${label}', ${isFull})">

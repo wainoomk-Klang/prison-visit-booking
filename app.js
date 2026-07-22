@@ -14,7 +14,7 @@ function isProduction() {
 const INITIAL_SLOTS = {
     "zone1_am": 2,
     "zone1_pm": 15,
-    "zone2_am": 300, // Full
+    "zone2_am": 10,
     "zone2_pm": 20,
     "zone3_am": 12,
     "zone3_pm": 9,
@@ -22,7 +22,7 @@ const INITIAL_SLOTS = {
     "zone4_pm": 11,
     "zone5_am": 5,
     "zone6_am": 1,
-    "zone7_pm": 300, // Full
+    "zone7_pm": 8,
     "zone8_pm": 0
 };
 
@@ -150,8 +150,6 @@ async function getSlots() {
                     slots[b.slot] = (slots[b.slot] || 0) + 1;
                 }
             });
-            // 🧪 คำสั่งจำลองสำหรับทดสอบ: บังคับให้ แดน 1 รอบเช้า เต็ม (300/300) ทันที
-            slots["zone1_am"] = 300;
             
             return slots;
         } catch (e) {
