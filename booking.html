@@ -368,8 +368,7 @@
                 document.getElementById("inmateFullName").value = `${inmate.name} ${inmate.surname}`;
                 document.getElementById("inmateGrade").value = inmate.grade;
             } else if ((inmate.disciplinedDetails && inmate.disciplinedDetails !== "" && inmate.disciplinedDetails !== "ไม่ใช่" && inmate.disciplinedDetails !== "-") || inmate.isDisciplined || inmate.grade === "กระทำผิดวินัย" || inmate.grade === "ผิดวินัย" || inmate.status === "disciplined") {
-                const violationInfo = inmate.disciplinedDetails || "พบประวัติกระทำผิดวินัยในฐานข้อมูล";
-                const msg = `ผู้ต้องขัง <strong>${inmate.name} ${inmate.surname}</strong> (ระดับชั้น: ${inmate.grade || "ไม่ระบุ"}) ไม่สามารถจองเยี่ยมญาติใกล้ชิดได้ เนื่องจากพบข้อมูลกระทำผิดวินัย:<br><br><span style="color:var(--danger); font-weight:bold; display:block; text-align:left; background-color:rgba(0,0,0,0.02); padding:0.75rem; border-radius:6px; border-left:4px solid var(--danger); font-size:0.9rem;">${violationInfo}</span><br><strong style="color:var(--warning); display:block; text-align:center;">"หมายเหตุ ข้อมูลและหลักเกณฑ์ทั้งหมด ใช้แค่การจองเยี่ยมญาติใกล้ชิด ในครั้งนี้ เท่านั้น"</strong>`;
+                const msg = `ผู้ต้องขัง <strong>${inmate.name} ${inmate.surname}</strong> (ระดับชั้น: ${inmate.grade || "ไม่ระบุ"}) กระทำผิดวินัย ย้อนหลัง 6 เดือน ตามหลักเกณฑ์ที่กำหนด จึงไม่ได้รับสิทธิ์เปิดเยี่ยมญาติใกล้ชิดรอบพิเศษนี้<br><br><strong style="color:var(--warning); display:block; text-align:center;">"หมายเหตุ ข้อมูลและหลักเกณฑ์ทั้งหมด ใช้แค่การจองเยี่ยมญาติใกล้ชิด ในครั้งนี้ เท่านั้น"</strong>`;
                 showBlockModal(msg);
 
                 feedback.innerText = `⚠️ ไม่สามารถจองได้: ผู้ต้องขังกระทำผิดวินัย (ระดับชั้น: ${inmate.grade || "ไม่ระบุ"})`;
