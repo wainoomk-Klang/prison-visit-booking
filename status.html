@@ -321,6 +321,14 @@
                 statusDesc.innerText = "เอกสารหลักฐานผ่านเกณฑ์เรียบร้อย กรุณาเดินทางมาเยี่ยมตามเวลานัดหมาย";
                 step = 3;
                 statusColor = 'success';
+            } else if (status === 'disciplined' || (status === 'rejected' && (booking.remarks || '').includes('ผิดวินัย'))) {
+                statusCard.className = "rounded-card p-6 shadow-sm text-center border bg-rose-50/50 border-danger/20 text-rose-700";
+                statusIconBg.className = "p-4 rounded-full bg-rose-100 text-danger";
+                statusIcon.setAttribute("data-lucide", "x-circle");
+                statusTitle.innerText = "ผู้ต้องขังกระทำผิดวินัย";
+                statusDesc.innerText = "ผู้ต้องขังถูกเพิกถอนสิทธิ์เข้าเยี่ยมเนื่องจากกระทำผิดวินัยตามเกณฑ์ที่กำหนด";
+                step = 3;
+                statusColor = 'danger';
             } else if (status === 'rejected') {
                 statusCard.className = "rounded-card p-6 shadow-sm text-center border bg-rose-50/50 border-danger/20 text-rose-700";
                 statusIconBg.className = "p-4 rounded-full bg-rose-100 text-danger";
