@@ -368,7 +368,7 @@
                 document.getElementById("inmateFullName").value = `${inmate.name} ${inmate.surname}`;
                 document.getElementById("inmateGrade").value = inmate.grade;
             } else if ((inmate.disciplinedDetails && inmate.disciplinedDetails !== "" && inmate.disciplinedDetails !== "ไม่ใช่" && inmate.disciplinedDetails !== "-") || inmate.isDisciplined || inmate.grade === "กระทำผิดวินัย" || inmate.grade === "ผิดวินัย" || inmate.status === "disciplined") {
-                const msg = `ผู้ต้องขัง <strong>${inmate.name} ${inmate.surname}</strong> (ระดับชั้น: ${inmate.grade || "ไม่ระบุ"}) กระทำผิดวินัย ย้อนหลัง 6 เดือน ตามหลักเกณฑ์ที่กำหนด จึงไม่ได้รับสิทธิ์เปิดเยี่ยมญาติใกล้ชิดรอบพิเศษนี้<br><br><strong style="color:var(--warning); display:block; text-align:center;">"หมายเหตุ: ข้อมูลและหลักเกณฑ์ทั้งหมดนี้ ใช้เฉพาะสำหรับการจองเยี่ยมญาติใกล้ชิดในรอบนี้เท่านั้น"</strong>`;
+                const msg = `ผู้ต้องขัง <strong>${inmate.name} ${inmate.surname}</strong> (ระดับชั้น: ${inmate.grade || "ไม่ระบุ"}) กระทำผิดวินัย ย้อนหลัง 6 เดือน ตามหลักเกณฑ์ที่กำหนด จึงไม่ได้รับสิทธิ์เยี่ยมญาติใกล้ชิดรอบพิเศษนี้<br><br><strong style="color:var(--warning); display:block; text-align:center;">"หมายเหตุ: ข้อมูลและหลักเกณฑ์ทั้งหมดนี้ ใช้เฉพาะสำหรับการจองเยี่ยมญาติใกล้ชิดในรอบนี้เท่านั้น"</strong>`;
                 showBlockModal(msg);
 
                 feedback.innerText = `⚠️ ไม่สามารถจองได้: ผู้ต้องขังกระทำผิดวินัย (ระดับชั้น: ${inmate.grade || "ไม่ระบุ"})`;
@@ -382,7 +382,7 @@
                 document.getElementById("inmateFullName").value = `${inmate.name} ${inmate.surname}`;
                 document.getElementById("inmateGrade").value = `${inmate.grade || "ไม่ระบุ"} (กระทำผิดวินัย)`;
             } else if (inmate.grade === "ชั้นต้องปรับปรุง" || inmate.grade === "ชั้นต้องปรับปรุงมาก") {
-                const msg = `ผู้ต้องขัง <strong>${inmate.name} ${inmate.surname}</strong> อยู่ในเกณฑ์ความประพฤติระดับ <strong>"${inmate.grade}"</strong> จึงทำให้ไม่ผ่านเงื่อนไขการได้รับสิทธิ์เปิดเยี่ยมญาติใกล้ชิดรอบพิเศษนี้ตามระเบียบกรมราชทัณฑ์`;
+                const msg = `ผู้ต้องขัง <strong>${inmate.name} ${inmate.surname}</strong> อยู่ในเกณฑ์ความประพฤติระดับ <strong>"${inmate.grade}"</strong> จึงทำให้ไม่ผ่านเงื่อนไขการได้รับสิทธิ์เยี่ยมญาติใกล้ชิดรอบพิเศษนี้ตามระเบียบกรมราชทัณฑ์`;
                 showBlockModal(msg);
 
                 feedback.innerText = `⚠️ ไม่สามารถจองได้: ผู้ต้องขังอยู่ในกลุ่ม "${inmate.grade}" (ไม่ได้รับสิทธิ์เข้าเยี่ยม)`;
