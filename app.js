@@ -160,7 +160,7 @@ async function getSlots() {
 }
 
 // Save dynamic changes (simulated for LocalStorage, or executed via API)
-async function changeBookingStatusOnServer(inmateId, newStatus) {
+async function changeBookingStatusOnServer(inmateId, newStatus, remarks) {
     if (isProduction()) {
         try {
             const response = await fetch(APPS_SCRIPT_URL, {
@@ -170,7 +170,8 @@ async function changeBookingStatusOnServer(inmateId, newStatus) {
                 body: JSON.stringify({
                     action: "update_status",
                     inmateId: inmateId,
-                    status: newStatus
+                    status: newStatus,
+                    remarks: remarks || ""
                 })
             });
             // Due to 'no-cors' redirection, we update local cache or wait for reload
@@ -180,10 +181,11 @@ async function changeBookingStatusOnServer(inmateId, newStatus) {
             return false;
         }
     } else {
-        const bookings = JSON.parse(localStorage.getItem(STORAGE_BOOKINGS_KEY));
+        const bookings = JSON.parse(localStorage.getItem(STORAGE_BOOKINGS_KEY)) || [];
         const booking = bookings.find(b => b.inmateId === inmateId);
         if (booking) {
             booking.status = newStatus;
+            booking.remarks = remarks || "";
             localStorage.setItem(STORAGE_BOOKINGS_KEY, JSON.stringify(bookings));
         }
         return true;
@@ -308,26 +310,46 @@ async function uploadAndSaveBooking(bookingData, rawFiles) {
         const bookings = JSON.parse(localStorage.getItem(STORAGE_BOOKINGS_KEY)) || [];
         const slots = JSON.parse(localStorage.getItem(STORAGE_SLOTS_KEY)) || {};
 
-        const newBooking = {
-            inmateId: bookingData.inmateId,
-            inmateFullName: bookingData.inmateFullName,
-            inmateName: bookingData.inmateFullName.split(" ")[0],
-            inmateSurname: bookingData.inmateFullName.split(" ").slice(-1)[0],
-            zone: bookingData.zone,
-            grade: bookingData.grade,
-            slot: bookingData.slot,
-            slotText: bookingData.slotText,
-            visitors: bookingData.visitors,
-            status: "pending",
-            dateBooked: new Date().toISOString(),
-            files: [`${bookingData.inmateId}_inmate_doc.jpg`],
-            driveFolderUrl: "#"
-        };
+        const existingIdx = bookings.findIndex(b => String(b.inmateId).trim() === String(bookingData.inmateId).trim());
+        if (existingIdx >= 0 && bookings[existingIdx].status === "rejected") {
+            const oldSlot = bookings[existingIdx].slot;
+            
+            bookings[existingIdx].inmateFullName = bookingData.inmateFullName;
+            bookings[existingIdx].zone = bookingData.zone;
+            bookings[existingIdx].grade = bookingData.grade;
+            bookings[existingIdx].slot = bookingData.slot;
+            bookings[existingIdx].slotText = bookingData.slotText;
+            bookings[existingIdx].visitors = bookingData.visitors;
+            bookings[existingIdx].status = "pending";
+            bookings[existingIdx].dateBooked = new Date().toISOString();
+            bookings[existingIdx].remarks = ""; // Clear rejection reasons
+            
+            if (oldSlot !== bookingData.slot) {
+                if (slots[oldSlot] > 0) slots[oldSlot]--;
+                slots[bookingData.slot] = (slots[bookingData.slot] || 0) + 1;
+            }
+        } else {
+            const newBooking = {
+                inmateId: bookingData.inmateId,
+                inmateFullName: bookingData.inmateFullName,
+                inmateName: bookingData.inmateFullName.split(" ")[0],
+                inmateSurname: bookingData.inmateFullName.split(" ").slice(-1)[0],
+                zone: bookingData.zone,
+                grade: bookingData.grade,
+                slot: bookingData.slot,
+                slotText: bookingData.slotText,
+                visitors: bookingData.visitors,
+                status: "pending",
+                dateBooked: new Date().toISOString(),
+                files: [`${bookingData.inmateId}_inmate_doc.jpg`],
+                driveFolderUrl: "#"
+            };
 
-        bookings.push(newBooking);
+            bookings.push(newBooking);
+            slots[bookingData.slot] = (slots[bookingData.slot] || 0) + 1;
+        }
+
         localStorage.setItem(STORAGE_BOOKINGS_KEY, JSON.stringify(bookings));
-
-        slots[bookingData.slot] = (slots[bookingData.slot] || 0) + 1; // 1 ผู้ต้องขังต่อ 1 คิวจอง
         localStorage.setItem(STORAGE_SLOTS_KEY, JSON.stringify(slots));
 
         return { status: "success", message: "ลงทะเบียนจองสิทธิ์ในระบบจำลองสำเร็จ" };

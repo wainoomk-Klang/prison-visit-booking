@@ -431,7 +431,10 @@
                                 <span style="color:var(--text-muted-light);">ไม่มีลิงก์ (ระบบจำลอง)</span>
                             `}
                         </td>
-                        <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+                        <td>
+                            <span class="badge ${badgeClass}">${badgeText}</span>
+                            ${booking.remarks ? `<br><small style="color:var(--danger); display:block; margin-top:4px; max-width:180px; white-space:normal; line-height:1.2;">เหตุผล: ${booking.remarks}</small>` : ''}
+                        </td>
                         <td>
                             <div style="display:flex; gap:0.25rem;">
                                 <button class="btn btn-secondary" onclick="viewDetails('${booking.inmateId}')" style="padding:0.25rem 0.5rem; font-size:0.8rem; width:auto;">ดูเอกสาร</button>
@@ -510,17 +513,27 @@
         }
 
         async function changeStatus(inmateId, newStatus) {
+            let remarks = "";
+            if (newStatus === "rejected") {
+                remarks = prompt("กรุณาระบุเหตุผลการปฏิเสธ (เช่น รูปถ่ายบัตรประชาชนไม่ชัดเจน หรือ เอกสารความสัมพันธ์ไม่ตรงตามเกณฑ์):");
+                if (remarks === null) return; // Cancel if user clicked Cancel
+                if (remarks.trim() === "") {
+                    remarks = "เอกสารไม่สมบูรณ์ หรือความสัมพันธ์ไม่ตรงตามเกณฑ์";
+                }
+            }
+
             // 1. อัปเดตข้อมูลสถานะในความทรงจำเบราว์เซอร์ทันที (Optimistic local update)
             const booking = bookingsCache.find(b => String(b.inmateId).trim() === String(inmateId).trim());
             if (booking) {
                 booking.status = newStatus;
+                booking.remarks = remarks;
                 updateStats();
                 renderBookingsTable();
             }
             
             // 2. ส่งคำสั่งไปแก้ไขที่ตาราง Google Sheets เงียบๆ ด้านหลัง (Background save)
             // วิธีนี้เจ้าหน้าที่จะเห็นการอนุมัติทันทีใน 0.01 วินาที โดยไม่เกิดหน้าจอค้าง เลื่อน หรือหมุนติ้วๆ
-            changeBookingStatusOnServer(inmateId, newStatus);
+            changeBookingStatusOnServer(inmateId, newStatus, remarks);
         }
 
         function resetDemoData() {

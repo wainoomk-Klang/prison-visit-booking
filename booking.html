@@ -74,6 +74,16 @@
             </a>
         </div>
 
+        <!-- Correction mode banner -->
+        <div id="editModeBanner" class="card alert alert-warning" style="display:none; border-radius:8px; border-left: 5px solid var(--warning); margin-bottom: 1.5rem;">
+            <h3 style="margin-top:0; font-family:'Prompt', sans-serif; font-size:1.15rem; color:var(--warning);">
+                <i class="fa-solid fa-triangle-exclamation"></i> โหมดแก้ไขข้อมูลคำร้องขอเยี่ยมที่ถูกปฏิเสธ
+            </h3>
+            <p style="margin: 0; font-size: 0.9rem; line-height: 1.5;">
+                ท่านกำลังเข้าสู่ระบบเพื่อแก้ไขข้อมูลคิวจองเยี่ยมที่ <strong>ไม่ผ่านการอนุมัติ</strong> ของผู้ต้องขังรายเดิม ระบบได้ดึงข้อมูลการลงทะเบียนและรายชื่อญาติคนเดิมมาใส่ในฟอร์มให้เรียบร้อยแล้ว ท่านสามารถตรวจสอบ แก้ไขข้อมูลที่ผิดพลาด หรืออัปโหลดรูปเอกสารใบใหม่แทนใบเดิมที่ถูกปฏิเสธ และกดยืนยันส่งข้อมูลเพื่อยื่นเรื่องให้เจ้าหน้าที่ตรวจสอบอีกครั้งได้ทันทีครับ
+            </p>
+        </div>
+
         <!-- Steps Indicator -->
         <div class="steps-indicator">
             <div class="step-node active" id="step1Node">1</div>
@@ -256,10 +266,22 @@
         let selectedSlotText = "";
         let visitorCount = 0;
         let isCidVerified = false;
+        let isEditMode = false;
 
         document.addEventListener("DOMContentLoaded", () => {
             initTheme();
-            addVisitorForm(); // Add at least one visitor form initially
+            
+            // Check for edit mode parameter
+            const urlParams = new URLSearchParams(window.location.search);
+            const editParam = urlParams.get('edit') === 'true';
+            const inmateIdParam = urlParams.get('inmateId');
+            
+            if (editParam && inmateIdParam) {
+                isEditMode = true;
+                initEditMode(inmateIdParam);
+            } else {
+                addVisitorForm(); // Add at least one visitor form initially
+            }
 
             // Auto-focus and paste handling for 13-digit CID boxes
             const digits = document.querySelectorAll(".cid-digit");
@@ -662,6 +684,7 @@
             }
 
             container.innerHTML = html;
+            adjustRequiredFieldsForEdit();
         }
 
         function removeVisitorForm(id) {
@@ -679,7 +702,7 @@
                 const zone = document.getElementById("inmateZone").value;
                 const grade = document.getElementById("inmateGrade").value;
 
-                if (!isCidVerified || !doc || !zone || !grade) {
+                if (!isCidVerified || (!isEditMode && !doc) || !zone || !grade) {
                     showCustomAlert("กรุณากรอกข้อมูลให้ครบถ้วน", "กรุณากรอกข้อมูลผู้ต้องขังและอัปโหลดไฟล์หลักฐานความสัมพันธ์ให้ครบถ้วนก่อนไปขั้นตอนถัดไป", "warning");
                     return;
                 }
@@ -854,6 +877,139 @@
             };
 
             modal.style.display = "flex";
+        }
+
+        async function initEditMode(inmateId) {
+            // 1. Unhide warning banner
+            document.getElementById("editModeBanner").style.display = "block";
+            
+            // 2. Pre-fill the 13 digit CID boxes
+            const digits = inmateId.split("");
+            const cidDigitInputs = document.querySelectorAll(".cid-digit");
+            cidDigitInputs.forEach((el, idx) => {
+                if (digits[idx]) el.value = digits[idx];
+            });
+
+            // Show full screen loader
+            document.getElementById("loadingModal").querySelector("h3").innerText = "กำลังดึงข้อมูลเดิม...";
+            document.getElementById("loadingModal").querySelector("p").innerHTML = "ระบบกำลังดึงข้อมูลการลงทะเบียนเดิมของท่านเพื่อเตรียมการแก้ไข กรุณารอสักครู่...";
+            document.getElementById("loadingModal").style.display = "flex";
+
+            try {
+                // 3. Search inmate details
+                const searchResponse = await searchInmateOnServer(inmateId);
+                // 4. Search booking details
+                const bookingResponse = await checkBookingOnServer(inmateId);
+
+                document.getElementById("loadingModal").style.display = "none";
+                // Reset loading modal text
+                document.getElementById("loadingModal").querySelector("h3").innerText = "กำลังส่งข้อมูลลงทะเบียน";
+                document.getElementById("loadingModal").querySelector("p").innerHTML = `ระบบกำลังส่งข้อมูลและอัปโหลดไฟล์หลักฐานไปยังคลาวด์ไดรฟ์<br><span style="font-size: 0.85rem; color: var(--text-muted-light); display: block; margin-top: 0.5rem;">*ความเร็วขึ้นอยู่กับขนาดรูปภาพและอินเทอร์เน็ตของท่าน*</span><strong style="color: var(--danger); font-size: 1.02rem; display: block; margin-top: 0.75rem;">กรุณารอสักครู่ และห้ามปิดหรือรีเฟรชหน้าจอนี้เด็ดขาด!</strong>`;
+
+                if (searchResponse.status === "success" && searchResponse.found && bookingResponse.status === "success" && bookingResponse.found) {
+                    const inmate = searchResponse.data;
+                    const booking = bookingResponse.data;
+
+                    // Fill inmate details
+                    document.getElementById("inmateCode").value = inmate.inmateCode;
+                    document.getElementById("inmateCid").value = inmate.citizenId;
+                    document.getElementById("inmateFullName").value = inmate.name + ' ' + inmate.surname;
+                    document.getElementById("inmateGrade").value = inmate.grade;
+                    
+                    const zoneSelect = document.getElementById("inmateZone");
+                    zoneSelect.value = inmate.zone;
+                    
+                    isCidVerified = true;
+                    disableInmateFields(false);
+                    document.getElementById("cidFeedback").innerText = "✓ ยืนยันสิทธิ์ข้อมูลเดิมของผู้ต้องขังเรียบร้อย";
+                    document.getElementById("cidFeedback").style.color = "var(--success)";
+
+                    // Pre-fill time slots grid
+                    await updateTimeSlotsGrid();
+
+                    // Pre-select the original slot if it exists in current options
+                    if (booking.zone === inmate.zone) {
+                        const slotCode = getSlotCode(booking.zone, booking.slotText);
+                        const slotEl = document.getElementById(`slot_${slotCode}`);
+                        if (slotEl) {
+                            selectSlot(slotCode, booking.slotText, false);
+                        }
+                    }
+
+                    // Pre-fill visitors
+                    const visitorsContainer = document.getElementById("visitorsContainer");
+                    visitorsContainer.innerHTML = "";
+                    visitorCount = 0;
+
+                    let visitors = [];
+                    if (booking.visitorsJson) {
+                        try {
+                            visitors = JSON.parse(booking.visitorsJson);
+                        } catch(e) {
+                            visitors = [];
+                        }
+                    }
+
+                    if (visitors.length > 0) {
+                        visitors.forEach((visitor, idx) => {
+                            addVisitorForm();
+                            const visitorCard = document.getElementById(`visitor_${visitorCount}`);
+                            
+                            visitorCard.querySelector(".visitor-relation").value = visitor.relation;
+                            visitorCard.querySelector(".visitor-title").value = visitor.title;
+                            visitorCard.querySelector(".visitor-name").value = visitor.name;
+                            visitorCard.querySelector(".visitor-surname").value = visitor.surname;
+                            visitorCard.querySelector(".visitor-cid").value = visitor.cid;
+                            visitorCard.querySelector(".visitor-tel").value = visitor.tel;
+
+                            // Re-trigger update docs structure
+                            updateRelationDocs(visitorCard.querySelector(".visitor-relation"), visitorCount);
+                        });
+                    } else {
+                        addVisitorForm();
+                    }
+
+                    adjustRequiredFieldsForEdit();
+                } else {
+                    showCustomAlert("ข้อผิดพลาด", "ไม่พบสิทธิ์เดิมสำหรับการแก้ไข หรือคิวนั้นพ้นสภาพการแก้ไขแล้ว", "danger", () => {
+                        window.location.href = "status.html";
+                    });
+                }
+            } catch (err) {
+                console.error("Init edit mode error:", err);
+                document.getElementById("loadingModal").style.display = "none";
+                showCustomAlert("ข้อผิดพลาด", "ระบบเชื่อมต่อคลาวด์ขัดข้อง กรุณาลองใหม่อีกครั้งในภายหลัง", "danger", () => {
+                    window.location.href = "status.html";
+                });
+            }
+        }
+
+        function adjustRequiredFieldsForEdit() {
+            if (isEditMode) {
+                // Remove required from inmateDoc
+                document.getElementById("inmateDoc").removeAttribute("required");
+                
+                // Remove required from all visitor file inputs
+                document.querySelectorAll(".visitor-id-card-doc").forEach(el => el.removeAttribute("required"));
+                document.querySelectorAll(".visitor-relation-doc").forEach(el => el.removeAttribute("required"));
+                document.querySelectorAll(".visitor-extra-doc").forEach(el => el.removeAttribute("required"));
+                document.querySelectorAll(".visitor-extra-doc-2").forEach(el => el.removeAttribute("required"));
+                
+                // Add helper text if not already added
+                document.querySelectorAll(".upload-zone").forEach(zone => {
+                    if (!zone.querySelector(".edit-mode-helper-text")) {
+                        const helper = document.createElement("p");
+                        helper.className = "edit-mode-helper-text";
+                        helper.style.fontSize = "0.78rem";
+                        helper.style.color = "#d97706";
+                        helper.style.marginTop = "0.25rem";
+                        helper.style.fontWeight = "600";
+                        helper.style.fontFamily = "'Prompt', sans-serif";
+                        helper.innerHTML = "<i class='fa-solid fa-file-circle-check'></i> มีไฟล์เอกสารเดิมแล้ว แนบใหม่เฉพาะเมื่อต้องการแก้ไข";
+                        zone.appendChild(helper);
+                    }
+                });
+            }
         }
     </script>
 

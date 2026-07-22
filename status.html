@@ -200,6 +200,15 @@
 
             <!-- 7. Bottom Actions -->
             <div class="space-y-2 pt-2">
+                <!-- Dynamic Action Button for Resubmit -->
+                <div id="resubmitActionContainer" class="hidden">
+                    <button onclick="goToResubmit()" 
+                            class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-center">
+                        <i data-lucide="edit-3" class="w-4 h-4"></i>
+                        แก้ไขข้อมูล / ยื่นเอกสารใหม่
+                    </button>
+                </div>
+
                 <button onclick="resetSearch()" 
                         class="w-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold py-3.5 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
                     <i data-lucide="refresh-cw" class="w-4 h-4"></i>
@@ -210,11 +219,20 @@
                     <i data-lucide="home" class="w-4 h-4"></i>
                     กลับหน้าหลัก
                 </a>
-                <a href="tel:021234567" 
-                   class="w-full bg-blue-50 hover:bg-blue-100 text-primary font-semibold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 text-center">
-                    <i data-lucide="phone" class="w-4 h-4"></i>
-                    ติดต่อเจ้าหน้าที่ทัณฑสถาน
-                </a>
+                
+                <span class="text-xs text-slate-400 block text-center pt-1 font-medium">📞 ติดต่อทัณฑสถานวัยหนุ่มกลาง</span>
+                <div class="flex gap-2">
+                    <a href="tel:0828405902" 
+                       class="flex-1 bg-blue-50 hover:bg-blue-100 text-primary font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-1.5 text-center text-xs">
+                        <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                        โทร: 082-8405902
+                    </a>
+                    <a href="tel:0828405910" 
+                       class="flex-1 bg-blue-50 hover:bg-blue-100 text-primary font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-1.5 text-center text-xs">
+                        <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                        โทร: 082-8405910
+                    </a>
+                </div>
             </div>
 
         </div>
@@ -389,6 +407,26 @@
 
             // Set Timeline Active state
             updateTimeline(step, statusColor);
+            
+            // Toggle resubmit action button container based on status
+            const resubmitContainer = document.getElementById("resubmitActionContainer");
+            if (status === 'rejected') {
+                resubmitContainer.classList.remove("hidden");
+                resubmitContainer.setAttribute("data-inmate-id", booking.inmateId);
+            } else {
+                resubmitContainer.classList.add("hidden");
+            }
+            
+            // Refresh lucide icons to display the edit-3 icon
+            lucide.createIcons();
+        }
+
+        function goToResubmit() {
+            const container = document.getElementById("resubmitActionContainer");
+            const inmateId = container.getAttribute("data-inmate-id");
+            if (inmateId) {
+                window.location.href = `booking.html?edit=true&inmateId=${encodeURIComponent(inmateId)}`;
+            }
         }
 
         function updateTimeline(activeStep, statusColor) {
