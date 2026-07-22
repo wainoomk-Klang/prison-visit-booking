@@ -254,6 +254,35 @@
         </div>
     </div>
 
+    <!-- Modal Reject Reason -->
+    <div class="modal" id="rejectReasonModal">
+        <div class="modal-content" style="max-width: 450px; border-top: 5px solid var(--danger);">
+            <h3 style="margin-top:0; font-family:'Prompt', sans-serif; display:flex; align-items:center; gap:0.5rem; color:var(--danger); font-size:1.25rem;">
+                <i class="fa-solid fa-circle-xmark"></i> ระบุเหตุผลการปฏิเสธคำร้อง
+            </h3>
+            <p style="font-size:0.85rem; color:var(--text-muted-light); margin-bottom:1rem; line-height:1.5;">
+                กรุณาระบุสาเหตุที่ปฏิเสธคิวจองนี้ เพื่อให้ญาติผู้ขอเข้าเยี่ยมทราบและดำเนินการแก้ไขเอกสารได้ถูกต้อง:
+            </p>
+            
+            <div class="form-group" style="margin-bottom:1rem;">
+                <textarea id="rejectReasonInput" class="form-control" rows="3" placeholder="ตัวอย่าง: รูปถ่ายบัตรประชาชนไม่ชัดเจน กรุณาถ่ายภาพใหม่และแนบหลักฐานยื่นเข้ามาอีกครั้ง" style="width:100%; border:1.5px solid var(--border-light); border-radius:8px; padding:0.75rem; font-family:inherit; font-size:0.9rem; resize:none; box-sizing:border-box;"></textarea>
+            </div>
+            
+            <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:0.5rem; color:var(--text-light);">เลือกข้อความสำเร็จรูป:</label>
+            <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:1.5rem;">
+                <button type="button" class="btn-preset" onclick="setPresetRejectReason('รูปถ่ายหน้าบัตรประชาชนผู้เข้าเยี่ยมไม่ชัดเจน กรุณาแนบภาพใหม่')">บัตร ปชช. ไม่ชัด</button>
+                <button type="button" class="btn-preset" onclick="setPresetRejectReason('รูปถ่ายทะเบียนบ้านหน้าแสดงความสัมพันธ์ไม่ชัดเจน กรุณาแนบภาพใหม่')">ทะเบียนบ้านไม่ชัด</button>
+                <button type="button" class="btn-preset" onclick="setPresetRejectReason('เอกสารยืนยันสิทธิ์ความสัมพันธ์ไม่ตรงตามเกณฑ์จองเยี่ยมญาติใกล้ชิด')">เอกสารไม่สมบูรณ์</button>
+                <button type="button" class="btn-preset" onclick="setPresetRejectReason('ข้อมูลชื่อ-นามสกุล หรือข้อมูลส่วนตัวของญาติไม่ตรงตามเอกสารสิทธิ์')">ข้อมูลไม่ตรงจริง</button>
+            </div>
+
+            <div class="form-row" style="margin-top:1.5rem; display:flex; gap:0.5rem; justify-content:flex-end;">
+                <button onclick="closeRejectReasonModal()" class="btn btn-secondary" style="width:auto; padding:0.5rem 1.2rem; border-radius:6px; font-weight:600; font-size:0.9rem;">ยกเลิก</button>
+                <button onclick="submitRejectReason()" class="btn btn-primary" style="width:auto; padding:0.5rem 1.2rem; background-color:var(--danger); border-color:var(--danger); color:white; border-radius:6px; font-weight:600; font-size:0.9rem;">ยืนยันปฏิเสธ</button>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <p>© 2026 ทัณฑสถานวัยหนุ่มกลาง กรมราชทัณฑ์ | ระบบลงทะเบียนจองสิทธิ์เยี่ยมญาติใกล้ชิด</p>
     </footer>
@@ -512,16 +541,43 @@
             document.getElementById("detailsModal").style.display = "none";
         }
 
+        let pendingRejectInmateId = "";
+        let pendingRejectStatus = "";
+
         async function changeStatus(inmateId, newStatus) {
-            let remarks = "";
             if (newStatus === "rejected") {
-                remarks = prompt("กรุณาระบุเหตุผลการปฏิเสธ (เช่น รูปถ่ายบัตรประชาชนไม่ชัดเจน หรือ เอกสารความสัมพันธ์ไม่ตรงตามเกณฑ์):");
-                if (remarks === null) return; // Cancel if user clicked Cancel
-                if (remarks.trim() === "") {
-                    remarks = "เอกสารไม่สมบูรณ์ หรือความสัมพันธ์ไม่ตรงตามเกณฑ์";
-                }
+                pendingRejectInmateId = inmateId;
+                pendingRejectStatus = newStatus;
+                document.getElementById("rejectReasonInput").value = "";
+                document.getElementById("rejectReasonModal").style.display = "flex";
+                return;
             }
 
+            // If approved, process directly
+            processStatusChange(inmateId, newStatus, "");
+        }
+
+        function closeRejectReasonModal() {
+            document.getElementById("rejectReasonModal").style.display = "none";
+            pendingRejectInmateId = "";
+            pendingRejectStatus = "";
+        }
+
+        function setPresetRejectReason(text) {
+            document.getElementById("rejectReasonInput").value = text;
+        }
+
+        function submitRejectReason() {
+            let remarks = document.getElementById("rejectReasonInput").value.trim();
+            if (remarks === "") {
+                remarks = "เอกสารไม่สมบูรณ์ หรือความสัมพันธ์ไม่ตรงตามเกณฑ์";
+            }
+            
+            processStatusChange(pendingRejectInmateId, pendingRejectStatus, remarks);
+            closeRejectReasonModal();
+        }
+
+        function processStatusChange(inmateId, newStatus, remarks) {
             // 1. อัปเดตข้อมูลสถานะในความทรงจำเบราว์เซอร์ทันที (Optimistic local update)
             const booking = bookingsCache.find(b => String(b.inmateId).trim() === String(inmateId).trim());
             if (booking) {
@@ -532,7 +588,6 @@
             }
             
             // 2. ส่งคำสั่งไปแก้ไขที่ตาราง Google Sheets เงียบๆ ด้านหลัง (Background save)
-            // วิธีนี้เจ้าหน้าที่จะเห็นการอนุมัติทันทีใน 0.01 วินาที โดยไม่เกิดหน้าจอค้าง เลื่อน หรือหมุนติ้วๆ
             changeBookingStatusOnServer(inmateId, newStatus, remarks);
         }
 
@@ -824,11 +879,15 @@
         window.onclick = function(event) {
             const modal = document.getElementById("detailsModal");
             const repModal = document.getElementById("reportModal");
+            const rejectModal = document.getElementById("rejectReasonModal");
             if (event.target == modal) {
                 closeDetailsModal();
             }
             if (event.target == repModal) {
                 closeReportModal();
+            }
+            if (event.target == rejectModal) {
+                closeRejectReasonModal();
             }
         }
     </script>

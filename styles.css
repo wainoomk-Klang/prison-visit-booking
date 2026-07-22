@@ -686,3 +686,27 @@ body.dark-mode .cid-digit {
         font-size: 0.8rem !important;
     }
 }
+
+/* Preset rejection reason buttons */
+.btn-preset {
+    background-color: rgba(0, 0, 0, 0.03);
+    border: 1px solid var(--border-light);
+    color: var(--text-muted-light);
+    font-size: 0.78rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: 'Prompt', sans-serif;
+    font-weight: 500;
+}
+body.dark-mode .btn-preset {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--border-dark);
+    color: var(--text-muted-dark);
+}
+.btn-preset:hover {
+    background-color: var(--danger);
+    color: white;
+    border-color: var(--danger);
+}
