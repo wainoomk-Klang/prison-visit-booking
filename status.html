@@ -66,20 +66,19 @@
                 </div>
                 <div>
                     <h2 class="text-lg font-bold text-slate-800">ตรวจสอบสถานะการจองเยี่ยม</h2>
-                    <p class="text-xs text-slate-500">กรอกเลขบัตรประชาชนผู้ต้องขังเพื่อเช็คคิวและสถานะ</p>
+                    <p class="text-xs text-slate-500">กรอกรหัสผู้ต้องขัง หรือ เลขบัตรประชาชน / Enter Inmate Code or ID</p>
                 </div>
             </div>
 
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-600 mb-1" for="searchCid">
-                        เลขบัตรประชาชนผู้ต้องขัง (13 หลัก)
+                        รหัสผู้ต้องขัง หรือ เลขบัตรประชาชน / พาสปอร์ต (Inmate Code / ID / Passport)
                     </label>
                     <input type="text" id="searchCid" 
                            class="w-full px-4 py-3.5 text-lg border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-300 tracking-wider" 
-                           placeholder="กรอกเลขบัตรประชาชนผู้ต้องขัง (13 หลัก)" 
-                           maxlength="13" 
-                           inputmode="numeric">
+                           placeholder="กรอกรหัสผู้ต้องขัง (10 หลัก) หรือ เลขบัตรประชาชน (13 หลัก)" 
+                           maxlength="25">
                 </div>
 
                 <button onclick="checkStatus()" 
@@ -264,8 +263,8 @@
             const loadingIndicator = document.getElementById("loadingIndicator");
             const resultArea = document.getElementById("resultArea");
             
-            if (cid.length !== 13 || isNaN(cid)) {
-                alert("กรุณากรอกเลขบัตรประชาชนผู้ต้องขัง 13 หลักให้ถูกต้อง");
+            if (cid.length < 5) {
+                alert("กรุณากรอกรหัสผู้ต้องขัง (10 หลัก) หรือ เลขบัตรประชาชน/พาสปอร์ต ให้ถูกต้อง / Please enter valid Inmate Code or ID");
                 return;
             }
 

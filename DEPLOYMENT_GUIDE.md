@@ -237,13 +237,13 @@ function doPost(e) {
         folderUrl = oldFolderUrl;
       } catch (e) {
         var parentFolder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
-        inmateFolder = parentFolder.createFolder("ผู้ต้องขัง_" + inmateCid + "_" + String(data.inmateFullName).replace(/\s+/g, "_"));
+        inmateFolder = parentFolder.createFolder(String(data.inmateFullName).replace(/\s+/g, "_") + "_แดน_" + data.zone);
         folderUrl = inmateFolder.getUrl();
       }
     } else {
       // สร้างโฟลเดอร์ใหม่ใน Google Drive
       var parentFolder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
-      inmateFolder = parentFolder.createFolder("ผู้ต้องขัง_" + inmateCid + "_" + String(data.inmateFullName).replace(/\s+/g, "_"));
+      inmateFolder = parentFolder.createFolder(String(data.inmateFullName).replace(/\s+/g, "_") + "_แดน_" + data.zone);
       folderUrl = inmateFolder.getUrl();
     }
     

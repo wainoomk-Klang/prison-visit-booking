@@ -100,33 +100,15 @@
                 </h3>
                 
                 <div class="form-group">
-                    <label>เลขประจำตัวประชาชนผู้ต้องขัง (13 หลัก) *</label>
+                    <label style="font-weight: 600; color: var(--text-light);">
+                        รหัสผู้ต้องขัง / เลขประจำตัวประชาชน / พาสปอร์ต 
+                        <span style="font-size: 0.85rem; color: var(--text-muted-light); font-weight: normal; margin-left: 0.25rem;">(Inmate Code / Citizen ID / Passport No.) *</span>
+                    </label>
                     <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem;">
-                        <div class="cid-container">
-                            <!-- Group 1: 1 digit -->
-                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                            <span style="font-weight:bold; color:var(--text-muted-light);">-</span>
-                            <!-- Group 2: 4 digits -->
-                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                            <span style="font-weight:bold; color:var(--text-muted-light);">-</span>
-                            <!-- Group 3: 5 digits -->
-                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                            <span style="font-weight:bold; color:var(--text-muted-light);">-</span>
-                            <!-- Group 4: 2 digits -->
-                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                            <span style="font-weight:bold; color:var(--text-muted-light);">-</span>
-                            <!-- Group 5: 1 digit -->
-                            <input type="text" class="cid-digit" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
-                        </div>
-                        <button type="button" class="btn btn-primary" onclick="verifyInmateCid()" style="width:auto; white-space:nowrap; padding: 0.75rem 1.5rem; margin-left: auto;">ตรวจสอบสิทธิ์</button>
+                        <input type="text" id="inmateSearchInput" class="form-control" placeholder="กรอกรหัสผู้ต้องขัง (10 หลัก) หรือ เลขบัตรประชาชน (13 หลัก) / Enter Inmate Code or ID" style="flex:1; min-width: 250px; font-size: 1.05rem; font-weight: 600; letter-spacing: 0.5px; border: 1.5px solid var(--border-light); border-radius: 8px; padding: 0.75rem 1rem;" oninput="resetVerificationState()" maxlength="25">
+                        <button type="button" class="btn btn-primary" onclick="verifyInmateCid()" style="width:auto; white-space:nowrap; padding: 0.75rem 1.5rem; font-weight: bold; border-radius: 8px; margin-left: auto;">
+                            <i class="fa-solid fa-magnifying-glass" style="margin-right: 0.4rem;"></i> ตรวจสอบสิทธิ์ (Check)
+                        </button>
                     </div>
                     <small id="cidFeedback" style="display:block; margin-top:0.5rem; font-weight: 500;"></small>
                 </div>
@@ -335,12 +317,11 @@
         }
 
         async function verifyInmateCid() {
-            let searchKey = "";
-            document.querySelectorAll(".cid-digit").forEach(el => searchKey += el.value.trim());
+            let searchKey = document.getElementById("inmateSearchInput").value.trim().replace(/\s+/g, "");
             const feedback = document.getElementById("cidFeedback");
             
-            if (searchKey.length !== 13) {
-                feedback.innerText = "✖ กรุณากรอกเลขประจำตัวประชาชนผู้ต้องขังให้ครบ 13 หลัก";
+            if (searchKey.length < 5) {
+                feedback.innerText = "✖ กรุณากรอกรหัสผู้ต้องขัง (10 หลัก) หรือ เลขบัตรประชาชน/พาสปอร์ต ให้ถูกต้อง / Please enter valid Inmate Code or ID";
                 feedback.style.color = "var(--danger)";
                 disableInmateFields(true);
                 return;
@@ -548,49 +529,53 @@
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>ความสัมพันธ์ *</label>
+                        <label>ความสัมพันธ์ / Relationship *</label>
                         <select class="form-control visitor-relation" onchange="updateRelationDocs(this, ${visitorCount})" required>
-                            <option value="">เลือกความสัมพันธ์</option>
-                            <option value="บิดา">บิดา</option>
-                            <option value="มารดา">มารดา</option>
-                            <option value="บุตร">บุตร</option>
-                            <option value="ภรรยา">ภรรยา (จดทะเบียนสมรส)</option>
-                            <option value="สามี">สามี (จดทะเบียนสมรส)</option>
-                            <option value="แฟน">แฟน (ไม่ได้จดทะเบียนสมรส)</option>
+                            <option value="">เลือกความสัมพันธ์ / Select Relation</option>
+                            <option value="บิดา">บิดา / Father</option>
+                            <option value="มารดา">มารดา / Mother</option>
+                            <option value="บุตร">บุตร / Child</option>
+                            <option value="ภรรยา">ภรรยา / Wife (จดทะเบียนสมรส)</option>
+                            <option value="สามี">สามี / Husband (จดทะเบียนสมรส)</option>
+                            <option value="แฟน">แฟน / Partner (ไม่ได้จดทะเบียนสมรส)</option>
+                            <option value="ญาติ">ญาติ / Relative</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>เลขบัตรประชาชนญาติ *</label>
-                        <input type="text" class="form-control visitor-cid" placeholder="เลข 13 หลัก" maxlength="13" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                        <label>เลขบัตรประชาชน / พาสปอร์ต (ID / Passport No.) *</label>
+                        <input type="text" class="form-control visitor-cid" placeholder="เลขบัตร 13 หลัก หรือ Passport No." maxlength="20" oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '')" required>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>คำนำหน้า *</label>
+                        <label>คำนำหน้า / Title *</label>
                         <select class="form-control visitor-title" onchange="updateRelationDocs(document.querySelector('#visitor_${visitorCount} .visitor-relation'), ${visitorCount})" required>
-                            <option value="">เลือก</option>
-                            <option value="นาย">นาย</option>
-                            <option value="นาง">นาง</option>
-                            <option value="นางสาว">นางสาว</option>
-                            <option value="เด็กชาย">เด็กชาย</option>
-                            <option value="เด็กหญิง">เด็กหญิง</option>
+                            <option value="">เลือก / Select</option>
+                            <option value="นาย">นาย (Mr.)</option>
+                            <option value="นาง">นาง (Mrs.)</option>
+                            <option value="นางสาว">นางสาว (Ms.)</option>
+                            <option value="เด็กชาย">เด็กชาย (Master)</option>
+                            <option value="เด็กหญิง">เด็กหญิง (Miss)</option>
+                            <option value="Mr.">Mr.</option>
+                            <option value="Mrs.">Mrs.</option>
+                            <option value="Ms.">Ms.</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>ชื่อ *</label>
-                        <input type="text" class="form-control visitor-name" required>
+                        <label>ชื่อ / First Name *</label>
+                        <input type="text" class="form-control visitor-name" placeholder="ชื่อจริง / First Name" required>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>นามสกุล *</label>
-                        <input type="text" class="form-control visitor-surname" required>
+                        <label>นามสกุล / Last Name *</label>
+                        <input type="text" class="form-control visitor-surname" placeholder="นามสกุล / Last Name" required>
                     </div>
                     <div class="form-group">
-                        <label>เบอร์โทรศัพท์ *</label>
-                        <input type="tel" class="form-control visitor-tel" placeholder="เบอร์โทร 10 หลัก" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+                        <label>เบอร์โทรศัพท์ / Phone Number *</label>
+                        <input type="tel" class="form-control visitor-tel" placeholder="เบอร์โทรศัพท์ / Phone No." maxlength="15" required>
                     </div>
                 </div>
 
@@ -613,10 +598,10 @@
             const titleSelect = document.querySelector(`#visitor_${id} .visitor-title`);
             const title = titleSelect ? titleSelect.value : "";
             
-            let idCardLabel = "แนบรูปบัตรประชาชนญาติ *";
+            let idCardLabel = "แนบรูปบัตรประชาชน / พาสปอร์ต (ID Card / Passport) *";
             let idCardIcon = "fa-id-card";
-            if (relation === "บุตร" && (title === "เด็กชาย" || title === "เด็กหญิง")) {
-                idCardLabel = "แนบรูปสูติบัตรญาติ (กรณีเป็นเด็ก) *";
+            if (relation === "บุตร" && (title === "เด็กชาย" || title === "เด็กหญิง" || title === "Master" || title === "Miss")) {
+                idCardLabel = "แนบรูปสูติบัตรญาติ (กรณีเป็นเด็ก) / Birth Certificate *";
                 idCardIcon = "fa-file-medical";
             }
 
@@ -626,16 +611,16 @@
                         <label>${idCardLabel}</label>
                         <div class="upload-zone">
                             <i class="fa-solid ${idCardIcon}"></i>
-                            <p>เลือกไฟล์รูปภาพหลักฐานประจำตัว</p>
+                            <p>เลือกไฟล์รูปภาพหลักฐานประจำตัว / Select ID Image</p>
                             <input type="file" class="visitor-id-card-doc" required onchange="handleFileSelect(this, 'preview_cid_${id}')">
                         </div>
                         <div id="preview_cid_${id}" class="file-preview" style="display:none;"></div>
                     </div>
                     <div class="form-group">
-                        <label>แนบรูปทะเบียนบ้านญาติ *</label>
+                        <label>แนบรูปทะเบียนบ้าน / เอกสารความสัมพันธ์ (House Reg. / Relation Doc) *</label>
                         <div class="upload-zone">
                             <i class="fa-solid fa-house-chimney"></i>
-                            <p>เลือกไฟล์รูปภาพทะเบียนบ้าน</p>
+                            <p>เลือกไฟล์รูปภาพ / Select Relation Doc</p>
                             <input type="file" class="visitor-relation-doc" required onchange="handleFileSelect(this, 'preview_rel_${id}')">
                         </div>
                         <div id="preview_rel_${id}" class="file-preview" style="display:none;"></div>
@@ -883,12 +868,9 @@
             // 1. Unhide warning banner
             document.getElementById("editModeBanner").style.display = "block";
             
-            // 2. Pre-fill the 13 digit CID boxes
-            const digits = inmateId.split("");
-            const cidDigitInputs = document.querySelectorAll(".cid-digit");
-            cidDigitInputs.forEach((el, idx) => {
-                if (digits[idx]) el.value = digits[idx];
-            });
+            // 2. Pre-fill the inmate search input
+            const searchInput = document.getElementById("inmateSearchInput");
+            if (searchInput) searchInput.value = inmateId;
 
             // Show full screen loader
             document.getElementById("loadingModal").querySelector("h3").innerText = "กำลังดึงข้อมูลเดิม...";
