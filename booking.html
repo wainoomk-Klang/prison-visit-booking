@@ -96,7 +96,7 @@
             <!-- STEP 1: INMATE INFORMATION -->
             <div class="card form-step" id="step1">
                 <h3 style="margin-top:0; font-family:'Prompt', sans-serif; border-bottom: 2px solid var(--primary-color); padding-bottom:0.5rem;">
-                    ขั้นตอนที่ 1: ข้อมูลผู้ต้องขังที่ต้องการเข้าเยี่ยม
+                    ขั้นตอนที่ 1: ข้อมูลผู้ต้องขังที่ต้องการเข้าเยี่ยม <span style="font-size:0.9rem; font-weight:normal; color:var(--text-muted-light);">(Step 1: Inmate Information)</span>
                 </h3>
                 
                 <div class="form-group">
@@ -115,61 +115,65 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="inmateCode">รหัสผู้ต้องขัง *</label>
+                        <label for="inmateCode">รหัสผู้ต้องขัง (Inmate Code) *</label>
                         <input type="text" id="inmateCode" class="form-control" readonly placeholder="ดึงข้อมูลอัตโนมัติ" required>
                     </div>
                     <div class="form-group">
-                        <label for="inmateCid">เลขประจำตัวประชาชนผู้ต้องขัง *</label>
+                        <label for="inmateCid">เลขประจำตัวประชาชน (Citizen ID / ID No.) *</label>
                         <input type="text" id="inmateCid" class="form-control" readonly placeholder="ดึงข้อมูลอัตโนมัติ" required>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="inmateFullName">ชื่อ-นามสกุล ผู้ต้องขัง *</label>
+                        <label for="inmateFullName">ชื่อ-นามสกุล ผู้ต้องขัง (Inmate Full Name) *</label>
                         <input type="text" id="inmateFullName" class="form-control" readonly placeholder="ดึงข้อมูลอัตโนมัติ" required>
                     </div>
                     <div class="form-group">
-                        <label for="inmateGrade">ระดับชั้นผู้ต้องขัง *</label>
-                        <input type="text" id="inmateGrade" class="form-control" readonly placeholder="ดึงข้อมูลอัตโนมัติ" required>
+                        <label for="inmateZone">แดนคุมขัง (Zone) *</label>
+                        <select id="inmateZone" class="form-control" disabled required>
+                            <option value="">เลือกแดนคุมขัง</option>
+                            <option value="1">แดน 1</option>
+                            <option value="2">แดน 2</option>
+                            <option value="3">แดน 3</option>
+                            <option value="4">แดน 4</option>
+                            <option value="5">แดน 5</option>
+                            <option value="6">แดน 6</option>
+                            <option value="7">แดน 7</option>
+                            <option value="8">แดน 8</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="inmateZone">แดนคุมขัง *</label>
-                    <select id="inmateZone" class="form-control" required disabled onchange="updateTimeSlotsGrid()">
-                        <option value="">เลือกแดน</option>
-                        <option value="1">แดน 1</option>
-                        <option value="2">แดน 2</option>
-                        <option value="3">แดน 3</option>
-                        <option value="4">แดน 4</option>
-                        <option value="5">แดน 5</option>
-                        <option value="6">แดน 6</option>
-                        <option value="7">แดน 7</option>
-                        <option value="8">แดน 8</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="inmateGrade">ชั้นผู้ต้องขัง (Grade) *</label>
+                        <input type="text" id="inmateGrade" class="form-control" readonly placeholder="ดึงข้อมูลอัตโนมัติ" required>
+                    </div>
+                    <div class="form-group">
+                        <!-- Spacer -->
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label>แนบรูปถ่ายทะเบียนบ้านผู้ต้องขัง *</label>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label>แนบรูปเอกสารประจำตัว/ทะเบียนบ้านของผู้ต้องขัง (Inmate Doc / House Reg.) *</label>
                     <div class="upload-zone">
                         <i class="fa-solid fa-cloud-arrow-up"></i>
-                        <p>คลิกเพื่อเลือกไฟล์ หรือลากรูปมาวางที่นี่</p>
-                        <small>ไฟล์ JPG, PNG ขนาดสูงสุดไม่เกิน 15MB</small>
-                        <input type="file" id="inmateDoc" required disabled onchange="handleFileSelect(this, 'inmateDocPreview')">
+                        <p>เลือกไฟล์รูปภาพหลักฐานผู้ต้องขัง / Select Inmate Document Photo</p>
+                        <input type="file" id="inmateDoc" required onchange="handleFileSelect(this, 'inmateDocPreview')">
                     </div>
                     <div id="inmateDocPreview" class="file-preview" style="display:none;"></div>
                 </div>
 
                 <div style="margin-top:1.5rem; text-align:right;">
-                    <button type="button" class="btn btn-primary" onclick="goToStep(2)" style="width:200px;" id="btnNext1" disabled>ถัดไป</button>
+                    <button type="button" class="btn btn-primary" onclick="goToStep(2)" style="width:200px;" id="btnNext1" disabled>ถัดไป (Next)</button>
                 </div>
             </div>
 
             <!-- STEP 2: CHOOSE SLOT -->
             <div class="card form-step" id="step2" style="display:none;">
                 <h3 style="margin-top:0; font-family:'Prompt', sans-serif; border-bottom: 2px solid var(--primary-color); padding-bottom:0.5rem;">
-                    ขั้นตอนที่ 2: เลือกวันและรอบเวลาเข้าเยี่ยม
+                    ขั้นตอนที่ 2: เลือกวันและรอบเวลาเข้าเยี่ยม <span style="font-size:0.9rem; font-weight:normal; color:var(--text-muted-light);">(Step 2: Select Time Slot)</span>
                 </h3>
                 
                 <div class="alert alert-info">
@@ -177,7 +181,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label>เลือกวันและรอบเวลาที่สะดวกเข้าเยี่ยม:</label>
+                    <label>เลือกวันและรอบเวลาที่สะดวกเข้าเยี่ยม / Select Visit Date & Time Slot:</label>
                     <div class="time-grid" id="slotsContainer">
                         <!-- slots will render dynamically -->
                     </div>
