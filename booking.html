@@ -105,7 +105,7 @@
                         <span style="font-size: 0.85rem; color: var(--text-muted-light); font-weight: normal; margin-left: 0.25rem;">(Inmate Code / Citizen ID) *</span>
                     </label>
                     <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-top:0.5rem;">
-                        <input type="text" id="inmateSearchInput" class="form-control" placeholder="กรอกรหัสผู้ต้องขัง (10 หลัก) หรือ เลขบัตรประชาชน (13 หลัก)" style="flex:1; min-width: 250px; font-size: 1.05rem; font-weight: 600; letter-spacing: 0.5px; border: 1.5px solid var(--border-light); border-radius: 8px; padding: 0.75rem 1rem;" oninput="resetVerificationState()" maxlength="25">
+                        <input type="text" id="inmateSearchInput" class="form-control" placeholder="กรอกรหัสผู้ต้องขัง (10 หลัก) หรือ เลขบัตรประชาชน (13 หลัก)" style="flex:1; min-width: 250px; font-size: 1.05rem; font-weight: 600; letter-spacing: 0.5px; border: 1.5px solid var(--border-light); border-radius: 8px; padding: 0.75rem 1rem;" oninput="this.value = this.value.replace(/[^0-9]/g, ''); resetVerificationState();" maxlength="13" inputmode="numeric">
                         <button type="button" class="btn btn-primary" onclick="verifyInmateCid()" style="width:auto; white-space:nowrap; padding: 0.75rem 1.5rem; font-weight: bold; border-radius: 8px; margin-left: auto;">
                             <i class="fa-solid fa-magnifying-glass" style="margin-right: 0.4rem;"></i> ตรวจสอบสิทธิ์ (Check)
                         </button>
@@ -320,8 +320,8 @@
             let searchKey = document.getElementById("inmateSearchInput").value.trim().replace(/\s+/g, "");
             const feedback = document.getElementById("cidFeedback");
             
-            if (searchKey.length < 5) {
-                feedback.innerText = "✖ กรุณากรอกรหัสผู้ต้องขัง (10 หลัก) หรือ เลขบัตรประชาชน/พาสปอร์ต ให้ถูกต้อง / Please enter valid Inmate Code or ID";
+            if (searchKey.length !== 10 && searchKey.length !== 13) {
+                feedback.innerText = "✖ กรุณากรอกรหัสผู้ต้องขัง (10 หลัก) หรือ เลขบัตรประชาชน (13 หลัก) ให้ถูกต้อง";
                 feedback.style.color = "var(--danger)";
                 disableInmateFields(true);
                 return;
