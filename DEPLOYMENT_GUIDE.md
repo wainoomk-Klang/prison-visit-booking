@@ -43,7 +43,7 @@
 ```javascript
 // กำหนดโฟลเดอร์ปลายทางและไฟล์สเปรดชีต
 var DRIVE_FOLDER_ID = "1Wc3rSGmYgX_2A9g7TDhVAUOIt4dXNsMK"; // รหัสโฟลเดอร์ของคุณ
-var SHEET_ID = "1Z7G93AvXlzOvv4a7iz9Jzfr2QHwXAs3yRIGrnmHTfSo";
+var SHEET_ID = "1i656vGf7q1ioLa3yF2Mw2JrBKwG9Z00F_pNUyrDsPws";
 
 // 1. ค้นหาข้อมูลผู้ต้องขัง (READ / SEARCH)
 function doGet(e) {
