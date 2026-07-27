@@ -299,6 +299,21 @@ function doPost(e) {
       }).join("\n");
     }
 
+    var cleanVisitorsJson = "";
+    if (data.visitors && data.visitors.length > 0) {
+      var cleanVisitors = data.visitors.map(function(v) {
+        return {
+          relation: v.relation,
+          title: v.title,
+          name: v.name,
+          surname: v.surname,
+          cid: v.cid,
+          tel: v.tel
+        };
+      });
+      cleanVisitorsJson = JSON.stringify(cleanVisitors);
+    }
+
     if (existingRowIndex > 0) {
       sheet.getRange(existingRowIndex, 1).setValue(new Date());
       sheet.getRange(existingRowIndex, 3).setValue(data.inmateFullName);
@@ -307,7 +322,7 @@ function doPost(e) {
       sheet.getRange(existingRowIndex, 6).setValue(visitorsText);
       sheet.getRange(existingRowIndex, 7).setValue(folderUrl);
       sheet.getRange(existingRowIndex, 8).setValue("pending");
-      sheet.getRange(existingRowIndex, 9).setValue(JSON.stringify(data.visitors));
+      sheet.getRange(existingRowIndex, 9).setValue(cleanVisitorsJson);
       sheet.getRange(existingRowIndex, 10).setValue("");
     } else {
       sheet.appendRow([
@@ -319,7 +334,7 @@ function doPost(e) {
         visitorsText, 
         folderUrl, 
         "pending", 
-        JSON.stringify(data.visitors),
+        cleanVisitorsJson,
         ""
       ]);
     }
