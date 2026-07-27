@@ -30,6 +30,8 @@
    * **คอลัมน์ F**: ข้อมูลญาติผู้เข้าเยี่ยมทั้งหมด (JSON / Text)
    * **คอลัมน์ G**: ลิงก์โฟลเดอร์เอกสารบน Google Drive (Drive Link)
    * **คอลัมน์ H**: สถานะคิวการจอง (Status)
+   * **คอลัมน์ I**: ข้อมูล JSON ดิบ (Raw Data)
+   * **คอลัมน์ J**: หมายเหตุ/เหตุผลกรณีปฏิเสธ (Remarks)
 
 ---
 
@@ -41,14 +43,14 @@
 ```javascript
 // กำหนดโฟลเดอร์ปลายทางและไฟล์สเปรดชีต
 var DRIVE_FOLDER_ID = "1Wc3rSGmYgX_2A9g7TDhVAUOIt4dXNsMK"; // รหัสโฟลเดอร์ของคุณ
-var SHEET_ID = "ใส่_SPREADSHEET_ID_ของสเปรดชีตที่ก๊อปมา_ที่นี่";
+var SHEET_ID = "1Z7G93AvXlzOvv4a7iz9Jzfr2QHwXAs3yRIGrnmHTfSo";
 
-// ดึงข้อมูลหรือค้นหาข้อมูลผู้ต้องขัง (READ / SEARCH)
+// 1. ค้นหาข้อมูลผู้ต้องขัง (READ / SEARCH)
 function doGet(e) {
   try {
     var ss = SpreadsheetApp.openById(SHEET_ID);
     
-    // กรณีที่ 1: ค้นหาข้อมูลผู้ต้องขังจากแผ่นงาน "รายชื่อผู้ต้องขัง"
+    // ค้นหาผู้ต้องขังรายบุคคล (สำหรับตรวจสอบสิทธิ์ลงจองคิว)
     if (e.parameter.action === "search_inmate") {
       var searchKey = String(e.parameter.key).trim().replace(/\s+/g, "");
       var inmateSheet = ss.getSheetByName("รายชื่อผู้ต้องขัง");
@@ -56,12 +58,11 @@ function doGet(e) {
       if (!inmateSheet) {
         return ContentService.createTextOutput(JSON.stringify({
           status: "error",
-          message: "ไม่พบแผ่นงานชื่อ 'รายชื่อผู้ต้องขัง' ใน Google Sheets กรุณาสร้างแผ่นงานใหม่และกรอกรายชื่อผู้ต้องขัง"
+          message: "ไม่พบแผ่นงานชื่อ 'รายชื่อผู้ต้องขัง' ใน Google Sheets"
         })).setMimeType(ContentService.MimeType.JSON);
       }
       
       var inmateData = inmateSheet.getDataRange().getValues();
-      // คอลัมน์ที่ต้องการค้นหา: A (รหัสผู้ต้องขัง) หรือ C (เลขบัตรประชาชน)
       for (var i = 1; i < inmateData.length; i++) {
         var inmateCode = String(inmateData[i][0]).trim().replace(/\s+/g, "");
         var citizenId = String(inmateData[i][2]).trim().replace(/\s+/g, "");
@@ -81,7 +82,8 @@ function doGet(e) {
               name: firstName,
               surname: lastName,
               grade: String(inmateData[i][6]).trim() || "ชั้นกลาง",
-              zone: String(inmateData[i][8]).trim() || ""
+              zone: String(inmateData[i][8]).trim() || "",
+              disciplinedDetails: inmateData[i][9] ? String(inmateData[i][9]).trim() : ""
             }
           })).setMimeType(ContentService.MimeType.JSON);
         }
@@ -93,14 +95,30 @@ function doGet(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
     
-    // ค้นหาสถานะการจองคิวรายบุคคลสำหรับญาติสืบค้น (ค้นหาทั้งแผ่นงานจากล่างขึ้นบน)
+    // ค้นหาสถานะการจองคิวรายบุคคลสำหรับญาติสืบค้น
     if (e.parameter.action === "check_booking") {
       var searchKey = String(e.parameter.key).trim().replace(/\s+/g, "");
+      
+      var targetId = searchKey;
+      var inmateSheet = ss.getSheetByName("รายชื่อผู้ต้องขัง");
+      if (inmateSheet) {
+        var inmateData = inmateSheet.getDataRange().getValues();
+        for (var i = 1; i < inmateData.length; i++) {
+          var inmateCode = String(inmateData[i][0]).trim().replace(/\s+/g, "");
+          var citizenId = String(inmateData[i][2]).trim().replace(/\s+/g, "");
+          if (inmateCode === searchKey) {
+            targetId = citizenId;
+            break;
+          }
+        }
+      }
+      
       var sheet = ss.getSheets()[0];
       var data = sheet.getDataRange().getValues();
       
       for (var i = data.length - 1; i >= 1; i--) {
-        if (String(data[i][1]).trim() === searchKey) {
+        var rowInmateId = String(data[i][1]).trim().replace(/\s+/g, "");
+        if (rowInmateId === targetId || rowInmateId === searchKey) {
           var nameStr = String(data[i][2]);
           return ContentService.createTextOutput(JSON.stringify({
             status: "success",
@@ -112,7 +130,9 @@ function doGet(e) {
               zone: data[i][3],
               slotText: data[i][4],
               driveFolderUrl: data[i][6],
-              status: data[i][7]
+              status: data[i][7],
+              remarks: data[i][9] || "",
+              visitorsJson: data[i][8] || ""
             }
           })).setMimeType(ContentService.MimeType.JSON);
         }
@@ -123,50 +143,45 @@ function doGet(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
     
-    // ค้นหารหัสผ่านของแอดมินเจ้าหน้าที่
+    // ตรวจสอบรหัสผ่านของแอดมินเจ้าหน้าที่
     if (e.parameter.action === "verify_password") {
       var pass = e.parameter.password;
-      var correctPass = "admin1234"; // สามารถเปลี่ยนรหัสผ่านแอดมินได้ตรงนี้
+      var correctPass = "wainoom1234";
       return ContentService.createTextOutput(JSON.stringify({
         status: "success",
         authorized: (pass === correctPass)
       })).setMimeType(ContentService.MimeType.JSON);
     }
     
-    // กรณีที่ 2: ดึงข้อมูลประวัติการจองทั้งหมดในระบบ (สำหรับหน้า Admin และเช็คผลคิว - จำกัดล่าสุด 300 คิวเพื่อความเร็วสูงสุด)
-    var sheet = ss.getSheets()[0]; // ดึงแผ่นงานหน้าแรก (ฐานข้อมูลการจอง)
+    // ดึงประวัติการจองทั้งหมดสำหรับ Admin
+    var sheet = ss.getSheets()[0];
     var lastRow = sheet.getLastRow();
-    var startRow = Math.max(2, lastRow - 300); // โหลดเฉพาะ 300 รายการล่าสุด
-    var numRows = lastRow - startRow + 1;
     var bookings = [];
     
-    if (numRows > 0) {
-      var range = sheet.getRange(startRow, 1, numRows, 9); // โหลด 9 คอลัมน์ (รวมคอลัมน์ JSON ของระบบหลังบ้าน)
+    if (lastRow >= 2) {
+      var range = sheet.getRange(2, 1, lastRow - 1, 10);
       var data = range.getValues();
       
       for (var i = 0; i < data.length; i++) {
         var row = data[i];
-        var nameStr = String(row[2]);
-        
         bookings.push({
           dateBooked: row[0],
           inmateId: row[1],
-          inmateName: nameStr.split(" ").slice(1).join(" ") || nameStr,
-          inmateTitle: nameStr.split(" ")[0] || "",
-          inmateSurname: nameStr.split(" ").slice(-1)[0] || "",
+          inmateName: String(row[2]),
+          inmateTitle: "",
+          inmateSurname: "",
           zone: row[3],
           slotText: row[4],
-          visitors: row[8] || row[5], // หากมีคอลัมน์ที่ 9 จะใช้ JSON ระบบ แต่ถ้าไม่มีจะดึงจากคอลัมน์ที่ 6
+          visitors: row[8] || row[5],
           driveFolderUrl: row[6],
           status: row[7],
+          remarks: row[9] || "",
           slot: getSlotCode(row[3], row[4])
         });
       }
     }
     
-    // เรียงคิวล่าสุดให้อยู่ด้านบนสุด (Sort descending)
     bookings.reverse();
-    
     return ContentService.createTextOutput(JSON.stringify({
       status: "success",
       data: bookings
@@ -180,18 +195,25 @@ function doGet(e) {
   }
 }
 
-// จัดการการส่งข้อมูลเข้าผ่านระบบเว็บ (CREATE / UPDATE)
+// รับข้อมูลลงทะเบียน (CREATE / UPDATE)
 function doPost(e) {
+  var lock = LockService.getScriptLock();
+  lock.tryLock(30000); // กันคิวกดพร้อมกันชนกันในระบบ
+  
   try {
     var data = JSON.parse(e.postData.contents);
-    var sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
+    var sheet = SpreadsheetApp.openById(SHEET_ID).getSheets()[0];
     
-    // ตรวจสอบว่าเป็นคำสั่งอัปเดตสถานะคิวจอง (แอดมินอนุมัติ/ปฏิเสธ)
+    // 1. อัปเดตสถานะคิวจอง (แอดมินอนุมัติ/ปฏิเสธ)
     if (data.action === "update_status") {
       var rows = sheet.getDataRange().getValues();
       for (var i = 1; i < rows.length; i++) {
-        if (rows[i][1] === data.inmateId) {
-          sheet.getCell(i + 1, 8).setValue(data.status); // คอลัมน์ H (หลักที่ 8) คือสถานะ
+        if (String(rows[i][1]).trim() === String(data.inmateId).trim()) {
+          sheet.getRange(i + 1, 8).setValue(data.status); // อัปเดตคอลัมน์ H
+          if (data.remarks !== undefined) {
+            sheet.getRange(i + 1, 10).setValue(data.remarks); // อัปเดตคอลัมน์ J
+          }
+          SpreadsheetApp.flush();
           return ContentService.createTextOutput(JSON.stringify({
             status: "success",
             message: "อัปเดตสถานะคิวสำเร็จ"
@@ -200,47 +222,76 @@ function doPost(e) {
       }
       return ContentService.createTextOutput(JSON.stringify({
         status: "error",
-        message: "ไม่พบข้อมูลเลขบัตรประชาชนผู้ต้องขังนี้ในสเปรดชีต"
+        message: "ไม่พบข้อมูลเลขบัตรประชาชนผู้ต้องขังในระบบ"
       })).setMimeType(ContentService.MimeType.JSON);
     }
     
-    // --- กรณีเป็นคำสั่งจองคิวใหม่ ---
-    var inmateCid = data.inmateId;
+    // 2. จองใหม่ หรือยื่นเอกสารแก้ไข (Resubmit)
+    var inmateCid = String(data.inmateId).trim();
     var rows = sheet.getDataRange().getValues();
+    var existingRowIndex = -1;
+    var existingFolderUrl = "";
+    
     for (var i = 1; i < rows.length; i++) {
-      if (rows[i][1] === inmateCid && rows[i][7] !== "rejected") {
-        return ContentService.createTextOutput(JSON.stringify({
-          status: "error",
-          message: "ผู้ต้องขังรายนี้มีสิทธิ์การจองแล้วในระบบ ไม่สามารถจองซ้ำได้"
-        })).setMimeType(ContentService.MimeType.JSON);
+      if (String(rows[i][1]).trim() === inmateCid) {
+        if (rows[i][7] !== "rejected") {
+          return ContentService.createTextOutput(JSON.stringify({
+            status: "error",
+            message: "ผู้ต้องขังรายนี้มีสิทธิ์การจองแล้วในระบบ ไม่สามารถจองซ้ำได้"
+          })).setMimeType(ContentService.MimeType.JSON);
+        } else {
+          existingRowIndex = i + 1;
+          existingFolderUrl = String(rows[i][6]).trim();
+        }
       }
     }
     
-    // สร้างโฟลเดอร์ย่อยใน Google Drive
+    // จัดการโฟลเดอร์ Google Drive (ใช้โฟลเดอร์เดิม หรือสร้างโฟลเดอร์ใหม่เพียงอันเดียวถ้าไม่มี)
     var parentFolder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
-    var inmateFolder = parentFolder.createFolder("ผู้ต้องขัง_" + inmateCid + "_" + String(data.inmateFullName).replace(/\s+/g, "_"));
+    var inmateFolder;
+    var folderUrl = "";
     
-    // บันทึกไฟล์รูปถ่ายเอกสารที่ส่งมาจากฟอร์ม (ภาพความละเอียดสูง แบบ Base64)
-    if (data.inmateDocBase64) {
-      saveFileToDrive(inmateFolder, data.inmateDocName, data.inmateDocBase64);
+    if (existingRowIndex > 0 && existingFolderUrl) {
+      var folderId = existingFolderUrl.split("/").pop();
+      try {
+        inmateFolder = DriveApp.getFolderById(folderId);
+        folderUrl = existingFolderUrl;
+      } catch (err) {}
     }
     
-    data.visitors.forEach(function(visitor, idx) {
-      if (visitor.idCardBase64) {
-        saveFileToDrive(inmateFolder, "ญาติ_" + (idx+1) + "_บัตรประชาชน_" + visitor.cid, visitor.idCardBase64);
+    if (!inmateFolder) {
+      var folderName = String(data.inmateFullName).replace(/\s+/g, "_") + "_แดน_" + data.zone;
+      var existingFolders = parentFolder.getFoldersByName(folderName);
+      if (existingFolders.hasNext()) {
+        inmateFolder = existingFolders.next();
+      } else {
+        inmateFolder = parentFolder.createFolder(folderName);
       }
-      if (visitor.relationBase64) {
-        saveFileToDrive(inmateFolder, "ญาติ_" + (idx+1) + "_ทะเบียนบ้าน_" + visitor.cid, visitor.relationBase64);
-      }
-      if (visitor.extraBase64) {
-        saveFileToDrive(inmateFolder, "ญาติ_" + (idx+1) + "_ทะเบียนสมรส_" + visitor.cid, visitor.extraBase64);
-      }
-      if (visitor.extra2Base64) {
-        saveFileToDrive(inmateFolder, "ญาติ_" + (idx+1) + "_หนังสือรับรองความสัมพันธ์_" + visitor.cid, visitor.extra2Base64);
-      }
-    });
+      folderUrl = inmateFolder.getUrl();
+    }
+    
+    // บันทึกไฟล์ภาพลง Drive
+    if (data.inmateDocBase64) {
+      saveFileToDrive(inmateFolder, data.inmateDocName || (inmateCid + "_เอกสารผู้ต้องขัง.jpg"), data.inmateDocBase64);
+    }
+    
+    if (data.visitors && data.visitors.length > 0) {
+      data.visitors.forEach(function(visitor, idx) {
+        if (visitor.idCardBase64) {
+          saveFileToDrive(inmateFolder, "ญาติ_" + (idx+1) + "_บัตรประชาชน_" + visitor.cid, visitor.idCardBase64);
+        }
+        if (visitor.relationBase64) {
+          saveFileToDrive(inmateFolder, "ญาติ_" + (idx+1) + "_ทะเบียนบ้าน_" + visitor.cid, visitor.relationBase64);
+        }
+        if (visitor.extraBase64) {
+          saveFileToDrive(inmateFolder, "ญาติ_" + (idx+1) + "_ทะเบียนสมรส_" + visitor.cid, visitor.extraBase64);
+        }
+        if (visitor.extra2Base64) {
+          saveFileToDrive(inmateFolder, "ญาติ_" + (idx+1) + "_หนังสือรับรอง_" + visitor.cid, visitor.extra2Base64);
+        }
+      });
+    }
 
-    // แปลงข้อมูลรายชื่อญาติทั้งหมดให้อยู่ในรูปแบบที่อ่านง่ายใน Google Sheets
     var visitorsText = "";
     if (data.visitors && data.visitors.length > 0) {
       visitorsText = data.visitors.map(function(visitor, idx) {
@@ -248,23 +299,37 @@ function doPost(e) {
       }).join("\n");
     }
 
-    // บันทึกข้อมูลทั้งหมดลงสเปรดชีต
-    sheet.appendRow([
-      new Date(),
-      inmateCid,
-      data.inmateFullName,
-      data.zone,
-      data.slotText,
-      visitorsText, // คอลัมน์ที่ 6 (F): ชื่อญาติทั้งหมดแบบอ่านง่ายจัดเรียงให้อัตโนมัติ
-      inmateFolder.getUrl(), // คอลัมน์ที่ 7 (G): ลิงก์ตรงของโฟลเดอร์บน Google Drive
-      "pending", // คอลัมน์ที่ 8 (H): สถานะเริ่มต้นเป็นรอตรวจสอบเอกสาร
-      JSON.stringify(data.visitors) // คอลัมน์ที่ 9 (I): ข้อมูล JSON ดิบสำหรับเว็บระบบหลังบ้านนำไปแสดงผล
-    ]);
+    if (existingRowIndex > 0) {
+      sheet.getRange(existingRowIndex, 1).setValue(new Date());
+      sheet.getRange(existingRowIndex, 3).setValue(data.inmateFullName);
+      sheet.getRange(existingRowIndex, 4).setValue(data.zone);
+      sheet.getRange(existingRowIndex, 5).setValue(data.slotText);
+      sheet.getRange(existingRowIndex, 6).setValue(visitorsText);
+      sheet.getRange(existingRowIndex, 7).setValue(folderUrl);
+      sheet.getRange(existingRowIndex, 8).setValue("pending");
+      sheet.getRange(existingRowIndex, 9).setValue(JSON.stringify(data.visitors));
+      sheet.getRange(existingRowIndex, 10).setValue("");
+    } else {
+      sheet.appendRow([
+        new Date(),
+        inmateCid,
+        data.inmateFullName,
+        data.zone,
+        data.slotText,
+        visitorsText, 
+        folderUrl, 
+        "pending", 
+        JSON.stringify(data.visitors),
+        ""
+      ]);
+    }
+
+    SpreadsheetApp.flush();
 
     return ContentService.createTextOutput(JSON.stringify({
       status: "success",
-      driveLink: inmateFolder.getUrl(),
-      message: "ลงทะเบียนจองสิทธิ์สำเร็จ และจัดส่งไฟล์เข้าระบบ Google Drive เรียบร้อย"
+      driveLink: folderUrl,
+      message: "ลงทะเบียนจองสิทธิ์สำเร็จ"
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch(error) {
@@ -272,8 +337,11 @@ function doPost(e) {
       status: "error",
       message: error.toString()
     })).setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock();
   }
 }
+```
 
 // ฟังก์ชันแปลงและบันทึกไฟล์ภาพแบบไม่ย่อขนาด
 function saveFileToDrive(folder, fileName, base64Data) {

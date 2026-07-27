@@ -66,19 +66,20 @@
                 </div>
                 <div>
                     <h2 class="text-lg font-bold text-slate-800">ตรวจสอบสถานะการจองเยี่ยม</h2>
-                    <p class="text-xs text-slate-500">กรอกเลขบัตรประชาชนผู้ต้องขังเพื่อเช็คคิวและสถานะ</p>
+                    <p class="text-xs text-slate-500">กรอกรหัสผู้ต้องขัง หรือ เลขบัตรประชาชน / Enter Inmate Code or ID</p>
                 </div>
             </div>
 
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-600 mb-1" for="searchCid">
-                        เลขบัตรประชาชนผู้ต้องขัง (13 หลัก)
+                        รหัสผู้ต้องขัง หรือ เลขบัตรประชาชน (Inmate Code / Citizen ID)
                     </label>
                     <input type="text" id="searchCid" 
                            class="w-full px-4 py-3.5 text-lg border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-300 tracking-wider" 
-                           placeholder="กรอกเลขบัตรประชาชนผู้ต้องขัง (13 หลัก)" 
-                           maxlength="13" 
+                           placeholder="กรอกรหัสผู้ต้องขัง (10 หลัก) หรือ เลขบัตรประชาชน (13 หลัก)" 
+                           maxlength="13"
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                            inputmode="numeric">
                 </div>
 
@@ -200,6 +201,15 @@
 
             <!-- 7. Bottom Actions -->
             <div class="space-y-2 pt-2">
+                <!-- Dynamic Action Button for Resubmit -->
+                <div id="resubmitActionContainer" class="hidden">
+                    <button onclick="goToResubmit()" 
+                            class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3.5 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-center">
+                        <i data-lucide="edit-3" class="w-4 h-4"></i>
+                        แก้ไขข้อมูล / ยื่นเอกสารใหม่
+                    </button>
+                </div>
+
                 <button onclick="resetSearch()" 
                         class="w-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold py-3.5 rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
                     <i data-lucide="refresh-cw" class="w-4 h-4"></i>
@@ -210,11 +220,20 @@
                     <i data-lucide="home" class="w-4 h-4"></i>
                     กลับหน้าหลัก
                 </a>
-                <a href="tel:021234567" 
-                   class="w-full bg-blue-50 hover:bg-blue-100 text-primary font-semibold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 text-center">
-                    <i data-lucide="phone" class="w-4 h-4"></i>
-                    ติดต่อเจ้าหน้าที่ทัณฑสถาน
-                </a>
+                
+                <span class="text-xs text-slate-400 block text-center pt-1 font-medium">📞 ติดต่องานเยี่ยมญาติทัณฑสถานวัยหนุ่มกลาง</span>
+                <div class="flex gap-2">
+                    <a href="tel:0828405902" 
+                       class="flex-1 bg-blue-50 hover:bg-blue-100 text-primary font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-1.5 text-center text-xs">
+                        <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                        โทร: 082-8405902
+                    </a>
+                    <a href="tel:0828405910" 
+                       class="flex-1 bg-blue-50 hover:bg-blue-100 text-primary font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-1.5 text-center text-xs">
+                        <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                        โทร: 082-8405910
+                    </a>
+                </div>
             </div>
 
         </div>
@@ -246,8 +265,8 @@
             const loadingIndicator = document.getElementById("loadingIndicator");
             const resultArea = document.getElementById("resultArea");
             
-            if (cid.length !== 13 || isNaN(cid)) {
-                alert("กรุณากรอกเลขบัตรประชาชนผู้ต้องขัง 13 หลักให้ถูกต้อง");
+            if (cid.length !== 10 && cid.length !== 13) {
+                alert("กรุณากรอกรหัสผู้ต้องขัง (10 หลัก) หรือ เลขบัตรประชาชน (13 หลัก) ให้ถูกต้อง");
                 return;
             }
 
@@ -321,6 +340,14 @@
                 statusDesc.innerText = "เอกสารหลักฐานผ่านเกณฑ์เรียบร้อย กรุณาเดินทางมาเยี่ยมตามเวลานัดหมาย";
                 step = 3;
                 statusColor = 'success';
+            } else if (status === 'disciplined' || (status === 'rejected' && (booking.remarks || '').includes('ผิดวินัย'))) {
+                statusCard.className = "rounded-card p-6 shadow-sm text-center border bg-rose-50/50 border-danger/20 text-rose-700";
+                statusIconBg.className = "p-4 rounded-full bg-rose-100 text-danger";
+                statusIcon.setAttribute("data-lucide", "x-circle");
+                statusTitle.innerText = "ผู้ต้องขังกระทำผิดวินัย";
+                statusDesc.innerText = "ผู้ต้องขังถูกเพิกถอนสิทธิ์เข้าเยี่ยมเนื่องจากกระทำผิดวินัยตามเกณฑ์ที่กำหนด";
+                step = 3;
+                statusColor = 'danger';
             } else if (status === 'rejected') {
                 statusCard.className = "rounded-card p-6 shadow-sm text-center border bg-rose-50/50 border-danger/20 text-rose-700";
                 statusIconBg.className = "p-4 rounded-full bg-rose-100 text-danger";
@@ -381,6 +408,26 @@
 
             // Set Timeline Active state
             updateTimeline(step, statusColor);
+            
+            // Toggle resubmit action button container based on status
+            const resubmitContainer = document.getElementById("resubmitActionContainer");
+            if (status === 'rejected') {
+                resubmitContainer.classList.remove("hidden");
+                resubmitContainer.setAttribute("data-inmate-id", booking.inmateId);
+            } else {
+                resubmitContainer.classList.add("hidden");
+            }
+            
+            // Refresh lucide icons to display the edit-3 icon
+            lucide.createIcons();
+        }
+
+        function goToResubmit() {
+            const container = document.getElementById("resubmitActionContainer");
+            const inmateId = container.getAttribute("data-inmate-id");
+            if (inmateId) {
+                window.location.href = `booking.html?edit=true&inmateId=${encodeURIComponent(inmateId)}`;
+            }
         }
 
         function updateTimeline(activeStep, statusColor) {

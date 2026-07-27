@@ -14,7 +14,7 @@ function isProduction() {
 const INITIAL_SLOTS = {
     "zone1_am": 2,
     "zone1_pm": 15,
-    "zone2_am": 300, // Full
+    "zone2_am": 10,
     "zone2_pm": 20,
     "zone3_am": 12,
     "zone3_pm": 9,
@@ -22,7 +22,7 @@ const INITIAL_SLOTS = {
     "zone4_pm": 11,
     "zone5_am": 5,
     "zone6_am": 1,
-    "zone7_pm": 300, // Full
+    "zone7_pm": 8,
     "zone8_pm": 0
 };
 
@@ -56,11 +56,11 @@ if (!localStorage.getItem(STORAGE_SLOTS_KEY)) {
 
 // Fallback Mock Inmates Database (Matching user Excel spreadsheet format)
 const MOCK_INMATES = [
-    { inmateCode: "6911300978", name: "กิตติพันธ์", surname: "ทิพเสถียร", citizenId: "1468100000373", grade: "ชั้นต้องปรับปรุง", zone: "1" },
-    { inmateCode: "6911300977", name: "วุฒิเดช", surname: "ขำพุด", citizenId: "1460400061117", grade: "ชั้นต้องปรับปรุง", zone: "2" },
-    { inmateCode: "6911300975", name: "อภิวัฒน์", surname: "สมบัติหล้า", citizenId: "1407700009061", grade: "ชั้นดีมาก", zone: "1" },
-    { inmateCode: "6911300974", name: "สุชารัตน์", surname: "ศรีเมือง", citizenId: "1119902051313", grade: "ชั้นกลาง", zone: "3" },
-    { inmateCode: "6911300972", name: "อิทธิฤทธิ์", surname: "นาทันเลิศ", citizenId: "1460301248227", grade: "ชั้นต้องปรับปรุง", zone: "4" }
+    { inmateCode: "6911300978", name: "กิตติพันธ์", surname: "ทิพเสถียร", citizenId: "1468100000373", grade: "ชั้นต้องปรับปรุง", zone: "1", disciplinedDetails: "กระทำผิดวินัย: ทะเลาะวิวาท" },
+    { inmateCode: "6911300977", name: "วุฒิเดช", surname: "ขำพุด", citizenId: "1460400061117", grade: "ชั้นต้องปรับปรุง", zone: "4", disciplinedDetails: "" },
+    { inmateCode: "6911300975", name: "อภิวัฒน์", surname: "สมบัติหล้า", citizenId: "1407700009061", grade: "ชั้นดีมาก", zone: "6", disciplinedDetails: "" },
+    { inmateCode: "6911300974", name: "สุชารัตน์", surname: "ศรีเมือง", citizenId: "1119902051313", grade: "ชั้นกลาง", zone: "1", disciplinedDetails: "" },
+    { inmateCode: "6911300972", name: "อิทธิฤทธิ์", surname: "นาทันเลิศ", citizenId: "1460301248227", grade: "ชั้นต้องปรับปรุง", zone: "4", disciplinedDetails: "" }
 ];
 
 async function searchInmateOnServer(searchKey) {
@@ -104,7 +104,16 @@ async function checkBookingOnServer(inmateCid) {
         }
     } else {
         const bookings = JSON.parse(localStorage.getItem(STORAGE_BOOKINGS_KEY)) || [];
-        const found = bookings.find(b => String(b.inmateId).trim() === String(inmateCid).trim());
+        const cleanKey = inmateCid.trim().replace(/\s+/g, "");
+        
+        // Find if this is a 10-digit Inmate Code and map to citizenId in mock
+        let targetId = cleanKey;
+        const mockInmate = MOCK_INMATES.find(i => i.inmateCode === cleanKey);
+        if (mockInmate) {
+            targetId = mockInmate.citizenId;
+        }
+        
+        const found = bookings.find(b => String(b.inmateId).trim() === String(targetId).trim() || String(b.inmateId).trim() === cleanKey);
         if (found) {
             return {
                 status: "success",
@@ -150,8 +159,6 @@ async function getSlots() {
                     slots[b.slot] = (slots[b.slot] || 0) + 1;
                 }
             });
-            // 🧪 คำสั่งจำลองสำหรับทดสอบ: บังคับให้ แดน 1 รอบเช้า เต็ม (300/300) ทันที
-            slots["zone1_am"] = 300;
             
             return slots;
         } catch (e) {
@@ -162,30 +169,31 @@ async function getSlots() {
 }
 
 // Save dynamic changes (simulated for LocalStorage, or executed via API)
-async function changeBookingStatusOnServer(inmateId, newStatus) {
+async function changeBookingStatusOnServer(inmateId, newStatus, remarks) {
     if (isProduction()) {
         try {
             const response = await fetch(APPS_SCRIPT_URL, {
                 method: "POST",
-                mode: "no-cors", // Allows sending cross-origin request to Google redirection
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify({
                     action: "update_status",
                     inmateId: inmateId,
-                    status: newStatus
+                    status: newStatus,
+                    remarks: remarks || ""
                 })
             });
-            // Due to 'no-cors' redirection, we update local cache or wait for reload
-            return true;
+            const result = await response.json();
+            return result.status === "success";
         } catch (e) {
             console.error("Failed to update status on server:", e);
             return false;
         }
     } else {
-        const bookings = JSON.parse(localStorage.getItem(STORAGE_BOOKINGS_KEY));
+        const bookings = JSON.parse(localStorage.getItem(STORAGE_BOOKINGS_KEY)) || [];
         const booking = bookings.find(b => b.inmateId === inmateId);
         if (booking) {
             booking.status = newStatus;
+            booking.remarks = remarks || "";
             localStorage.setItem(STORAGE_BOOKINGS_KEY, JSON.stringify(bookings));
         }
         return true;
@@ -310,26 +318,46 @@ async function uploadAndSaveBooking(bookingData, rawFiles) {
         const bookings = JSON.parse(localStorage.getItem(STORAGE_BOOKINGS_KEY)) || [];
         const slots = JSON.parse(localStorage.getItem(STORAGE_SLOTS_KEY)) || {};
 
-        const newBooking = {
-            inmateId: bookingData.inmateId,
-            inmateFullName: bookingData.inmateFullName,
-            inmateName: bookingData.inmateFullName.split(" ")[0],
-            inmateSurname: bookingData.inmateFullName.split(" ").slice(-1)[0],
-            zone: bookingData.zone,
-            grade: bookingData.grade,
-            slot: bookingData.slot,
-            slotText: bookingData.slotText,
-            visitors: bookingData.visitors,
-            status: "pending",
-            dateBooked: new Date().toISOString(),
-            files: [`${bookingData.inmateId}_inmate_doc.jpg`],
-            driveFolderUrl: "#"
-        };
+        const existingIdx = bookings.findIndex(b => String(b.inmateId).trim() === String(bookingData.inmateId).trim());
+        if (existingIdx >= 0 && bookings[existingIdx].status === "rejected") {
+            const oldSlot = bookings[existingIdx].slot;
+            
+            bookings[existingIdx].inmateFullName = bookingData.inmateFullName;
+            bookings[existingIdx].zone = bookingData.zone;
+            bookings[existingIdx].grade = bookingData.grade;
+            bookings[existingIdx].slot = bookingData.slot;
+            bookings[existingIdx].slotText = bookingData.slotText;
+            bookings[existingIdx].visitors = bookingData.visitors;
+            bookings[existingIdx].status = "pending";
+            bookings[existingIdx].dateBooked = new Date().toISOString();
+            bookings[existingIdx].remarks = ""; // Clear rejection reasons
+            
+            if (oldSlot !== bookingData.slot) {
+                if (slots[oldSlot] > 0) slots[oldSlot]--;
+                slots[bookingData.slot] = (slots[bookingData.slot] || 0) + 1;
+            }
+        } else {
+            const newBooking = {
+                inmateId: bookingData.inmateId,
+                inmateFullName: bookingData.inmateFullName,
+                inmateName: bookingData.inmateFullName.split(" ")[0],
+                inmateSurname: bookingData.inmateFullName.split(" ").slice(-1)[0],
+                zone: bookingData.zone,
+                grade: bookingData.grade,
+                slot: bookingData.slot,
+                slotText: bookingData.slotText,
+                visitors: bookingData.visitors,
+                status: "pending",
+                dateBooked: new Date().toISOString(),
+                files: [`${bookingData.inmateId}_inmate_doc.jpg`],
+                driveFolderUrl: "#"
+            };
 
-        bookings.push(newBooking);
+            bookings.push(newBooking);
+            slots[bookingData.slot] = (slots[bookingData.slot] || 0) + 1;
+        }
+
         localStorage.setItem(STORAGE_BOOKINGS_KEY, JSON.stringify(bookings));
-
-        slots[bookingData.slot] = (slots[bookingData.slot] || 0) + 1; // 1 ผู้ต้องขังต่อ 1 คิวจอง
         localStorage.setItem(STORAGE_SLOTS_KEY, JSON.stringify(slots));
 
         return { status: "success", message: "ลงทะเบียนจองสิทธิ์ในระบบจำลองสำเร็จ" };
