@@ -425,14 +425,24 @@
                     badgeText = "ปฏิเสธการจอง";
                 }
 
-                // Parse visitors if it's a JSON string (production format)
+                // Parse visitors if it's a JSON string or text format
+                let visitorCount = 0;
                 let visitors = booking.visitors;
                 if (typeof visitors === 'string') {
-                    try {
-                        visitors = JSON.parse(visitors);
-                    } catch(e) {
-                        visitors = [];
+                    const trimmed = visitors.trim();
+                    if (trimmed.startsWith('[')) {
+                        try {
+                            const parsed = JSON.parse(trimmed);
+                            visitorCount = Array.isArray(parsed) ? parsed.length : 0;
+                        } catch(e) {
+                            visitorCount = 0;
+                        }
+                    } else if (trimmed.length > 0) {
+                        const lines = trimmed.split('\n').filter(l => l.trim().length > 0);
+                        visitorCount = lines.length;
                     }
+                } else if (Array.isArray(visitors)) {
+                    visitorCount = visitors.length;
                 }
 
                 const driveUrl = booking.driveFolderUrl || booking.driveFolder || "#";
@@ -446,7 +456,7 @@
                             <small style="color:var(--text-muted-light);">บัตร: ${booking.inmateId} | แดน ${booking.zone}</small>
                         </td>
                         <td>${booking.slotText}</td>
-                        <td>${visitors.length} ท่าน</td>
+                        <td>${visitorCount} ท่าน</td>
                         <td>
                             ${hasDrive ? `
                                 <a href="${driveUrl}" target="_blank" style="color:var(--secondary-color); font-weight:600;">
@@ -484,23 +494,38 @@
             const modalBody = document.getElementById("modalDetailsBody");
             
             let visitors = booking.visitors;
+            let visitorsHtml = "";
+            let parsedVisitors = null;
+
             if (typeof visitors === 'string') {
-                try {
-                    visitors = JSON.parse(visitors);
-                } catch(e) {
-                    visitors = [];
+                const trimmed = visitors.trim();
+                if (trimmed.startsWith('[')) {
+                    try {
+                        parsedVisitors = JSON.parse(trimmed);
+                    } catch(e) {}
                 }
+            } else if (Array.isArray(visitors)) {
+                parsedVisitors = visitors;
             }
 
-            let visitorsHtml = "";
-            visitors.forEach((v, idx) => {
-                visitorsHtml += `
-                    <div style="border: 1px solid var(--border-light); border-radius:6px; padding:0.75rem; margin-top:0.5rem; background-color:rgba(0,0,0,0.01);">
-                        <strong style="color:var(--primary-color);">ญาติคนที่ ${idx+1}: ${v.title}${v.name} ${v.surname}</strong> (ความสัมพันธ์: ${v.relation})<br>
-                        <span>เลขบัตรประชาชน: ${v.cid} | เบอร์ติดต่อ: ${v.tel}</span>
+            if (Array.isArray(parsedVisitors) && parsedVisitors.length > 0) {
+                parsedVisitors.forEach((v, idx) => {
+                    visitorsHtml += `
+                        <div style="border: 1px solid var(--border-light); border-radius:6px; padding:0.75rem; margin-top:0.5rem; background-color:rgba(0,0,0,0.01);">
+                            <strong style="color:var(--primary-color);">ญาติคนที่ ${idx+1}: ${v.title || ''}${v.name || ''} ${v.surname || ''}</strong> (ความสัมพันธ์: ${v.relation || 'ไม่ระบุ'})<br>
+                            <span>เลขบัตรประชาชน: ${v.cid || 'ไม่ระบุ'} | เบอร์ติดต่อ: ${v.tel || 'ไม่ระบุ'}</span>
+                        </div>
+                    `;
+                });
+            } else if (typeof visitors === 'string' && visitors.trim().length > 0) {
+                visitorsHtml = `
+                    <div style="border: 1px solid var(--border-light); border-radius:6px; padding:0.75rem; margin-top:0.5rem; background-color:rgba(0,0,0,0.01); white-space:pre-line; line-height:1.6;">
+                        <strong style="color:var(--primary-color);">รายชื่อญาติผู้เข้าเยี่ยม:</strong><br>${visitors}
                     </div>
                 `;
-            });
+            } else {
+                visitorsHtml = `<p style="color:var(--text-muted-light);">ไม่พบรายละเอียดรายชื่อญาติ (กรุณาดูไฟล์เอกสารบน Drive)</p>`;
+            }
 
             const driveUrl = booking.driveFolderUrl || booking.driveFolder || "#";
             const hasDrive = driveUrl && driveUrl !== "#";
