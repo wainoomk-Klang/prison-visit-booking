@@ -157,6 +157,22 @@
             </div>
         </div>
 
+        <!-- Quota Monitor Section -->
+        <div class="card" style="margin-bottom: 1.5rem; background-color: #f8fafc; border: 1px solid var(--border-light);">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem;">
+                <h3 style="margin:0; font-family:'Prompt', sans-serif; color:var(--primary-color); display:flex; align-items:center; gap:0.5rem; font-size:1.15rem;">
+                    <i class="fa-solid fa-chart-bar"></i> สถานะโควตาการจองเยี่ยมคงเหลือ (จำกัด 300 คิว/รอบ/แดน)
+                </h3>
+                <span style="font-size:0.85rem; color:var(--text-muted-light);">
+                    <i class="fa-solid fa-arrows-rotate"></i> อัปเดตเรียลไทม์ตามคิวจองในระบบ
+                </span>
+            </div>
+
+            <div id="quotaMonitorGrid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:0.75rem;">
+                <!-- dynamic quota monitor cards render here -->
+            </div>
+        </div>
+
         <!-- report button bar -->
         <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;" class="no-print">
             <button class="btn btn-primary" onclick="showReportModal()" style="width:auto; padding:0.6rem 1.5rem; background-color: #0d9488; border-color: #0d9488; font-family:'Prompt', sans-serif; display:inline-flex; align-items:center; gap:0.5rem; font-weight:600; font-size:0.9rem; border-radius:6px; cursor:pointer;">
@@ -392,6 +408,7 @@
             document.getElementById("pendingBookings").innerText = bookingsCache.filter(b => b.status === "pending").length;
             document.getElementById("approvedBookings").innerText = bookingsCache.filter(b => b.status === "approved").length;
             document.getElementById("rejectedBookings").innerText = bookingsCache.filter(b => b.status === "rejected").length;
+            renderQuotaMonitor();
         }
 
         function renderBookingsTable() {
@@ -620,14 +637,90 @@
             }
         }
         
+        const ADMIN_ZONE_DATA = {
+            "1": { date: "วันจันทร์ที่ 24 ส.ค. 69", options: ["am", "pm"] },
+            "2": { date: "วันอังคารที่ 25 ส.ค. 69", options: ["am", "pm"] },
+            "3": { date: "วันพุธที่ 26 ส.ค. 69", options: ["am", "pm"] },
+            "4": { date: "วันพฤหัสบดีที่ 27 ส.ค. 69", options: ["am", "pm"] },
+            "5": { date: "วันศุกร์ที่ 28 ส.ค. 69", options: ["am"] },
+            "6": { date: "วันศุกร์ที่ 28 ส.ค. 69", options: ["am"] },
+            "7": { date: "วันศุกร์ที่ 28 ส.ค. 69", options: ["pm"] },
+            "8": { date: "วันศุกร์ที่ 28 ส.ค. 69", options: ["pm"] }
+        };
+
+        function renderQuotaMonitor() {
+            const grid = document.getElementById("quotaMonitorGrid");
+            if (!grid) return;
+
+            const slotsCount = {};
+            bookingsCache.forEach(b => {
+                if (b.status !== "rejected" && b.slot) {
+                    slotsCount[b.slot] = (slotsCount[b.slot] || 0) + 1;
+                }
+            });
+
+            let html = "";
+            for (let z = 1; z <= 8; z++) {
+                const conf = ADMIN_ZONE_DATA[z];
+                let slotsHtml = "";
+
+                conf.options.forEach(opt => {
+                    const key = `zone${z}_${opt}`;
+                    const booked = slotsCount[key] || 0;
+                    const limit = 300;
+                    const remaining = Math.max(0, limit - booked);
+                    const label = opt === "am" ? "รอบเช้า (08.30-11.00)" : "รอบบ่าย (12.30-15.00)";
+                    const percent = Math.min(100, Math.round((booked / limit) * 100));
+
+                    let barColor = "#10b981";
+                    let statusText = `คงเหลือ ${remaining} คิว`;
+                    if (booked >= limit) {
+                        barColor = "#ef4444";
+                        statusText = "🔴 เต็ม 300/300";
+                    } else if (booked >= 200) {
+                        barColor = "#f59e0b";
+                        statusText = `⚠️ หนาแน่น (เหลือ ${remaining})`;
+                    }
+
+                    slotsHtml += `
+                        <div style="margin-top:0.4rem; padding:0.4rem; background-color:white; border-radius:6px; border:1px solid #e2e8f0;">
+                            <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:0.25rem;">
+                                <span><strong>${label}</strong></span>
+                                <span style="font-weight:bold; color:${booked >= limit ? '#ef4444' : '#1e3a8a'}">${booked} / ${limit} คิว</span>
+                            </div>
+                            <div style="width:100%; height:7px; background-color:#e2e8f0; border-radius:4px; overflow:hidden; margin-bottom:0.25rem;">
+                                <div style="width:${percent}%; height:100%; background-color:${barColor}; transition:width 0.3s;"></div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#64748b;">
+                                <span>${statusText}</span>
+                                <span>${percent}%</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                    <div class="card" style="padding:0.75rem; margin:0; border:1px solid #cbd5e1; background-color:white; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #f1f5f9; padding-bottom:0.4rem; margin-bottom:0.4rem;">
+                            <span style="font-weight:bold; color:var(--primary-color); font-size:0.95rem;">แดน ${z}</span>
+                            <span style="font-size:0.75rem; color:#475569; background:#f1f5f9; padding:0.1rem 0.4rem; border-radius:4px;">${conf.date}</span>
+                        </div>
+                        ${slotsHtml}
+                    </div>
+                `;
+            }
+
+            grid.innerHTML = html;
+        }
+
         async function showReportModal() {
             const bookings = await getBookings();
             
             // Calculate statistics
-            // 1. Group by Date
             const dateStats = {};
-            // 2. Group by Zone
             const zoneStats = {};
+            const slotsCount = {};
+
             for (let z = 1; z <= 8; z++) {
                 zoneStats[z] = { bookings: 0, visitors: 0 };
             }
@@ -638,7 +731,6 @@
             let rejectedCount = 0;
 
             bookings.forEach(b => {
-                // Parse date Booked (YYYY-MM-DD)
                 let dateStr = "ไม่ระบุวันที่";
                 if (b.dateBooked) {
                     try {
@@ -647,22 +739,34 @@
                     } catch(e) {}
                 }
                 
-                // Count status
                 if (b.status === "approved") approvedCount++;
                 else if (b.status === "pending") pendingCount++;
                 else if (b.status === "rejected") rejectedCount++;
-                
-                // Count visitors
-                let visitors = [];
-                if (typeof b.visitors === 'string') {
-                    try { visitors = JSON.parse(b.visitors); } catch(e) {}
-                } else if (Array.isArray(b.visitors)) {
-                    visitors = b.visitors;
+
+                if (b.status !== "rejected" && b.slot) {
+                    slotsCount[b.slot] = (slotsCount[b.slot] || 0) + 1;
                 }
-                const vCount = visitors.length;
+                
+                // Robust multi-format visitor counter!
+                let vCount = 0;
+                let visitors = b.visitors;
+                if (typeof visitors === 'string') {
+                    const trimmed = visitors.trim();
+                    if (trimmed.startsWith('[')) {
+                        try {
+                            const parsed = JSON.parse(trimmed);
+                            vCount = Array.isArray(parsed) ? parsed.length : 0;
+                        } catch(e) { vCount = 0; }
+                    } else if (trimmed.length > 0) {
+                        const lines = trimmed.split('\n').filter(l => l.trim().length > 0);
+                        vCount = lines.length;
+                    }
+                } else if (Array.isArray(visitors)) {
+                    vCount = visitors.length;
+                }
+
                 totalVisitors += vCount;
 
-                // Group by date
                 if (!dateStats[dateStr]) {
                     dateStats[dateStr] = { totalBookings: 0, totalVisitors: 0, zones: {} };
                     for (let z = 1; z <= 8; z++) dateStats[dateStr].zones[z] = 0;
@@ -709,6 +813,35 @@
                 `;
             }
 
+            let quotaRowsHtml = "";
+            for (let z = 1; z <= 8; z++) {
+                const conf = ADMIN_ZONE_DATA[z];
+                conf.options.forEach(opt => {
+                    const key = `zone${z}_${opt}`;
+                    const booked = slotsCount[key] || 0;
+                    const limit = 300;
+                    const remaining = Math.max(0, limit - booked);
+                    const label = opt === "am" ? "รอบเช้า (08.30 - 11.00 น.)" : "รอบบ่าย (12.30 - 15.00 น.)";
+                    let statusBadge = `<span style="color:#10b981; font-weight:bold;">● ว่าง (เหลือ ${remaining} คิว)</span>`;
+                    if (booked >= limit) {
+                        statusBadge = `<span style="color:#ef4444; font-weight:bold;">🔴 เต็มแล้ว (300/300)</span>`;
+                    } else if (booked >= 200) {
+                        statusBadge = `<span style="color:#f59e0b; font-weight:bold;">⚠️ หนาแน่น (เหลือ ${remaining} คิว)</span>`;
+                    }
+
+                    quotaRowsHtml += `
+                        <tr>
+                            <td style="padding:0.6rem; border-bottom:1px solid var(--border-light); text-align:center; font-weight:bold;">แดน ${z}</td>
+                            <td style="padding:0.6rem; border-bottom:1px solid var(--border-light);">${conf.date}</td>
+                            <td style="padding:0.6rem; border-bottom:1px solid var(--border-light);">${label}</td>
+                            <td style="padding:0.6rem; border-bottom:1px solid var(--border-light); text-align:center; font-weight:bold; color:var(--primary-color);">${booked} / ${limit} คิว</td>
+                            <td style="padding:0.6rem; border-bottom:1px solid var(--border-light); text-align:center; font-weight:bold; color:#059669;">${remaining} คิว</td>
+                            <td style="padding:0.6rem; border-bottom:1px solid var(--border-light); text-align:center;">${statusBadge}</td>
+                        </tr>
+                    `;
+                });
+            }
+
             const reportHtml = `
                 <div id="printReportArea" style="font-family:'Prompt', sans-serif;">
                     <div style="text-align:center; margin-bottom:1.5rem;">
@@ -752,7 +885,7 @@
                     </table>
 
                     <h4 style="border-bottom:2px solid var(--primary-color); padding-bottom:0.4rem; color:var(--primary-color); font-family:'Prompt', sans-serif;">2. สรุปสะสมยอดรวมตามแดนคุมขัง</h4>
-                    <table style="width:100%; border-collapse:collapse; margin-bottom:1.5rem; font-size:0.9rem;">
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:2rem; font-size:0.9rem;">
                         <thead>
                             <tr style="background-color:rgba(0,0,0,0.05);">
                                 <th style="padding:0.75rem; text-align:center; width:120px;">แดนคุมขัง</th>
@@ -762,6 +895,23 @@
                         </thead>
                         <tbody>
                             ${zoneRowsHtml}
+                        </tbody>
+                    </table>
+
+                    <h4 style="border-bottom:2px solid var(--primary-color); padding-bottom:0.4rem; color:var(--primary-color); font-family:'Prompt', sans-serif;">3. สรุปสถานะโควตาการจองเยี่ยมคงเหลือ (จำกัดรอบละ 300 คิว)</h4>
+                    <table style="width:100%; border-collapse:collapse; margin-bottom:1.5rem; font-size:0.85rem;">
+                        <thead>
+                            <tr style="background-color:rgba(0,0,0,0.05);">
+                                <th style="padding:0.6rem; text-align:center; width:80px;">แดน</th>
+                                <th style="padding:0.6rem; text-align:left;">กำหนดวันเข้าเยี่ยม</th>
+                                <th style="padding:0.6rem; text-align:left;">รอบเวลา</th>
+                                <th style="padding:0.6rem; text-align:center;">จองแล้ว (คิว)</th>
+                                <th style="padding:0.6rem; text-align:center;">คงเหลือ (คิว)</th>
+                                <th style="padding:0.6rem; text-align:center;">สถานะรอบ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${quotaRowsHtml}
                         </tbody>
                     </table>
                 </div>
