@@ -199,8 +199,12 @@
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1rem;">
                 <h3 style="margin:0; font-family:'Prompt', sans-serif;">รายชื่อการลงทะเบียนจองเยี่ยมญาติใกล้ชิด</h3>
                 
-                <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-                    <select id="filterZone" class="form-control" style="width:150px; padding:0.5rem;" onchange="renderBookingsTable()">
+                <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+                    <div style="position:relative;">
+                        <input type="text" id="filterSearch" class="form-control" placeholder="🔍 ค้นหาชื่อ / เลขบัตร / ญาติ..." style="width:220px; padding:0.5rem; border-radius:6px;" oninput="renderBookingsTable()">
+                    </div>
+
+                    <select id="filterZone" class="form-control" style="width:140px; padding:0.5rem;" onchange="renderBookingsTable()">
                         <option value="">กรองตามแดน</option>
                         <option value="1">แดน 1</option>
                         <option value="2">แดน 2</option>
@@ -212,7 +216,7 @@
                         <option value="8">แดน 8</option>
                     </select>
 
-                    <select id="filterStatus" class="form-control" style="width:150px; padding:0.5rem;" onchange="renderBookingsTable()">
+                    <select id="filterStatus" class="form-control" style="width:140px; padding:0.5rem;" onchange="renderBookingsTable()">
                         <option value="">กรองสถานะ</option>
                         <option value="pending">รอการตรวจสอบ</option>
                         <option value="approved">อนุมัติแล้ว</option>
@@ -459,11 +463,22 @@
         }
 
         function renderBookingsTable() {
+            const searchQuery = (document.getElementById("filterSearch") ? document.getElementById("filterSearch").value : "").trim().toLowerCase();
             const zoneFilter = document.getElementById("filterZone").value;
             const statusFilter = document.getElementById("filterStatus").value;
             const tbody = document.getElementById("bookingsTableBody");
             
             let filtered = bookingsCache;
+
+            if (searchQuery) {
+                filtered = filtered.filter(b => {
+                    const inmateName = (b.inmateFullName || `${b.inmateTitle || ''}${b.inmateName || ''} ${b.inmateSurname || ''}`).toLowerCase();
+                    const inmateId = String(b.inmateId || '').toLowerCase();
+                    const visitorsText = (typeof b.visitors === 'string' ? b.visitors : JSON.stringify(b.visitors)).toLowerCase();
+                    
+                    return inmateName.includes(searchQuery) || inmateId.includes(searchQuery) || visitorsText.includes(searchQuery);
+                });
+            }
 
             if (zoneFilter) {
                 filtered = filtered.filter(b => b.zone === zoneFilter);
