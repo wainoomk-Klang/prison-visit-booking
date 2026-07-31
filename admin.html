@@ -292,30 +292,30 @@
 
     <!-- Modal Reject Reason -->
     <div class="modal" id="rejectReasonModal">
-        <div class="modal-content" style="max-width: 450px; border-top: 5px solid var(--danger);">
-            <h3 style="margin-top:0; font-family:'Prompt', sans-serif; display:flex; align-items:center; gap:0.5rem; color:var(--danger); font-size:1.25rem;">
-                <i class="fa-solid fa-circle-xmark"></i> ระบุเหตุผลการปฏิเสธคำร้อง
+        <div class="modal-content" style="max-width: 480px; border-top: 5px solid var(--danger);">
+            <h3 style="margin-top:0; font-family:'Prompt', sans-serif; display:flex; align-items:center; gap:0.5rem; color:var(--danger); font-size:1.2rem;">
+                <i class="fa-solid fa-ban"></i> ระบุเหตุผลการงดเยี่ยม / ปฏิเสธคำร้อง
             </h3>
             <p style="font-size:0.85rem; color:var(--text-muted-light); margin-bottom:1rem; line-height:1.5;">
-                กรุณาระบุสาเหตุที่ปฏิเสธคิวจองนี้ เพื่อให้ญาติผู้ขอเข้าเยี่ยมทราบและดำเนินการแก้ไขเอกสารได้ถูกต้อง:
+                พิมพ์ระบุเหตุผลที่งดเยี่ยมหรือปฏิเสธคำร้องนี้ เพื่อแจ้งให้ญาติทราบโดยตรงในระบบ:
             </p>
             
             <div class="form-group" style="margin-bottom:1rem;">
-                <textarea id="rejectReasonInput" class="form-control" rows="3" placeholder="ตัวอย่าง: รูปถ่ายบัตรประชาชนไม่ชัดเจน กรุณาถ่ายภาพใหม่และแนบหลักฐานยื่นเข้ามาอีกครั้ง" style="width:100%; border:1.5px solid var(--border-light); border-radius:8px; padding:0.75rem; font-family:inherit; font-size:0.9rem; resize:none; box-sizing:border-box;"></textarea>
+                <textarea id="rejectReasonInput" class="form-control" rows="3" placeholder="พิมพ์เหตุผลที่นี่... (เช่น งดเยี่ยมเนื่องจากผู้ต้องขังออกศาล / งดเยี่ยมเนื่องจากย้ายเรือนจำ / บัตรประชาชนไม่ชัดเจน)" style="width:100%; border:1.5px solid var(--border-light); border-radius:8px; padding:0.75rem; font-family:inherit; font-size:0.9rem; resize:none; box-sizing:border-box;"></textarea>
             </div>
             
-            <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:0.5rem; color:var(--text-light);">เลือกข้อความสำเร็จรูป:</label>
+            <label style="display:block; font-size:0.8rem; font-weight:600; margin-bottom:0.5rem; color:var(--text-light);">เลือกข้อความสำเร็จรูป (สามารถแก้ไขข้อความเพิ่มเติมได้):</label>
             <div style="display:flex; flex-wrap:wrap; gap:0.4rem; margin-bottom:1.5rem;">
-                <button type="button" class="btn-preset" onclick="setPresetRejectReason('มีคำสั่งงดเยี่ยมญาติกรณีพิเศษ/เหตุจำเป็นด่วนของเรือนจำ กรุณาติดตามประกาศกำหนดวันเยี่ยมใหม่')" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-weight:bold;">📢 คำสั่งงดเยี่ยมด่วน</button>
-                <button type="button" class="btn-preset" onclick="setPresetRejectReason('ผู้ต้องขังถูกลงโทษเพิกถอนสิทธิ์เข้าเยี่ยมเนื่องจากกระทำผิดวินัย')" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5;">🚫 ผู้ต้องขังติดวินัย</button>
-                <button type="button" class="btn-preset" onclick="setPresetRejectReason('รูปถ่ายหน้าบัตรประชาชนผู้เข้าเยี่ยมไม่ชัดเจน กรุณาแนบภาพใหม่')">บัตร ปชช. ไม่ชัด</button>
-                <button type="button" class="btn-preset" onclick="setPresetRejectReason('รูปถ่ายทะเบียนบ้านหน้าแสดงความสัมพันธ์ไม่ชัดเจน กรุณาแนบภาพใหม่')">ทะเบียนบ้านไม่ชัด</button>
-                <button type="button" class="btn-preset" onclick="setPresetRejectReason('เอกสารยืนยันสิทธิ์ความสัมพันธ์ไม่ตรงตามเกณฑ์จองเยี่ยมญาติใกล้ชิด')">เอกสารไม่สมบูรณ์</button>
+                <button type="button" class="btn-preset" onclick="setPresetRejectReason('งดเยี่ยมเนื่องจากผู้ต้องขังมีกำหนดออกศาลในวันดังกล่าว')" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5;">⚖️ งดเยี่ยม (ผู้ต้องขังออกศาล)</button>
+                <button type="button" class="btn-preset" onclick="setPresetRejectReason('งดเยี่ยมเนื่องจากย้ายเรือนจำ / ย้ายแดนคุมขัง')" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5;">🚚 งดเยี่ยม (ย้ายเรือนจำ)</button>
+                <button type="button" class="btn-preset" onclick="setPresetRejectReason('งดเยี่ยมเนื่องจากเรือนจำปรับปรุงสถานที่ / มีภารกิจพิเศษ')" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5;">🏢 งดเยี่ยม (ปรับปรุงสถานที่)</button>
+                <button type="button" class="btn-preset" onclick="setPresetRejectReason('งดเยี่ยมเนื่องจากผู้ต้องขังถูกลงโทษเพิกถอนสิทธิ์เข้าเยี่ยม (กระทำผิดวินัย)')" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5;">🚫 งดเยี่ยม (กระทำผิดวินัย)</button>
+                <button type="button" class="btn-preset" onclick="setPresetRejectReason('รูปถ่ายหน้าบัตรประชาชนผู้เข้าเยี่ยมไม่ชัดเจน กรุณาแนบภาพใหม่')">🪪 บัตร ปชช. ไม่ชัด</button>
             </div>
 
             <div class="form-row" style="margin-top:1.5rem; display:flex; gap:0.5rem; justify-content:flex-end;">
                 <button onclick="closeRejectReasonModal()" class="btn btn-secondary" style="width:auto; padding:0.5rem 1.2rem; border-radius:6px; font-weight:600; font-size:0.9rem;">ยกเลิก</button>
-                <button onclick="submitRejectReason()" class="btn btn-primary" style="width:auto; padding:0.5rem 1.2rem; background-color:var(--danger); border-color:var(--danger); color:white; border-radius:6px; font-weight:600; font-size:0.9rem;">ยืนยันปฏิเสธ</button>
+                <button onclick="submitRejectReason()" class="btn btn-primary" style="width:auto; padding:0.5rem 1.2rem; background-color:var(--danger); border-color:var(--danger); color:white; border-radius:6px; font-weight:600; font-size:0.9rem;">บันทึกแจ้งงดเยี่ยม / ปฏิเสธ</button>
             </div>
         </div>
     </div>
