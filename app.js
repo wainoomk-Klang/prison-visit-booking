@@ -169,18 +169,30 @@ async function getSlots() {
 }
 
 // Save dynamic changes (simulated for LocalStorage, or executed via API)
-async function changeBookingStatusOnServer(inmateId, newStatus, remarks) {
+async function changeBookingStatusOnServer(inmateId, newStatus, remarks, updatedVisitors = null) {
     if (isProduction()) {
         try {
+            const body = {
+                action: "update_status",
+                inmateId: inmateId,
+                status: newStatus,
+                remarks: remarks || ""
+            };
+
+            if (updatedVisitors !== null) {
+                if (Array.isArray(updatedVisitors)) {
+                    body.visitorsJson = JSON.stringify(updatedVisitors);
+                    body.visitorsText = updatedVisitors.map((v, i) => `${i+1}. ${v.title || ''}${v.name || ''} ${v.surname || ''} (${v.relation || ''}) โทร: ${v.tel || ''}`).join('\n');
+                } else if (typeof updatedVisitors === 'string') {
+                    body.visitorsText = updatedVisitors;
+                    body.visitorsJson = updatedVisitors;
+                }
+            }
+
             const response = await fetch(APPS_SCRIPT_URL, {
                 method: "POST",
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({
-                    action: "update_status",
-                    inmateId: inmateId,
-                    status: newStatus,
-                    remarks: remarks || ""
-                })
+                body: JSON.stringify(body)
             });
             const result = await response.json();
             return result.status === "success";
@@ -194,6 +206,9 @@ async function changeBookingStatusOnServer(inmateId, newStatus, remarks) {
         if (booking) {
             booking.status = newStatus;
             booking.remarks = remarks || "";
+            if (updatedVisitors !== null) {
+                booking.visitors = updatedVisitors;
+            }
             localStorage.setItem(STORAGE_BOOKINGS_KEY, JSON.stringify(bookings));
         }
         return true;

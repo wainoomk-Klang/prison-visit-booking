@@ -411,6 +411,53 @@
             renderQuotaMonitor();
         }
 
+        function parseVisitorsData(visitors) {
+            if (typeof visitors === 'string') {
+                const trimmed = visitors.trim();
+                if (trimmed.startsWith('[')) {
+                    try {
+                        const parsed = JSON.parse(trimmed);
+                        if (Array.isArray(parsed)) return parsed;
+                    } catch(e) {}
+                } else if (trimmed.length > 0) {
+                    const lines = trimmed.split('\n').filter(l => l.trim().length > 0);
+                    return lines.map(l => ({ rawText: l.trim() }));
+                }
+            } else if (Array.isArray(visitors)) {
+                return visitors;
+            }
+            return [];
+        }
+
+        const VALID_RELATIONS = ["บิดา", "มารดา", "บุตร", "ภรรยา", "สามี"];
+
+        function getVisitorBadgesHtml(booking) {
+            const list = parseVisitorsData(booking.visitors);
+            if (list.length === 0) return `<small style="color:var(--text-muted-light);">ไม่พบข้อมูล</small>`;
+
+            let badges = [];
+            list.forEach((v, i) => {
+                let rel = v.relation || "";
+                let nameStr = v.name ? `${v.title || ''}${v.name} ${v.surname || ''}` : `ญาติคนที่ ${i+1}`;
+                if (!rel && v.rawText) {
+                    const match = v.rawText.match(/\((.*?)\)/);
+                    if (match) rel = match[1];
+                    nameStr = v.rawText;
+                }
+
+                if (rel) {
+                    const isValid = VALID_RELATIONS.some(r => rel.includes(r));
+                    if (isValid) {
+                        badges.push(`<span class="badge" style="background:#e0f2fe; color:#0369a1; font-size:0.72rem; padding:2px 6px; font-weight:normal; border:1px solid #bae6fd;" title="${nameStr}">${rel}</span>`);
+                    } else {
+                        badges.push(`<span class="badge" style="background:#fee2e2; color:#b91c1c; font-size:0.72rem; padding:2px 6px; font-weight:bold; border:1px solid #fca5a5;" title="${nameStr} (ไม่มีสิทธิ์เยี่ยมตามระเบียบ)">⚠️ ${rel}</span>`);
+                    }
+                }
+            });
+
+            return badges.length > 0 ? `<div style="margin-top:4px; display:flex; flex-wrap:wrap; gap:2px;">${badges.join('')}</div>` : '';
+        }
+
         function renderBookingsTable() {
             const zoneFilter = document.getElementById("filterZone").value;
             const statusFilter = document.getElementById("filterStatus").value;
@@ -442,25 +489,10 @@
                     badgeText = "ปฏิเสธการจอง";
                 }
 
-                // Parse visitors if it's a JSON string or text format
-                let visitorCount = 0;
-                let visitors = booking.visitors;
-                if (typeof visitors === 'string') {
-                    const trimmed = visitors.trim();
-                    if (trimmed.startsWith('[')) {
-                        try {
-                            const parsed = JSON.parse(trimmed);
-                            visitorCount = Array.isArray(parsed) ? parsed.length : 0;
-                        } catch(e) {
-                            visitorCount = 0;
-                        }
-                    } else if (trimmed.length > 0) {
-                        const lines = trimmed.split('\n').filter(l => l.trim().length > 0);
-                        visitorCount = lines.length;
-                    }
-                } else if (Array.isArray(visitors)) {
-                    visitorCount = visitors.length;
-                }
+                // Parse visitors count and badges
+                const parsedList = parseVisitorsData(booking.visitors);
+                const visitorCount = parsedList.length;
+                const badgesHtml = getVisitorBadgesHtml(booking);
 
                 const driveUrl = booking.driveFolderUrl || booking.driveFolder || "#";
                 const hasDrive = driveUrl && driveUrl !== "#";
@@ -473,7 +505,10 @@
                             <small style="color:var(--text-muted-light);">บัตร: ${booking.inmateId} | แดน ${booking.zone}</small>
                         </td>
                         <td>${booking.slotText}</td>
-                        <td>${visitorCount} ท่าน</td>
+                        <td>
+                            <strong>${visitorCount} ท่าน</strong>
+                            ${badgesHtml}
+                        </td>
                         <td>
                             ${hasDrive ? `
                                 <a href="${driveUrl}" target="_blank" style="color:var(--secondary-color); font-weight:600;">
@@ -488,8 +523,8 @@
                             ${booking.remarks ? `<br><small style="color:var(--danger); display:block; margin-top:4px; max-width:180px; white-space:normal; line-height:1.2;">เหตุผล: ${booking.remarks}</small>` : ''}
                         </td>
                         <td>
-                            <div style="display:flex; gap:0.25rem;">
-                                <button class="btn btn-secondary" onclick="viewDetails('${booking.inmateId}')" style="padding:0.25rem 0.5rem; font-size:0.8rem; width:auto;">ดูเอกสาร</button>
+                            <div style="display:flex; gap:0.25rem; flex-wrap:wrap;">
+                                <button class="btn btn-secondary" onclick="viewDetails('${booking.inmateId}')" style="padding:0.25rem 0.5rem; font-size:0.8rem; width:auto;">ดูเอกสาร/จัดการญาติ</button>
                                 ${booking.status === "pending" ? `
                                     <button class="btn btn-primary" onclick="changeStatus('${booking.inmateId}', 'approved')" style="padding:0.25rem 0.5rem; font-size:0.8rem; background-color:var(--success); width:auto;">อนุมัติ</button>
                                     <button class="btn btn-primary" onclick="changeStatus('${booking.inmateId}', 'rejected')" style="padding:0.25rem 0.5rem; font-size:0.8rem; background-color:var(--danger); width:auto;">ปฏิเสธ</button>
@@ -503,11 +538,15 @@
             tbody.innerHTML = html;
         }
 
+        let activeModalBookingId = "";
+        let currentModalVisitors = [];
+
         async function viewDetails(inmateId) {
             const bookings = await getBookings();
             const booking = bookings.find(b => String(b.inmateId).trim() === String(inmateId).trim());
             if (!booking) return;
 
+            activeModalBookingId = inmateId;
             const modalBody = document.getElementById("modalDetailsBody");
             
             let visitors = booking.visitors;
@@ -994,12 +1033,26 @@
 
             let rowsHtml = "";
             approvedBookings.forEach((b, idx) => {
+                const vList = parseVisitorsData(b.visitors);
+                let vListStr = "";
+                if (vList.length > 0) {
+                    vListStr = vList.map((v, i) => {
+                        if (v.rawText) return v.rawText;
+                        return `${i+1}. ${v.title || ''}${v.name || ''} ${v.surname || ''} (${v.relation || 'ญาติ'}) โทร: ${v.tel || '-'}`;
+                    }).join("<br>");
+                } else {
+                    vListStr = "ไม่ระบุรายละเอียดญาติ";
+                }
+
+                const inmateNameStr = b.inmateFullName || `${b.inmateTitle || ''}${b.inmateName || ''} ${b.inmateSurname || ''}`;
+
                 rowsHtml += `
                     <tr>
-                        <td style="padding:4px 8px; border:1px solid #000; text-align:center; font-size:10pt;">${idx + 1}</td>
-                        <td style="padding:4px 8px; border:1px solid #000; font-weight:bold; font-size:10pt;">${b.inmateName}</td>
-                        <td style="padding:4px 8px; border:1px solid #000; text-align:center; font-size:10pt;">แดน ${b.zone}</td>
-                        <td style="padding:4px 8px; border:1px solid #000; font-size:10pt;">${b.slotText}</td>
+                        <td style="padding:5px 8px; border:1px solid #000; text-align:center; font-size:10pt;">${idx + 1}</td>
+                        <td style="padding:5px 8px; border:1px solid #000; font-weight:bold; font-size:10pt;">${inmateNameStr}</td>
+                        <td style="padding:5px 8px; border:1px solid #000; text-align:center; font-size:10pt;">แดน ${b.zone}</td>
+                        <td style="padding:5px 8px; border:1px solid #000; font-size:10pt;">${b.slotText}</td>
+                        <td style="padding:5px 8px; border:1px solid #000; font-size:9.5pt; line-height:1.4;">${vListStr}</td>
                     </tr>
                 `;
             });
@@ -1007,7 +1060,7 @@
             const printableTable = `
                 <div style="font-family:'Sarabun', 'TH Sarabun New', 'TH Sarabun PSK', sans-serif; color:#000; background-color:#fff; padding:0.5rem; border:1px solid #ccc; border-radius:8px;">
                     <div style="text-align:center; margin-bottom:0.75rem;">
-                        <h2 style="margin:0 0 0.2rem 0; font-size:1.25rem;">บัญชีรายชื่อผู้ต้องขังที่ผ่านการอนุมัติเยี่ยมญาติใกล้ชิดรอบพิเศษ</h2>
+                        <h2 style="margin:0 0 0.2rem 0; font-size:1.25rem;">บัญชีรายชื่อผู้ต้องขังและญาติที่ผ่านการอนุมัติเยี่ยมญาติใกล้ชิดรอบพิเศษ</h2>
                         <h3 style="margin:0 0 0.2rem 0; font-size:1.1rem; color:#000;">ทัณฑสถานวัยหนุ่มกลาง (แดน ${zoneNum})</h3>
                         <p style="margin:0; font-size:0.8rem; color:#444;">พิมพ์เมื่อ: ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })} น.</p>
                     </div>
@@ -1015,10 +1068,11 @@
                     <table style="width:100%; border-collapse:collapse; font-size:10pt; line-height:1.2;">
                         <thead>
                             <tr style="background-color:#eee;">
-                                <th style="padding:5px 8px; border:1px solid #000; text-align:center; width:50px; font-size:10pt;">ลำดับ</th>
-                                <th style="padding:5px 8px; border:1px solid #000; text-align:left; font-size:10pt;">ชื่อ-นามสกุล ผู้ต้องขัง</th>
-                                <th style="padding:5px 8px; border:1px solid #000; text-align:center; width:80px; font-size:10pt;">แดน</th>
-                                <th style="padding:5px 8px; border:1px solid #000; text-align:left; width:280px; font-size:10pt;">รอบเวลาเข้าเยี่ยม</th>
+                                <th style="padding:5px 8px; border:1px solid #000; text-align:center; width:45px; font-size:10pt;">ลำดับ</th>
+                                <th style="padding:5px 8px; border:1px solid #000; text-align:left; width:170px; font-size:10pt;">ชื่อ-นามสกุล ผู้ต้องขัง</th>
+                                <th style="padding:5px 8px; border:1px solid #000; text-align:center; width:50px; font-size:10pt;">แดน</th>
+                                <th style="padding:5px 8px; border:1px solid #000; text-align:left; width:180px; font-size:10pt;">รอบเวลาเข้าเยี่ยม</th>
+                                <th style="padding:5px 8px; border:1px solid #000; text-align:left; font-size:10pt;">รายชื่อและสิทธิ์ญาติที่ได้รับอนุมัติ</th>
                             </tr>
                         </thead>
                         <tbody>
