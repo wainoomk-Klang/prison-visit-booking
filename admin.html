@@ -1033,26 +1033,13 @@
 
             let rowsHtml = "";
             approvedBookings.forEach((b, idx) => {
-                const vList = parseVisitorsData(b.visitors);
-                let vListStr = "";
-                if (vList.length > 0) {
-                    vListStr = vList.map((v, i) => {
-                        if (v.rawText) return v.rawText;
-                        return `${i+1}. ${v.title || ''}${v.name || ''} ${v.surname || ''} (${v.relation || 'ญาติ'}) โทร: ${v.tel || '-'}`;
-                    }).join("<br>");
-                } else {
-                    vListStr = "ไม่ระบุรายละเอียดญาติ";
-                }
-
                 const inmateNameStr = b.inmateFullName || `${b.inmateTitle || ''}${b.inmateName || ''} ${b.inmateSurname || ''}`;
-
                 rowsHtml += `
                     <tr>
-                        <td style="padding:5px 8px; border:1px solid #000; text-align:center; font-size:10pt;">${idx + 1}</td>
-                        <td style="padding:5px 8px; border:1px solid #000; font-weight:bold; font-size:10pt;">${inmateNameStr}</td>
-                        <td style="padding:5px 8px; border:1px solid #000; text-align:center; font-size:10pt;">แดน ${b.zone}</td>
-                        <td style="padding:5px 8px; border:1px solid #000; font-size:10pt;">${b.slotText}</td>
-                        <td style="padding:5px 8px; border:1px solid #000; font-size:9.5pt; line-height:1.4;">${vListStr}</td>
+                        <td style="padding:4px 8px; border:1px solid #000; text-align:center; font-size:10pt;">${idx + 1}</td>
+                        <td style="padding:4px 8px; border:1px solid #000; font-weight:bold; font-size:10pt;">${inmateNameStr}</td>
+                        <td style="padding:4px 8px; border:1px solid #000; text-align:center; font-size:10pt;">แดน ${b.zone}</td>
+                        <td style="padding:4px 8px; border:1px solid #000; font-size:10pt;">${b.slotText}</td>
                     </tr>
                 `;
             });
@@ -1060,7 +1047,7 @@
             const printableTable = `
                 <div style="font-family:'Sarabun', 'TH Sarabun New', 'TH Sarabun PSK', sans-serif; color:#000; background-color:#fff; padding:0.5rem; border:1px solid #ccc; border-radius:8px;">
                     <div style="text-align:center; margin-bottom:0.75rem;">
-                        <h2 style="margin:0 0 0.2rem 0; font-size:1.25rem;">บัญชีรายชื่อผู้ต้องขังและญาติที่ผ่านการอนุมัติเยี่ยมญาติใกล้ชิดรอบพิเศษ</h2>
+                        <h2 style="margin:0 0 0.2rem 0; font-size:1.25rem;">บัญชีรายชื่อผู้ต้องขังที่ผ่านการอนุมัติเยี่ยมญาติใกล้ชิดรอบพิเศษ</h2>
                         <h3 style="margin:0 0 0.2rem 0; font-size:1.1rem; color:#000;">ทัณฑสถานวัยหนุ่มกลาง (แดน ${zoneNum})</h3>
                         <p style="margin:0; font-size:0.8rem; color:#444;">พิมพ์เมื่อ: ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })} น.</p>
                     </div>
@@ -1068,11 +1055,10 @@
                     <table style="width:100%; border-collapse:collapse; font-size:10pt; line-height:1.2;">
                         <thead>
                             <tr style="background-color:#eee;">
-                                <th style="padding:5px 8px; border:1px solid #000; text-align:center; width:45px; font-size:10pt;">ลำดับ</th>
-                                <th style="padding:5px 8px; border:1px solid #000; text-align:left; width:170px; font-size:10pt;">ชื่อ-นามสกุล ผู้ต้องขัง</th>
-                                <th style="padding:5px 8px; border:1px solid #000; text-align:center; width:50px; font-size:10pt;">แดน</th>
-                                <th style="padding:5px 8px; border:1px solid #000; text-align:left; width:180px; font-size:10pt;">รอบเวลาเข้าเยี่ยม</th>
-                                <th style="padding:5px 8px; border:1px solid #000; text-align:left; font-size:10pt;">รายชื่อและสิทธิ์ญาติที่ได้รับอนุมัติ</th>
+                                <th style="padding:5px 8px; border:1px solid #000; text-align:center; width:50px; font-size:10pt;">ลำดับ</th>
+                                <th style="padding:5px 8px; border:1px solid #000; text-align:left; font-size:10pt;">ชื่อ-นามสกุล ผู้ต้องขัง</th>
+                                <th style="padding:5px 8px; border:1px solid #000; text-align:center; width:80px; font-size:10pt;">แดน</th>
+                                <th style="padding:5px 8px; border:1px solid #000; text-align:left; width:280px; font-size:10pt;">รอบเวลาเข้าเยี่ยม</th>
                             </tr>
                         </thead>
                         <tbody>
