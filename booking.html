@@ -536,15 +536,15 @@
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>ความสัมพันธ์ / Relationship *</label>
-                        <select class="form-control visitor-relation" onchange="updateRelationDocs(this, ${visitorCount})" required>
-                            <option value="">เลือกความสัมพันธ์ / Select Relation</option>
+                        <label style="font-weight:bold;">ความสัมพันธ์กับผู้ต้องขัง / Relationship <span style="color:var(--danger); font-weight:bold;">* (จำเป็นต้องเลือก)</span></label>
+                        <select class="form-control visitor-relation" onchange="updateRelationDocs(this, ${visitorCount})" required style="border: 1.5px solid var(--primary-color);">
+                            <option value="">-- กรุณากดเลือกความสัมพันธ์ * --</option>
                             <option value="บิดา">บิดา / Father</option>
                             <option value="มารดา">มารดา / Mother</option>
                             <option value="บุตร">บุตร / Child</option>
                             <option value="ภรรยา">ภรรยา / Wife (จดทะเบียนสมรส)</option>
                             <option value="สามี">สามี / Husband (จดทะเบียนสมรส)</option>
-                            <option value="แฟน">แฟน / Partner (ไม่ได้จดทะเบียนสมรส)</option>
+                            <option value="แฟน">แฟน / Partner (มีหนังสือรับรองจากเรือนจำ)</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -701,6 +701,45 @@
             }
 
             if (step === 4) {
+                // Strict validation for Step 3 visitor fields!
+                const forms = document.querySelectorAll("#visitorsContainer > .card");
+                let isValid = true;
+                let errorMsg = "";
+
+                forms.forEach((form, idx) => {
+                    if (!isValid) return;
+
+                    const relation = form.querySelector(".visitor-relation").value.trim();
+                    const title = form.querySelector(".visitor-title").value.trim();
+                    const name = form.querySelector(".visitor-name").value.trim();
+                    const surname = form.querySelector(".visitor-surname").value.trim();
+                    const tel = form.querySelector(".visitor-tel").value.trim();
+                    const cidDoc = form.querySelector(".visitor-id-card-doc");
+                    const relDoc = form.querySelector(".visitor-relation-doc");
+
+                    if (!relation) {
+                        isValid = false;
+                        errorMsg = `กรุณากดเลือกความสัมพันธ์ของ ญาติคนที่ ${idx+1} (จำเป็นต้องระบุ)`;
+                    } else if (!title || !name || !surname) {
+                        isValid = false;
+                        errorMsg = `กรุณากรอก คำนำหน้า ชื่อ และนามสกุล ของ ญาติคนที่ ${idx+1} ให้ครบถ้วน`;
+                    } else if (!tel) {
+                        isValid = false;
+                        errorMsg = `กรุณากรอก เบอร์โทรศัพท์ ของ ญาติคนที่ ${idx+1}`;
+                    } else if (!isEditMode && (!cidDoc || !cidDoc.files || cidDoc.files.length === 0)) {
+                        isValid = false;
+                        errorMsg = `กรุณาอัปโหลดรูปภาพบัตรประชาชน/สูติบัตร ของ ญาติคนที่ ${idx+1}`;
+                    } else if (!isEditMode && (!relDoc || !relDoc.files || relDoc.files.length === 0)) {
+                        isValid = false;
+                        errorMsg = `กรุณาอัปโหลดรูปภาพเอกสารความสัมพันธ์ ของ ญาติคนที่ ${idx+1}`;
+                    }
+                });
+
+                if (!isValid) {
+                    showCustomAlert("ข้อมูลไม่ครบถ้วน", errorMsg, "warning");
+                    return;
+                }
+
                 // Compile review data
                 const reviewDiv = document.getElementById("reviewContent");
                 const inmateNameStr = document.getElementById("inmateFullName").value;
@@ -708,7 +747,6 @@
                 const zone = document.getElementById("inmateZone").value;
 
                 let visitorsHtml = "";
-                const forms = document.querySelectorAll("#visitorsContainer > .card");
                 forms.forEach((form, idx) => {
                     const relation = form.querySelector(".visitor-relation").value;
                     const name = form.querySelector(".visitor-name").value;
