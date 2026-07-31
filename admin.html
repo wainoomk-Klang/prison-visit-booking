@@ -216,11 +216,12 @@
                         <option value="8">แดน 8</option>
                     </select>
 
-                    <select id="filterStatus" class="form-control" style="width:140px; padding:0.5rem;" onchange="renderBookingsTable()">
+                    <select id="filterStatus" class="form-control" style="width:160px; padding:0.5rem;" onchange="renderBookingsTable()">
                         <option value="">กรองสถานะ</option>
                         <option value="pending">รอการตรวจสอบ</option>
                         <option value="approved">อนุมัติแล้ว</option>
                         <option value="rejected">ปฏิเสธการจอง</option>
+                        <option value="resubmitted">🔄 เฉพาะยื่นแก้ไขใหม่</option>
                     </select>
 
                     <button class="btn btn-primary" onclick="refreshData()" style="width:auto; padding:0.5rem 1rem; background-color: var(--primary-color); border-color: var(--primary-color); display:inline-flex; align-items:center; gap:0.5rem; color:white; border-radius:6px; cursor:pointer; font-weight:600;">
@@ -484,18 +485,6 @@
                 });
             }
 
-            if (zoneFilter) {
-                filtered = filtered.filter(b => b.zone === zoneFilter);
-            }
-            if (statusFilter) {
-                filtered = filtered.filter(b => b.status === statusFilter);
-            }
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted-light);">ไม่พบข้อมูลการจองตามเงื่อนไขที่เลือก</td></tr>`;
-                return;
-            }
-
             // Count total submissions per inmateId to detect resubmissions/edits
             const inmateSeenCount = {};
             const totalInmateCounts = {};
@@ -503,6 +492,20 @@
                 const k = String(b.inmateId).trim();
                 totalInmateCounts[k] = (totalInmateCounts[k] || 0) + 1;
             });
+
+            if (zoneFilter) {
+                filtered = filtered.filter(b => b.zone === zoneFilter);
+            }
+            if (statusFilter) {
+                if (statusFilter === "resubmitted") {
+                    filtered = filtered.filter(b => {
+                        const k = String(b.inmateId).trim();
+                        return totalInmateCounts[k] > 1;
+                    });
+                } else {
+                    filtered = filtered.filter(b => b.status === statusFilter);
+                }
+            }
 
             let html = "";
             filtered.forEach((booking, idx) => {
