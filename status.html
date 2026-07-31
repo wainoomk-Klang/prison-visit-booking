@@ -405,19 +405,34 @@
             const appCard = document.getElementById("approvedVisitorsCard");
             const disCard = document.getElementById("disqualifiedVisitorsCard");
 
-            let visitors = booking.visitors;
+            let visitors = booking.cleanVisitors || booking.visitorsJson || booking.visitors;
             let parsedVisitors = [];
 
             if (typeof visitors === 'string') {
                 const trimmed = visitors.trim();
                 if (trimmed.startsWith('[')) {
                     try { parsedVisitors = JSON.parse(trimmed); } catch(e) {}
-                } else if (trimmed.length > 0) {
+                }
+                
+                if (parsedVisitors.length === 0 && trimmed.length > 0) {
                     const lines = trimmed.split('\n').filter(l => l.trim().length > 0);
                     parsedVisitors = lines.map(l => ({ rawText: l.trim() }));
                 }
             } else if (Array.isArray(visitors)) {
                 parsedVisitors = visitors;
+            }
+
+            // Filter out disqualified visitors if remark specifies removed names
+            if (msg.includes("ตัดสิทธิ์:")) {
+                const match = msg.match(/ตัดสิทธิ์:\s*(.*?)\s*ออก/);
+                const removedText = match ? match[1] : "";
+                if (removedText) {
+                    parsedVisitors = parsedVisitors.filter(v => {
+                        let nameStr = v.rawText || `${v.title || ''}${v.name || ''} ${v.surname || ''}`;
+                        let cleanName = nameStr.replace(/^[0-9.]+\s*/, '').split('(')[0].trim();
+                        return !removedText.includes(cleanName);
+                    });
+                }
             }
 
             if (parsedVisitors.length > 0 && status === 'approved') {
@@ -429,13 +444,13 @@
                 }).join("");
 
                 appCard.innerHTML = `
-                    <div class="bg-emerald-50/80 rounded-card p-5 border border-emerald-200/80 shadow-sm flex items-start gap-4">
+                    <div class="bg-emerald-50/90 rounded-card p-5 border-2 border-emerald-300 shadow-sm flex items-start gap-4">
                         <div class="p-3 bg-emerald-100 text-emerald-700 rounded-2xl mt-0.5">
                             <i data-lucide="user-check" class="w-6 h-6"></i>
                         </div>
                         <div class="flex-1">
                             <span class="text-xs text-emerald-800 font-bold block mb-1">🟢 รายชื่อญาติที่ได้รับอนุมัติให้เข้าเยี่ยม (${parsedVisitors.length} ท่าน):</span>
-                            <div class="space-y-1.5 mt-2 bg-white p-3 rounded-xl border border-emerald-100">
+                            <div class="space-y-1.5 mt-2 bg-white p-3.5 rounded-xl border border-emerald-200 shadow-inner">
                                 ${listItems}
                             </div>
                         </div>
