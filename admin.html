@@ -496,6 +496,14 @@
                 return;
             }
 
+            // Count total submissions per inmateId to detect resubmissions/edits
+            const inmateSeenCount = {};
+            const totalInmateCounts = {};
+            bookingsCache.forEach(b => {
+                const k = String(b.inmateId).trim();
+                totalInmateCounts[k] = (totalInmateCounts[k] || 0) + 1;
+            });
+
             let html = "";
             filtered.forEach((booking, idx) => {
                 let badgeClass = "badge-pending";
@@ -516,12 +524,25 @@
                 const driveUrl = booking.driveFolderUrl || booking.driveFolder || "#";
                 const hasDrive = driveUrl && driveUrl !== "#";
 
+                const k = String(booking.inmateId).trim();
+                inmateSeenCount[k] = (inmateSeenCount[k] || 0) + 1;
+                
+                let resubmitBadge = "";
+                if (totalInmateCounts[k] > 1) {
+                    if (inmateSeenCount[k] === 1) {
+                        resubmitBadge = `<br><span class="badge" style="background:#e0e7ff; color:#3730a3; border:1px solid #c7d2fe; font-size:0.7rem; margin-top:3px; display:inline-block;">🔄 แก้ไขส่งใหม่ (ฉบับล่าสุด)</span>`;
+                    } else {
+                        resubmitBadge = `<br><span class="badge" style="background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1; font-size:0.7rem; margin-top:3px; display:inline-block;">📜 คิวเดิมก่อนแก้ไข</span>`;
+                    }
+                }
+
                 html += `
                     <tr>
                         <td>${formatThaiDate(booking.dateBooked || new Date().toISOString())}</td>
                         <td>
                             <strong>${booking.inmateFullName || (booking.inmateTitle + booking.inmateName + ' ' + booking.inmateSurname)}</strong><br>
                             <small style="color:var(--text-muted-light);">บัตร: ${booking.inmateId} | แดน ${booking.zone}</small>
+                            ${resubmitBadge}
                         </td>
                         <td>${booking.slotText}</td>
                         <td>
