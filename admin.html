@@ -708,47 +708,63 @@
             activeModalBookingId = inmateId;
             const modalBody = document.getElementById("modalDetailsBody");
             
-            let visitors = booking.visitors;
+            const parsedVisitors = parseVisitorsData(booking.visitors);
+            currentModalVisitors = parsedVisitors;
+
             let visitorsHtml = "";
-            let parsedVisitors = null;
 
-            if (typeof visitors === 'string') {
-                const trimmed = visitors.trim();
-                if (trimmed.startsWith('[')) {
-                    try {
-                        parsedVisitors = JSON.parse(trimmed);
-                    } catch(e) {}
-                }
-            } else if (Array.isArray(visitors)) {
-                parsedVisitors = visitors;
-            }
-
-            if (Array.isArray(parsedVisitors) && parsedVisitors.length > 0) {
+            if (parsedVisitors.length > 0) {
                 parsedVisitors.forEach((v, idx) => {
+                    let rel = v.relation || "";
+                    let nameStr = v.name ? `${v.title || ''}${v.name} ${v.surname || ''}` : "";
+                    let cidStr = v.cid || "";
+                    let telStr = v.tel || "";
+
+                    if (v.rawText) {
+                        nameStr = v.rawText;
+                        const matchRel = v.rawText.match(/\((.*?)\)/);
+                        if (matchRel) rel = matchRel[1].replace('ความสัมพันธ์:', '').trim();
+                    }
+
+                    const isValid = VALID_RELATIONS.some(r => rel.includes(r));
+                    const isSpecial = rel.includes("แฟน") || rel.includes("คู่หมั้น");
+                    
+                    let badgeStyle = isValid ? "background:#dcfce7; color:#15803d; border:1px solid #86efac;" : "background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5;";
+                    let statusLabel = isValid ? (isSpecial ? "✓ มีสิทธิ์ (มีหนังสือรับรอง)" : "✓ มีสิทธิ์เข้าเยี่ยม") : "⚠️ ไม่ตรงตามเกณฑ์ (ติ๊กออกเพื่อตัดสิทธิ์)";
+                    if (isSpecial) {
+                        badgeStyle = "background:#fef3c7; color:#92400e; border:1px solid #fde68a;";
+                    }
+
+                    const displayName = nameStr || `ญาติคนที่ ${idx+1}`;
+
                     visitorsHtml += `
-                        <div style="border: 1px solid var(--border-light); border-radius:6px; padding:0.75rem; margin-top:0.5rem; background-color:rgba(0,0,0,0.01);">
-                            <strong style="color:var(--primary-color);">ญาติคนที่ ${idx+1}: ${v.title || ''}${v.name || ''} ${v.surname || ''}</strong> (ความสัมพันธ์: ${v.relation || 'ไม่ระบุ'})<br>
-                            <span>เลขบัตรประชาชน: ${v.cid || 'ไม่ระบุ'} | เบอร์ติดต่อ: ${v.tel || 'ไม่ระบุ'}</span>
+                        <div id="v_card_${idx}" style="border: 1px solid ${isValid ? '#cbd5e1' : '#fca5a5'}; border-radius:8px; padding:0.75rem; margin-top:0.5rem; background-color:${isValid ? 'white' : '#fff5f5'};">
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                                <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-weight:bold; color:var(--primary-color);">
+                                    <input type="checkbox" class="visitor-approve-checkbox" data-index="${idx}" checked onchange="onVisitorCheckToggle('${inmateId}')">
+                                    <span>ญาติคนที่ ${idx+1}: ${displayName} ${rel && !displayName.includes(rel) ? `(${rel})` : ''}</span>
+                                </label>
+                                <span class="badge" style="${badgeStyle} font-size:0.75rem; padding:3px 8px; font-weight:bold;">${statusLabel}</span>
+                            </div>
+                            ${(cidStr || telStr) ? `
+                                <div style="margin-top:0.4rem; font-size:0.85rem; color:#475569; padding-left:1.6rem;">
+                                    <span>เลขบัตรประชาชน: ${cidStr || 'ไม่ระบุ'} | เบอร์ติดต่อ: ${telStr || 'ไม่ระบุ'}</span>
+                                </div>
+                            ` : ''}
                         </div>
                     `;
                 });
-            } else if (typeof visitors === 'string' && visitors.trim().length > 0) {
-                visitorsHtml = `
-                    <div style="border: 1px solid var(--border-light); border-radius:6px; padding:0.75rem; margin-top:0.5rem; background-color:rgba(0,0,0,0.01); white-space:pre-line; line-height:1.6;">
-                        <strong style="color:var(--primary-color);">รายชื่อญาติผู้เข้าเยี่ยม:</strong><br>${visitors}
-                    </div>
-                `;
             } else {
                 visitorsHtml = `<p style="color:var(--text-muted-light);">ไม่พบรายละเอียดรายชื่อญาติ (กรุณาดูไฟล์เอกสารบน Drive)</p>`;
             }
 
             const driveUrl = booking.driveFolderUrl || booking.driveFolder || "#";
             const hasDrive = driveUrl && driveUrl !== "#";
-
             const inmateNameStr = booking.inmateFullName || `${booking.inmateTitle || ''}${booking.inmateName} ${booking.inmateSurname}`;
+
             modalBody.innerHTML = `
-                <p><strong>ผู้ต้องขัง:</strong> ${inmateNameStr} (แดน ${booking.zone} | ${booking.grade})</p>
-                <p><strong>รอบเวลานัดหมายเข้าเยี่ยม:</strong> ${booking.slotText}</p>
+                <p style="font-size:1.05rem;"><strong>ผู้ต้องขัง:</strong> ${inmateNameStr} (แดน ${booking.zone} | ${booking.grade})</p>
+                <p style="font-size:0.95rem;"><strong>รอบเวลานัดหมายเข้าเยี่ยม:</strong> ${booking.slotText}</p>
                 
                 <div style="border-top:1.5px dashed var(--border-light); margin-top:1rem; padding-top:1rem; text-align:center;">
                     <h4 style="margin:0 0 0.5rem 0; font-family:'Prompt', sans-serif; color:var(--primary-color);">📁 ตรวจสอบเอกสารหลักฐานทั้งหมด:</h4>
@@ -757,18 +773,39 @@
                             <i class="fa-solid fa-folder-open"></i> เปิดดูไฟล์เอกสารใน Google Drive ของคิวนี้
                         </a>
                         <p style="font-size:0.8rem; color:var(--text-muted-light); margin-top:0.5rem;">
-                            (เมื่อเปิดไดรฟ์จะพบไฟล์รูปภาพความละเอียดสูง ได้แก่ รูปทะเบียนบ้านผู้ต้องขัง, บัตรประชาชน/สูติบัตร และหลักฐานความสัมพันธ์ของญาติทั้งหมด)
+                            (เมื่อเปิดไดรฟ์จะพบไฟล์รูปภาพ ได้แก่ รูปทะเบียนบ้านผู้ต้องขัง, บัตรประชาชน และหลักฐานความสัมพันธ์ของญาติทั้งหมด)
                         </p>
                     ` : `
-                        <span style="color:var(--danger); font-weight:bold;">⚠️ ไม่มีลิงก์ Drive (เนื่องจากส่งในโหมดจำลองระบบ)</span>
+                        <span style="color:var(--danger); font-weight:bold;">⚠️ ไม่มีลิงก์ Drive</span>
                     `}
                 </div>
 
                 <div style="border-top:1px solid var(--border-light); margin-top:1rem; padding-top:1rem;">
-                    <h4 style="margin:0 0 0.5rem 0; font-family:'Prompt', sans-serif;">👥 รายละเอียดญาติผู้เข้าเยี่ยม (${visitors.length} ท่าน):</h4>
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                        <h4 style="margin:0; font-family:'Prompt', sans-serif; color:var(--primary-color);">👥 ตรวจสอบรายชื่อและจัดการตัดสิทธิ์ญาติ (${parsedVisitors.length} ท่าน):</h4>
+                        <span style="font-size:0.85rem; color:var(--text-muted-light);">*เอาเครื่องหมายติ๊กถูกออก เพื่อตัดสิทธิ์ญาติที่ไม่ให้อนุมัติได้</span>
+                    </div>
+                    
                     ${visitorsHtml}
+
+                    <div style="margin-top:1rem;">
+                        <label style="font-size:0.85rem; font-weight:bold; display:block; margin-bottom:0.25rem;">หมายเหตุประกอบการอนุมัติ / ตัดสิทธิ์:</label>
+                        <input type="text" id="modalRemarksInput" class="form-control" placeholder="ระบุเหตุผล เช่น อนุมัติ 2 ท่าน (ตัดญาติคนที่ 3 ออก...)" value="${booking.remarks || ''}">
+                    </div>
+
+                    <div style="display:flex; gap:0.5rem; margin-top:1.5rem; justify-content:flex-end; flex-wrap:wrap;">
+                        <button type="button" class="btn btn-primary" onclick="submitPartialApproval('${inmateId}')" style="background-color:var(--success); width:auto; padding:0.6rem 1.2rem; font-weight:bold;">
+                            <i class="fa-solid fa-circle-check"></i> บันทึกอนุมัติ (ตามรายชื่อญาติที่ติ๊กเลือก)
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="changeStatus('${inmateId}', 'rejected')" style="background-color:var(--danger); width:auto; padding:0.6rem 1.2rem;">
+                            <i class="fa-solid fa-circle-xmark"></i> ปฏิเสธทั้งคิว
+                        </button>
+                    </div>
                 </div>
             `;
+
+            document.getElementById("detailsModal").style.display = "flex";
+        }
 
             document.getElementById("detailsModal").style.display = "flex";
         }
