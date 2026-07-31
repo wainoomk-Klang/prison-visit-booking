@@ -806,6 +806,67 @@
             document.getElementById("detailsModal").style.display = "none";
         }
 
+        function onVisitorCheckToggle(inmateId) {
+            const checkboxes = document.querySelectorAll(".visitor-approve-checkbox");
+            const removedNames = [];
+            checkboxes.forEach(chk => {
+                const i = parseInt(chk.getAttribute("data-index"));
+                const v = currentModalVisitors[i];
+                if (!chk.checked && v) {
+                    let nameStr = v.name ? `${v.title || ''}${v.name} ${v.surname || ''}` : (v.rawText || `ญาติคนที่ ${i+1}`);
+                    let relStr = v.relation || "";
+                    removedNames.push(`${nameStr} ${relStr ? `(${relStr})` : ''}`);
+                }
+            });
+
+            const remarksInput = document.getElementById("modalRemarksInput");
+            if (remarksInput) {
+                if (removedNames.length > 0) {
+                    remarksInput.value = `ตัดสิทธิ์: ${removedNames.join(', ')} ออกเนื่องจากไม่อนุญาต/ไม่ตรงตามเกณฑ์`;
+                } else {
+                    remarksInput.value = "";
+                }
+            }
+        }
+
+        async function submitPartialApproval(inmateId) {
+            const checkboxes = document.querySelectorAll(".visitor-approve-checkbox");
+            let approvedVisitors = [];
+
+            if (checkboxes.length > 0 && currentModalVisitors.length > 0) {
+                checkboxes.forEach(chk => {
+                    const i = parseInt(chk.getAttribute("data-index"));
+                    if (chk.checked && currentModalVisitors[i]) {
+                        approvedVisitors.push(currentModalVisitors[i]);
+                    }
+                });
+
+                if (approvedVisitors.length === 0) {
+                    alert("กรุณาเลือกอนุมัติญาติอย่างน้อย 1 ท่าน หรือกด 'ปฏิเสธทั้งคิว' หากไม่อนุญาตญาติท่านใดเลย");
+                    return;
+                }
+            } else {
+                approvedVisitors = currentModalVisitors;
+            }
+
+            const remarksNote = document.getElementById("modalRemarksInput").value.trim();
+
+            // 1. Optimistic update local memory
+            const booking = bookingsCache.find(b => String(b.inmateId).trim() === String(inmateId).trim());
+            if (booking) {
+                booking.status = "approved";
+                booking.remarks = remarksNote;
+                booking.visitors = approvedVisitors;
+                updateStats();
+                renderBookingsTable();
+            }
+
+            closeDetailsModal();
+
+            // 2. Save update to server
+            await changeBookingStatusOnServer(inmateId, "approved", remarksNote, approvedVisitors);
+        }
+
         let pendingRejectInmateId = "";
         let pendingRejectStatus = "";
 
