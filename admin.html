@@ -173,6 +173,25 @@
             </div>
         </div>
 
+        <!-- Notification Alert & Auto-Refresh Control Bar -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem; padding:0.75rem 1rem; background:linear-gradient(135deg, #1e293b, #0f172a); color:white; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.15);" class="no-print">
+            <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+                <span style="font-weight:bold; font-size:0.95rem; display:flex; align-items:center; gap:0.4rem; color:#f8fafc;">
+                    <i class="fa-solid fa-bell" id="bellIcon" style="color:#f59e0b; font-size:1.1rem;"></i> ระบบตรวจจับคิวใหม่เรียลไทม์
+                </span>
+                <span id="autoRefreshStatus" class="badge" style="background:#059669; color:white; font-size:0.75rem; padding:4px 10px; border-radius:12px;">🟢 ทำงานปกติ (ตรวจสอบคิวใหม่ทุก 30 วิ)</span>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                <button id="btnToggleSound" onclick="toggleNotificationSound()" class="btn" style="padding:0.4rem 0.9rem; font-size:0.85rem; background:#334155; color:white; border:1px solid #475569; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; font-family:'Prompt', sans-serif;">
+                    <i class="fa-solid fa-volume-high" id="soundIcon" style="color:#10b981;"></i> เสียงแจ้งเตือน: เปิด
+                </button>
+                <button onclick="testNotificationSound()" class="btn" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:#475569; color:white; border:none; border-radius:6px; cursor:pointer; font-family:'Prompt', sans-serif;">
+                    <i class="fa-solid fa-music"></i> ทดสอบเสียง 🔊
+                </button>
+            </div>
+        </div>
+
         <!-- report button bar -->
         <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;" class="no-print">
             <button class="btn btn-primary" onclick="showReportModal()" style="width:auto; padding:0.6rem 1.5rem; background-color: #0d9488; border-color: #0d9488; font-family:'Prompt', sans-serif; display:inline-flex; align-items:center; gap:0.5rem; font-weight:600; font-size:0.9rem; border-radius:6px; cursor:pointer;">
@@ -384,6 +403,86 @@
         }
 
         let bookingsCache = [];
+        let isSoundEnabled = true;
+        let audioCtx = null;
+        let previousBookingCount = -1;
+        let autoRefreshTimer = null;
+
+        function playDingDongSound() {
+            if (!isSoundEnabled) return;
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const now = audioCtx.currentTime;
+
+                // Tone 1: High chime (E5 - 659.25Hz)
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(659.25, now);
+                gain1.gain.setValueAtTime(0.3, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                osc1.start(now);
+                osc1.stop(now + 0.4);
+
+                // Tone 2: Warm chime (B5 - 987.77Hz)
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(987.77, now + 0.15);
+                gain2.gain.setValueAtTime(0.4, now + 0.15);
+                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.start(now + 0.15);
+                osc2.stop(now + 0.8);
+            } catch(e) {
+                console.error("Audio playback error:", e);
+            }
+        }
+
+        function toggleNotificationSound() {
+            isSoundEnabled = !isSoundEnabled;
+            const btn = document.getElementById("btnToggleSound");
+            if (isSoundEnabled) {
+                btn.innerHTML = `<i class="fa-solid fa-volume-high" id="soundIcon" style="color:#10b981;"></i> เสียงแจ้งเตือน: เปิด`;
+                btn.style.background = "#334155";
+                playDingDongSound();
+            } else {
+                btn.innerHTML = `<i class="fa-solid fa-volume-xmark" id="soundIcon" style="color:#ef4444;"></i> เสียงแจ้งเตือน: ปิด`;
+                btn.style.background = "#991b1b";
+            }
+        }
+
+        function testNotificationSound() {
+            playDingDongSound();
+            showToastNotification("🔔 ทดสอบเสียงแจ้งเตือนระบบสำเร็จ!");
+        }
+
+        function showToastNotification(message) {
+            let toast = document.getElementById("adminToastNotif");
+            if (!toast) {
+                toast = document.createElement("div");
+                toast.id = "adminToastNotif";
+                toast.style.cssText = "position:fixed; top:20px; right:20px; z-index:9999; background:#0f172a; color:#fff; padding:1rem 1.5rem; border-radius:10px; box-shadow:0 10px 25px rgba(0,0,0,0.3); border-left:6px solid #10b981; font-family:'Prompt', sans-serif; font-size:0.95rem; font-weight:bold; display:flex; align-items:center; gap:0.75rem; transition:all 0.3s ease; transform:translateY(-20px); opacity:0;";
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = `<i class="fa-solid fa-bell" style="color:#f59e0b; font-size:1.4rem;"></i> ${message}`;
+            toast.style.transform = "translateY(0)";
+            toast.style.opacity = "1";
+
+            setTimeout(() => {
+                toast.style.transform = "translateY(-20px)";
+                toast.style.opacity = "0";
+            }, 5000);
+        }
 
         async function refreshData() {
             // Show loading indicators
@@ -391,21 +490,38 @@
             tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--warning);"><i class="fa-solid fa-spinner fa-spin"></i> กำลังดึงข้อมูลจากระบบ Google Sheets...</td></tr>`;
             
             bookingsCache = await getBookings();
+            previousBookingCount = bookingsCache.length;
             
             updateStats();
             renderBookingsTable();
+
+            startAutoRefreshPolling();
         }
 
         async function silentRefreshData() {
-            // ดึงข้อมูลเงียบๆ จาก Sheets เพื่ออัปเดตในความทรงจำเบราว์เซอร์
-            // วิธีนี้จะไม่แสดงหน้าต่างโหลดสีเหลือง และไม่กระตุกรบกวนหน้าจอเจ้าหน้าที่
+            // ดึงข้อมูลเงียบๆ จาก Sheets เพื่ออัปเดตและส่งเสียงเตือนเมื่อมีคิวใหม่
             try {
-                bookingsCache = await getBookings();
+                const freshBookings = await getBookings();
+                if (previousBookingCount >= 0) {
+                    const newDiff = freshBookings.length - previousBookingCount;
+                    if (newDiff > 0) {
+                        playDingDongSound();
+                        showToastNotification(`มีคิวการจองใหม่เข้ามาเพิ่ม ${newDiff} รายการ!`);
+                    }
+                }
+                previousBookingCount = freshBookings.length;
+                bookingsCache = freshBookings;
                 updateStats();
                 renderBookingsTable();
             } catch(e) {
                 console.error("Silent background refresh failed:", e);
             }
+        }
+
+        function startAutoRefreshPolling() {
+            if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+            // ดึงข้อมูลเงียบๆ ทุก 30 วินาที
+            autoRefreshTimer = setInterval(silentRefreshData, 30000);
         }
 
         function updateStats() {
