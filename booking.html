@@ -689,19 +689,35 @@
 
         function goToStep(step) {
             if (step === 2) {
-                const doc = document.getElementById("inmateDoc").files[0];
+                const docInput = document.getElementById("inmateDoc");
+                const doc = docInput ? docInput.files[0] : null;
                 const zone = document.getElementById("inmateZone").value;
                 const grade = document.getElementById("inmateGrade").value;
 
-                if (!isCidVerified || (!isEditMode && !doc) || !zone || !grade) {
-                    showCustomAlert("กรุณากรอกข้อมูลให้ครบถ้วน", "กรุณากรอกข้อมูลผู้ต้องขังและอัปโหลดไฟล์หลักฐานความสัมพันธ์ให้ครบถ้วนก่อนไปขั้นตอนถัดไป", "warning");
+                if (!isCidVerified) {
+                    showCustomAlert("กรุณาตรวจสอบสิทธิ์", "กรุณากรอกรหัสประจำตัว/เลขบัตรประชาชนผู้ต้องขัง แล้วกดปุ่ม 'ตรวจสอบสิทธิ์' ก่อน", "warning");
+                    return;
+                }
+                if (!isEditMode && (!doc || docInput.files.length === 0)) {
+                    showCustomAlert("กรุณาแนบไฟล์หลักฐาน", "กรุณาอัปโหลดรูปภาพทะเบียนบ้านผู้ต้องขัง หรือเอกสารหลักฐานให้เรียบร้อยก่อน", "warning");
+                    return;
+                }
+                if (!zone || !grade) {
+                    showCustomAlert("ข้อมูลไม่ครบถ้วน", "กรุณากรอกข้อมูลผู้ต้องขังให้ครบถ้วนก่อนไปขั้นตอนถัดไป", "warning");
                     return;
                 }
                 updateTimeSlotsGrid();
             }
 
+            if (step === 3) {
+                if (!selectedSlot) {
+                    showCustomAlert("กรุณาเลือกรอบเวลา", "กรุณาเลือกรอบเวลาเข้าเยี่ยมในแดนคุมขังก่อนไปขั้นตอนถัดไป", "warning");
+                    return;
+                }
+            }
+
             if (step === 4) {
-                // Strict validation for Step 3 visitor fields!
+                // Strict validation for Step 3 visitor fields and ALL uploaded files!
                 const forms = document.querySelectorAll("#visitorsContainer > .card");
                 let isValid = true;
                 let errorMsg = "";
@@ -716,6 +732,8 @@
                     const tel = form.querySelector(".visitor-tel").value.trim();
                     const cidDoc = form.querySelector(".visitor-id-card-doc");
                     const relDoc = form.querySelector(".visitor-relation-doc");
+                    const extraDoc1 = form.querySelector(".visitor-extra-doc");
+                    const extraDoc2 = form.querySelector(".visitor-extra-doc-2");
 
                     if (!relation) {
                         isValid = false;
@@ -728,10 +746,17 @@
                         errorMsg = `กรุณากรอก เบอร์โทรศัพท์ ของ ญาติคนที่ ${idx+1}`;
                     } else if (!isEditMode && (!cidDoc || !cidDoc.files || cidDoc.files.length === 0)) {
                         isValid = false;
-                        errorMsg = `กรุณาอัปโหลดรูปภาพบัตรประชาชน/สูติบัตร ของ ญาติคนที่ ${idx+1}`;
+                        errorMsg = `กรุณาแนบรูปภาพบัตรประชาชน/สูติบัตร ของ ญาติคนที่ ${idx+1}`;
                     } else if (!isEditMode && (!relDoc || !relDoc.files || relDoc.files.length === 0)) {
                         isValid = false;
-                        errorMsg = `กรุณาอัปโหลดรูปภาพเอกสารความสัมพันธ์ ของ ญาติคนที่ ${idx+1}`;
+                        errorMsg = `กรุณาแนบรูปภาพทะเบียนบ้าน/เอกสารความสัมพันธ์ ของ ญาติคนที่ ${idx+1}`;
+                    } else if (!isEditMode && extraDoc1 && (!extraDoc1.files || extraDoc1.files.length === 0)) {
+                        isValid = false;
+                        const docName = (relation === "ภรรยา" || relation === "สามี") ? "รูปภาพทะเบียนสมรส" : "รูปภาพหนังสือรับรองความสัมพันธ์";
+                        errorMsg = `กรุณาแนบ${docName} ของ ญาติคนที่ ${idx+1}`;
+                    } else if (!isEditMode && extraDoc2 && (!extraDoc2.files || extraDoc2.files.length === 0)) {
+                        isValid = false;
+                        errorMsg = `กรุณาแนบรูปภาพบัตรแสดงตำแหน่งของผู้นำชุมชน ของ ญาติคนที่ ${idx+1}`;
                     }
                 });
 
