@@ -204,14 +204,20 @@ function doPost(e) {
     var data = JSON.parse(e.postData.contents);
     var sheet = SpreadsheetApp.openById(SHEET_ID).getSheets()[0];
     
-    // 1. อัปเดตสถานะคิวจอง (แอดมินอนุมัติ/ปฏิเสธ)
+    // 1. อัปเดตสถานะคิวจอง (แอดมินอนุมัติ/ปฏิเสธ/ตัดสิทธิ์ญาติบางท่าน)
     if (data.action === "update_status") {
       var rows = sheet.getDataRange().getValues();
       for (var i = 1; i < rows.length; i++) {
         if (String(rows[i][1]).trim() === String(data.inmateId).trim()) {
-          sheet.getRange(i + 1, 8).setValue(data.status); // อัปเดตคอลัมน์ H
+          sheet.getRange(i + 1, 8).setValue(data.status); // อัปเดตคอลัมน์ H (Status)
           if (data.remarks !== undefined) {
-            sheet.getRange(i + 1, 10).setValue(data.remarks); // อัปเดตคอลัมน์ J
+            sheet.getRange(i + 1, 10).setValue(data.remarks); // อัปเดตคอลัมน์ J (Remarks)
+          }
+          if (data.visitorsJson !== undefined) {
+            sheet.getRange(i + 1, 9).setValue(data.visitorsJson); // อัปเดตคอลัมน์ I (JSON Raw)
+          }
+          if (data.visitorsText !== undefined) {
+            sheet.getRange(i + 1, 6).setValue(data.visitorsText); // อัปเดตคอลัมน์ F (Visitors Text)
           }
           SpreadsheetApp.flush();
           return ContentService.createTextOutput(JSON.stringify({
