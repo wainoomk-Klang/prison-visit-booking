@@ -358,8 +358,14 @@ function doPost(e) {
 }
 ```
 
-// ฟังก์ชันแปลงและบันทึกไฟล์ภาพแบบไม่ย่อขนาด
+// ฟังก์ชันแปลงและบันทึกไฟล์ภาพแบบไม่ย่อขนาด (พร้อมระบบลบรูปซ้ำเดิมออกให้อัตโนมัติ)
 function saveFileToDrive(folder, fileName, base64Data) {
+  if (!base64Data) return;
+  // ตรวจสอบและลบไฟล์เดิมที่มีชื่อซ้ำกันออก เพื่อป้องกันรูปภาพสะสมทวีคูณ
+  var existingFiles = folder.getFilesByName(fileName);
+  while (existingFiles.hasNext()) {
+    existingFiles.next().setTrashed(true);
+  }
   var rawData = base64Data.split(",")[1];
   var decodedData = Utilities.base64Decode(rawData);
   var blob = Utilities.newBlob(decodedData, "image/jpeg", fileName);

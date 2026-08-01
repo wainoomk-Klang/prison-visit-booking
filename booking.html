@@ -159,10 +159,13 @@
                 </div>
 
                 <div class="form-group" style="margin-top: 1rem;">
-                    <label>แนบรูปเอกสารประจำตัว / ทะเบียนบ้าน / พาสปอร์ต ของผู้ต้องขัง (Inmate Doc / House Reg. / Passport) *</label>
+                    <label style="font-weight:bold; color:var(--primary-color);">แนบรูปทะเบียนบ้านผู้ต้องขัง (หรือ พาสปอร์ตกรณีผู้ต้องขังต่างชาติ) <span style="color:var(--danger); font-weight:bold;">* [งดใช้บัตรประชาชนผู้ต้องขัง]</span></label>
+                    <div style="margin-bottom:0.75rem; border-left:4px solid var(--danger); background-color:#fff5f5; color:#991b1b; padding:0.75rem; border-radius:6px; font-size:0.88rem; line-height:1.5;">
+                        <p style="margin:0;">⚠️ <strong>ข้อระวังสำคัญ:</strong> กรุณาแนบรูปถ่าย <strong>"ทะเบียนบ้านผู้ต้องขัง" (หน้าที่มีชื่อผู้ต้องขังอยู่)</strong> หรือพาสปอร์ตกรณีเป็นต่างชาติเท่านั้น <span style="text-decoration:underline; font-weight:bold;">(ห้ามแนบรูปบัตรประชาชนของผู้ต้องขังเด็ดขาด)</span></p>
+                    </div>
                     <div class="upload-zone">
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                        <p>เลือกไฟล์รูปภาพหลักฐานผู้ต้องขัง / Select Inmate Document Photo</p>
+                        <i class="fa-solid fa-house-chimney-user"></i>
+                        <p>เลือกไฟล์รูปภาพทะเบียนบ้านผู้ต้องขัง / Select House Registration Document</p>
                         <input type="file" id="inmateDoc" required onchange="handleFileSelect(this, 'inmateDocPreview')">
                     </div>
                     <div id="inmateDocPreview" class="file-preview" style="display:none;"></div>
