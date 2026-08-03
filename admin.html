@@ -613,11 +613,25 @@
                 if (statusFilter === "resubmitted") {
                     filtered = filtered.filter(b => {
                         const k = String(b.inmateId).trim();
-                        return totalInmateCounts[k] > 1;
+                        const remarks = String(b.remarks || "").toLowerCase();
+                        return totalInmateCounts[k] > 1 || remarks.includes("แก้ไข") || remarks.includes("ยื่นใหม่") || remarks.includes("resubmit");
                     });
                 } else {
                     filtered = filtered.filter(b => b.status === statusFilter);
                 }
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align:center; padding:3rem 1rem; color:var(--text-muted-light);">
+                            <i class="fa-solid fa-circle-info" style="font-size:2rem; margin-bottom:0.5rem; display:block; opacity:0.5; color:var(--primary-color);"></i>
+                            <strong>ไม่พบรายการจองตามเงื่อนไขที่เลือก</strong><br>
+                            <small>รายการที่ยื่นแก้ไขเข้ามาใหม่จะปรับสถานะกลับเป็น "รอตรวจสอบ" อัตโนมัติ สามารถกดเลือกตัวกรองเป็น <strong>"สถานะทั้งหมด"</strong> หรือ <strong>"รอตรวจสอบ"</strong> เพื่อดูรายการคิวได้เลยครับ</small>
+                        </td>
+                    </tr>
+                `;
+                return;
             }
 
             let html = "";
@@ -644,7 +658,8 @@
                 inmateSeenCount[k] = (inmateSeenCount[k] || 0) + 1;
                 
                 let resubmitBadge = "";
-                if (totalInmateCounts[k] > 1) {
+                const remarksStr = String(booking.remarks || "");
+                if (totalInmateCounts[k] > 1 || remarksStr.includes("แก้ไข") || remarksStr.includes("ยื่นใหม่")) {
                     if (inmateSeenCount[k] === 1) {
                         resubmitBadge = `<br><span class="badge" style="background:#e0e7ff; color:#3730a3; border:1px solid #c7d2fe; font-size:0.7rem; margin-top:3px; display:inline-block;">🔄 แก้ไขส่งใหม่ (ฉบับล่าสุด)</span>`;
                     } else {
