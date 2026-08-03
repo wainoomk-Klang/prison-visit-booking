@@ -236,11 +236,10 @@
                     </select>
 
                     <select id="filterStatus" class="form-control" style="width:160px; padding:0.5rem;" onchange="renderBookingsTable()">
-                        <option value="">กรองสถานะ</option>
+                        <option value="">สถานะทั้งหมด</option>
                         <option value="pending">รอการตรวจสอบ</option>
                         <option value="approved">อนุมัติแล้ว</option>
                         <option value="rejected">ปฏิเสธการจอง</option>
-                        <option value="resubmitted">🔄 เฉพาะยื่นแก้ไขใหม่</option>
                     </select>
 
                     <button class="btn btn-primary" onclick="refreshData()" style="width:auto; padding:0.5rem 1rem; background-color: var(--primary-color); border-color: var(--primary-color); display:inline-flex; align-items:center; gap:0.5rem; color:white; border-radius:6px; cursor:pointer; font-weight:600;">
