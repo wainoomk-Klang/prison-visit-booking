@@ -384,10 +384,74 @@ function saveFileToDrive(folder, fileName, base64Data) {
   folder.createFile(blob);
 }
 
-// ฟังก์ชันช่วยเดาค่ารอบ
-function getSlotCode(zone, slotText) {
-  var isPm = slotText.indexOf("บ่าย") > -1;
-  return "zone" + zone + "_" + (isPm ? "pm" : "am");
+// ----------------------------------------------------
+// ฟังก์ชันพิเศษ: ล้างรูปซ้ำย้อนหลัง + ลบโฟลเดอร์ตกค้างที่ไม่ตรงกับ Sheets
+// ----------------------------------------------------
+function cleanOldDuplicateImagesAndOrphanFolders() {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var sheet = ss.getSheets()[0];
+  var data = sheet.getDataRange().getValues();
+  
+  // 1. เก็บ ID ของโฟลเดอร์จริงที่มีข้อมูลใน Google Sheets
+  var validFolderIds = {};
+  for (var i = 1; i < data.length; i++) {
+    var url = String(data[i][6]).trim();
+    if (url) {
+      var folderId = url.split("/").pop();
+      validFolderIds[folderId] = true;
+    }
+  }
+  
+  var parentFolder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
+  var folders = parentFolder.getFolders();
+  
+  var orphanFolderCount = 0;
+  var cleanedFolderCount = 0;
+  var deletedImageCount = 0;
+  
+  while (folders.hasNext()) {
+    var folder = folders.next();
+    var id = folder.getId();
+    
+    // ถ้าเป็นโฟลเดอร์ตกค้างที่ไม่มีใน Sheets -> ลบทิ้งลงถังขยะ
+    if (!validFolderIds[id]) {
+      folder.setTrashed(true);
+      orphanFolderCount++;
+      continue;
+    }
+    
+    // 2. ถ้าเป็นโฟลเดอร์จริง -> ทำการกวาดลบรูปซ้ำซ้อนภายในโฟลเดอร์
+    cleanedFolderCount++;
+    var files = folder.getFiles();
+    var filesByName = {};
+    
+    while (files.hasNext()) {
+      var file = files.next();
+      var name = file.getName();
+      if (!filesByName[name]) {
+        filesByName[name] = [];
+      }
+      filesByName[name].push(file);
+    }
+    
+    // สำหรับไฟล์ที่ชื่อซ้ำกัน ให้เก็บอันล่าสุด (Created Date) ไว้เพียง 1 ไฟล์ ส่วนที่เหลือย้ายลงถังขยะ
+    for (var fileName in filesByName) {
+      var fileList = filesByName[fileName];
+      if (fileList.length > 1) {
+        fileList.sort(function(a, b) {
+          return b.getDateCreated().getTime() - a.getDateCreated().getTime();
+        });
+        
+        for (var j = 1; j < fileList.length; j++) {
+          fileList[j].setTrashed(true);
+          deletedImageCount++;
+        }
+      }
+    }
+  }
+  
+  Logger.log("✅ ลบโฟลเดอร์ตกค้างที่ไม่ตรงกับ Sheets: " + orphanFolderCount + " โฟลเดอร์");
+  Logger.log("✅ เคลียร์รูปซ้ำในโฟลเดอร์จริง: " + cleanedFolderCount + " โฟลเดอร์ (ลบรูปซ้ำทิ้งไปทั้งหมด " + deletedImageCount + " รูป)");
 }
 ```
 
