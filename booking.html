@@ -677,6 +677,30 @@
                 `;
             }
 
+            // Optional Name / Surname Change Certificates
+            html += `
+                <div class="form-row" style="margin-top: 1rem;">
+                    <div class="form-group">
+                        <label style="color:var(--text-light);">แนบรูปใบเปลี่ยนชื่อ (ถ้ามี / Optional)</label>
+                        <div class="upload-zone" style="border-style: dashed; border-color:#94a3b8; background-color:rgba(241,245,249,0.5);">
+                            <i class="fa-solid fa-file-pen" style="color:#64748b;"></i>
+                            <p style="color:#64748b;">เลือกไฟล์รูปภาพใบเปลี่ยนชื่อ (แนบหรือไม่ก็ได้)</p>
+                            <input type="file" class="visitor-name-change-doc" onchange="handleFileSelect(this, 'preview_namechange_${id}')">
+                        </div>
+                        <div id="preview_namechange_${id}" class="file-preview" style="display:none;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label style="color:var(--text-light);">แนบรูปใบเปลี่ยนนามสกุล (ถ้ามี / Optional)</label>
+                        <div class="upload-zone" style="border-style: dashed; border-color:#94a3b8; background-color:rgba(241,245,249,0.5);">
+                            <i class="fa-solid fa-file-signature" style="color:#64748b;"></i>
+                            <p style="color:#64748b;">เลือกไฟล์รูปภาพใบเปลี่ยนนามสกุล (แนบหรือไม่ก็ได้)</p>
+                            <input type="file" class="visitor-surname-change-doc" onchange="handleFileSelect(this, 'preview_surnamechange_${id}')">
+                        </div>
+                        <div id="preview_surnamechange_${id}" class="file-preview" style="display:none;"></div>
+                    </div>
+                </div>
+            `;
+
             container.innerHTML = html;
             adjustRequiredFieldsForEdit();
         }
@@ -841,7 +865,9 @@
                     idCard: form.querySelector(".visitor-id-card-doc").files[0],
                     relationDoc: form.querySelector(".visitor-relation-doc").files[0],
                     extraDoc: form.querySelector(".visitor-extra-doc") ? form.querySelector(".visitor-extra-doc").files[0] : null,
-                    extraDoc2: form.querySelector(".visitor-extra-doc-2") ? form.querySelector(".visitor-extra-doc-2").files[0] : null
+                    extraDoc2: form.querySelector(".visitor-extra-doc-2") ? form.querySelector(".visitor-extra-doc-2").files[0] : null,
+                    nameChangeDoc: form.querySelector(".visitor-name-change-doc") ? form.querySelector(".visitor-name-change-doc").files[0] : null,
+                    surnameChangeDoc: form.querySelector(".visitor-surname-change-doc") ? form.querySelector(".visitor-surname-change-doc").files[0] : null
                 });
             }
 

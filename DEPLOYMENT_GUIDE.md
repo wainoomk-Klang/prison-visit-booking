@@ -295,6 +295,12 @@ function doPost(e) {
         if (visitor.extra2Base64) {
           saveFileToDrive(inmateFolder, "ญาติ_" + (idx+1) + "_หนังสือรับรอง_" + visitor.cid, visitor.extra2Base64);
         }
+        if (visitor.nameChangeBase64) {
+          saveFileToDrive(inmateFolder, "ญาติ_" + (idx+1) + "_ใบเปลี่ยนชื่อ_" + visitor.cid, visitor.nameChangeBase64);
+        }
+        if (visitor.surnameChangeBase64) {
+          saveFileToDrive(inmateFolder, "ญาติ_" + (idx+1) + "_ใบเปลี่ยนนามสกุล_" + visitor.cid, visitor.surnameChangeBase64);
+        }
       });
     }
 

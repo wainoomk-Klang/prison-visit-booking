@@ -312,6 +312,12 @@ async function uploadAndSaveBooking(bookingData, rawFiles) {
                 if (rawVisFiles.extraDoc2) {
                     visPayload.extra2Base64 = await getBase64(rawVisFiles.extraDoc2);
                 }
+                if (rawVisFiles.nameChangeDoc) {
+                    visPayload.nameChangeBase64 = await getBase64(rawVisFiles.nameChangeDoc);
+                }
+                if (rawVisFiles.surnameChangeDoc) {
+                    visPayload.surnameChangeBase64 = await getBase64(rawVisFiles.surnameChangeDoc);
+                }
 
                 payload.visitors.push(visPayload);
             }
