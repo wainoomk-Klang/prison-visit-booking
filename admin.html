@@ -39,9 +39,18 @@
             color: var(--primary-color);
         }
         @media print {
-            body {
+            @page {
+                size: A4 portrait;
+                margin: 12mm 10mm 12mm 10mm;
+            }
+            html, body {
                 background-color: white !important;
                 color: black !important;
+                height: auto !important;
+                min-height: auto !important;
+                overflow: visible !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
             body > * {
                 display: none !important;
@@ -49,30 +58,56 @@
             #reportModal {
                 display: block !important;
                 visibility: visible !important;
-            }
-            #reportModal .no-print {
-                display: none !important;
-            }
-            #reportModal {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
+                position: static !important;
+                left: auto !important;
+                top: auto !important;
+                width: 100% !important;
+                height: auto !important;
+                min-height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
                 background-color: white !important;
                 backdrop-filter: none !important;
+                box-shadow: none !important;
+                border: none !important;
                 z-index: 9999 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            #reportModal .no-print, .no-print {
+                display: none !important;
             }
             .modal-content {
                 box-shadow: none !important;
                 border: none !important;
                 width: 100% !important;
                 max-width: 100% !important;
+                height: auto !important;
+                min-height: auto !important;
+                max-height: none !important;
+                overflow: visible !important;
                 padding: 0 !important;
+                margin: 0 !important;
                 background-color: white !important;
+                position: static !important;
             }
-            .no-print {
-                display: none !important;
+            #zonePrintArea, #reportModalBody {
+                overflow: visible !important;
+                height: auto !important;
+                max-height: none !important;
+                position: static !important;
+            }
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                page-break-inside: auto !important;
+            }
+            tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            thead {
+                display: table-header-group !important;
             }
             .print-only {
                 display: flex !important;
