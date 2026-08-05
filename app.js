@@ -133,9 +133,10 @@ async function checkBookingOnServer(inmateCid) {
 async function getBookings() {
     if (isProduction()) {
         try {
-            const response = await fetch(`${APPS_SCRIPT_URL}?action=read`);
+            const timestamp = Date.now();
+            const response = await fetch(`${APPS_SCRIPT_URL}?action=read&_t=${timestamp}`, { cache: "no-store" });
             const result = await response.json();
-            if (result.status === "success") {
+            if (result.status === "success" && Array.isArray(result.data)) {
                 return result.data;
             }
         } catch (e) {
