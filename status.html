@@ -422,6 +422,19 @@
                 parsedVisitors = visitors;
             }
 
+            // Automatic Deduplication of Visitor Names
+            const uniqueVisitors = [];
+            const seenVisitorKeys = new Set();
+            parsedVisitors.forEach(v => {
+                let nameStr = v.rawText || `${v.title || ''}${v.name || ''} ${v.surname || ''}`;
+                let cleanKey = nameStr.replace(/^[0-9.]+\s*/, '').replace(/\(.*\)/, '').replace(/\s+/g, ' ').trim().toLowerCase();
+                if (cleanKey && !seenVisitorKeys.has(cleanKey)) {
+                    seenVisitorKeys.add(cleanKey);
+                    uniqueVisitors.push(v);
+                }
+            });
+            parsedVisitors = uniqueVisitors;
+
             // Filter out disqualified visitors if remark specifies removed names
             if (msg.includes("ตัดสิทธิ์:")) {
                 const match = msg.match(/ตัดสิทธิ์:\s*(.*?)\s*ออก/);
