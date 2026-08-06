@@ -52,9 +52,15 @@ function doGet(e) {
     
     // ค้นหาผู้ต้องขังรายบุคคล (สำหรับตรวจสอบสิทธิ์ลงจองคิว)
     if (e.parameter.action === "search_inmate") {
-      var searchKey = String(e.parameter.key).trim().replace(/\s+/g, "");
+      var searchKey = String(e.parameter.key || "").trim().replace(/\s+/g, "");
+      if (!searchKey || searchKey === "" || searchKey === "-" || searchKey === "undefined" || searchKey === "null") {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "success",
+          found: false
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+
       var inmateSheet = ss.getSheetByName("รายชื่อผู้ต้องขัง");
-      
       if (!inmateSheet) {
         return ContentService.createTextOutput(JSON.stringify({
           status: "error",
@@ -67,7 +73,10 @@ function doGet(e) {
         var inmateCode = String(inmateData[i][0]).trim().replace(/\s+/g, "");
         var citizenId = String(inmateData[i][2]).trim().replace(/\s+/g, "");
         
-        if (inmateCode === searchKey || citizenId === searchKey) {
+        var isCodeMatch = (inmateCode !== "" && inmateCode !== "-" && inmateCode === searchKey);
+        var isCidMatch = (citizenId !== "" && citizenId !== "-" && citizenId === searchKey);
+
+        if (isCodeMatch || isCidMatch) {
           var fullName = String(inmateData[i][1]).trim();
           var nameParts = fullName.split(/\s+/);
           var firstName = nameParts[0] || "";
@@ -97,7 +106,13 @@ function doGet(e) {
     
     // ค้นหาสถานะการจองคิวรายบุคคลสำหรับญาติสืบค้น
     if (e.parameter.action === "check_booking") {
-      var searchKey = String(e.parameter.key).trim().replace(/\s+/g, "");
+      var searchKey = String(e.parameter.key || "").trim().replace(/\s+/g, "");
+      if (!searchKey || searchKey === "" || searchKey === "-" || searchKey === "undefined" || searchKey === "null") {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "success",
+          found: false
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
       
       var targetId = searchKey;
       var inmateSheet = ss.getSheetByName("รายชื่อผู้ต้องขัง");
@@ -106,8 +121,8 @@ function doGet(e) {
         for (var i = 1; i < inmateData.length; i++) {
           var inmateCode = String(inmateData[i][0]).trim().replace(/\s+/g, "");
           var citizenId = String(inmateData[i][2]).trim().replace(/\s+/g, "");
-          if (inmateCode === searchKey) {
-            targetId = citizenId;
+          if (inmateCode !== "" && inmateCode !== "-" && inmateCode === searchKey) {
+            targetId = (citizenId !== "" && citizenId !== "-") ? citizenId : inmateCode;
             break;
           }
         }
@@ -118,7 +133,7 @@ function doGet(e) {
       
       for (var i = data.length - 1; i >= 1; i--) {
         var rowInmateId = String(data[i][1]).trim().replace(/\s+/g, "");
-        if (rowInmateId === targetId || rowInmateId === searchKey) {
+        if (rowInmateId !== "" && rowInmateId !== "-" && (rowInmateId === targetId || rowInmateId === searchKey)) {
           var nameStr = String(data[i][2]);
           return ContentService.createTextOutput(JSON.stringify({
             status: "success",

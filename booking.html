@@ -361,10 +361,16 @@
             }
 
             const inmate = searchResponse.data;
-            const targetCid = inmate.citizenId;
+            // Use citizenId if valid non-empty value; otherwise fall back to inmateCode!
+            const targetId = (inmate.citizenId && inmate.citizenId !== "" && inmate.citizenId !== "-") 
+                ? String(inmate.citizenId).trim() 
+                : String(inmate.inmateCode).trim();
 
-            // Check duplicate booking (already fetched in parallel)
-            const alreadyBooked = bookings.find(b => String(b.inmateId).trim() === String(targetCid).trim() && b.status !== "rejected");
+            // Check duplicate booking (ensure ID is not blank before matching)
+            const alreadyBooked = bookings.find(b => {
+                const bId = String(b.inmateId).trim();
+                return bId !== "" && bId !== "-" && (bId === targetId || bId === String(inmate.inmateCode).trim()) && b.status !== "rejected";
+            });
 
             if (alreadyBooked) {
                 const msg = `ผู้ต้องขัง <strong>${inmate.name} ${inmate.surname}</strong> ได้รับการลงทะเบียนจองสิทธิ์เข้าเยี่ยมไปแล้วในระบบ (จำกัด 1 สิทธิ์ต่อผู้ต้องขัง 1 ท่าน) ไม่สามารถจองคิวซ้ำซ้อนได้ หากเอกสารเดิมถูกปฏิเสธจึงจะสามารถลงคิวจองสิทธิ์ใหม่ได้ครับ`;
