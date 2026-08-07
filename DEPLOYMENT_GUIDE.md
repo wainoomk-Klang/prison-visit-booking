@@ -106,7 +106,8 @@ function doGet(e) {
     
     // ค้นหาสถานะการจองคิวรายบุคคลสำหรับญาติสืบค้น
     if (e.parameter && e.parameter.action === "check_booking") {
-      var searchKey = String(e.parameter.key || "").trim().replace(/\s+/g, "");
+      var rawKey = String(e.parameter.key || "").trim();
+      var searchKey = rawKey.replace(/\s+/g, "");
       if (!searchKey || searchKey === "" || searchKey === "-" || searchKey === "undefined" || searchKey === "null") {
         return ContentService.createTextOutput(JSON.stringify({
           status: "success",
@@ -116,43 +117,61 @@ function doGet(e) {
       
       var targetId = searchKey;
       var targetName = "";
+      var inmateCodeFromSheet = "";
+
+      // 1. ค้นหาในแผ่นงาน "รายชื่อผู้ต้องขัง" เพื่อดึงรหัส และชื่อ-นามสกุล ที่เกี่ยวข้อง
       var inmateSheet = ss.getSheetByName("รายชื่อผู้ต้องขัง");
       if (inmateSheet) {
         var inmateData = inmateSheet.getDataRange().getDisplayValues();
         for (var i = 1; i < inmateData.length; i++) {
-          var inmateCode = String(inmateData[i][0]).trim().replace(/\s+/g, "");
-          var citizenId = String(inmateData[i][2]).trim().replace(/\s+/g, "");
-          var isCodeMatch = (inmateCode !== "" && inmateCode !== "-" && inmateCode === searchKey);
-          var isCidMatch = (citizenId !== "" && citizenId !== "-" && citizenId === searchKey);
+          var code = String(inmateData[i][0]).trim().replace(/\s+/g, "");
+          var name = String(inmateData[i][1]).trim();
+          var cid = String(inmateData[i][2]).trim().replace(/\s+/g, "");
 
-          if (isCodeMatch || isCidMatch) {
-            targetId = (citizenId !== "" && citizenId !== "-") ? citizenId : inmateCode;
-            targetName = String(inmateData[i][1]).trim();
+          var isCodeMatch = (code !== "" && code !== "-" && code === searchKey);
+          var isCidMatch = (cid !== "" && cid !== "-" && cid === searchKey);
+          var isNameMatch = (name !== "" && (name.replace(/\s+/g, "").indexOf(searchKey) > -1 || searchKey.indexOf(name.replace(/\s+/g, "")) > -1));
+
+          if (isCodeMatch || isCidMatch || isNameMatch) {
+            targetId = (cid !== "" && cid !== "-") ? cid : code;
+            targetName = name;
+            inmateCodeFromSheet = code;
             break;
           }
         }
       }
       
+      // 2. ค้นหาในแผ่นงานสเปรดชีตประวัติการจอง (Sheet 0)
       var sheet = ss.getSheets()[0];
       var data = sheet.getDataRange().getDisplayValues();
       
       for (var i = data.length - 1; i >= 1; i--) {
         var rowInmateId = String(data[i][1]).trim().replace(/\s+/g, "");
         var rowInmateName = String(data[i][2]).trim();
+        var cleanRowName = rowInmateName.replace(/\s+/g, "").toLowerCase();
 
         var isMatch = false;
+
+        // เงื่อนไข 1: ตรงกับ ID / Code / SearchKey ที่ส่งมา
         if (rowInmateId !== "" && rowInmateId !== "-") {
-          if (rowInmateId === targetId || rowInmateId === searchKey) {
+          if (rowInmateId === targetId || rowInmateId === searchKey || rowInmateId === inmateCodeFromSheet) {
             isMatch = true;
           }
         }
 
-        // กรณีที่คอลัมน์ B ในสเปรดชีตจองเป็นเครื่องหมายขีด "-" (ต่างชาติ) ระบบจะสลับไปค้นหาด้วย "ชื่อ-นามสกุล ผู้ต้องขัง" แบบยืดหยุ่นแทนให้อัตโนมัติ
-        if (!isMatch && targetName !== "") {
-          var cleanRowName = rowInmateName.replace(/\s+/g, "").toLowerCase();
-          var cleanTargetName = targetName.replace(/\s+/g, "").toLowerCase();
-          if (cleanRowName.indexOf(cleanTargetName) > -1 || cleanTargetName.indexOf(cleanRowName) > -1) {
-            isMatch = true;
+        // เงื่อนไข 2: ค้นหาจากชื่อผู้ต้องขัง (สำหรับต่างชาติ หรือกรณีที่คอลัมน์ B เป็นเครื่องหมายขีด "-")
+        if (!isMatch) {
+          if (targetName !== "") {
+            var cleanTargetName = targetName.replace(/\s+/g, "").toLowerCase();
+            if (cleanRowName.indexOf(cleanTargetName) > -1 || cleanTargetName.indexOf(cleanRowName) > -1) {
+              isMatch = true;
+            }
+          }
+          if (searchKey !== "" && searchKey.length > 2) {
+            var cleanSearchKey = searchKey.toLowerCase();
+            if (cleanRowName.indexOf(cleanSearchKey) > -1) {
+              isMatch = true;
+            }
           }
         }
 
@@ -175,6 +194,7 @@ function doGet(e) {
           })).setMimeType(ContentService.MimeType.JSON);
         }
       }
+
       return ContentService.createTextOutput(JSON.stringify({
         status: "success",
         found: false
