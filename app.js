@@ -102,11 +102,12 @@ async function checkBookingOnServer(inmateCid) {
                 return result;
             }
 
-            // Fallback: If check_booking backend returns false, fetch all bookings (same as admin) and search locally
+            // Fallback Stage 1: Fetch all bookings (same as admin) and search locally
             const allBookings = await getBookings();
-            const cleanKey = inmateCid.trim().replace(/\s+/g, "").toLowerCase();
+            const rawKey = inmateCid.trim().toLowerCase();
+            const cleanKey = rawKey.replace(/\s+/g, "");
 
-            const found = allBookings.find(b => {
+            let found = allBookings.find(b => {
                 const bId = String(b.inmateId || "").trim().replace(/\s+/g, "").toLowerCase();
                 const bCode = String(b.inmateCode || "").trim().replace(/\s+/g, "").toLowerCase();
                 const bName = String(b.inmateName || "").trim().replace(/\s+/g, "").toLowerCase();
@@ -114,11 +115,37 @@ async function checkBookingOnServer(inmateCid) {
                 if (bId !== "" && bId !== "-" && bId === cleanKey) return true;
                 if (bCode !== "" && bCode !== "-" && bCode === cleanKey) return true;
                 if (cleanKey.length >= 2 && bName.indexOf(cleanKey) > -1) return true;
+                if (rawKey.length >= 2 && bName.indexOf(rawKey) > -1) return true;
                 return false;
             });
 
             if (found) {
                 return { status: "success", found: true, data: found };
+            }
+
+            // Fallback Stage 2: Look up inmate database sheet first, then match name against allBookings
+            const inmateCheck = await searchInmate(inmateCid);
+            if (inmateCheck && inmateCheck.found && inmateCheck.data) {
+                const iData = inmateCheck.data;
+                const searchName = String(iData.name || "").trim().toLowerCase();
+                const searchSurname = String(iData.surname || "").trim().toLowerCase();
+                const searchCode = String(iData.inmateCode || "").trim().toLowerCase();
+                const searchCid = String(iData.citizenId || "").trim().toLowerCase();
+
+                found = allBookings.find(b => {
+                    const bId = String(b.inmateId || "").trim().replace(/\s+/g, "").toLowerCase();
+                    const bName = String(b.inmateName || "").trim().replace(/\s+/g, "").toLowerCase();
+
+                    if (searchCid !== "" && searchCid !== "-" && bId === searchCid) return true;
+                    if (searchCode !== "" && searchCode !== "-" && bId === searchCode) return true;
+                    if (searchName !== "" && bName.indexOf(searchName) > -1) return true;
+                    if (searchSurname !== "" && bName.indexOf(searchSurname) > -1) return true;
+                    return false;
+                });
+
+                if (found) {
+                    return { status: "success", found: true, data: found };
+                }
             }
 
             return result;

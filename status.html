@@ -77,10 +77,7 @@
                     </label>
                     <input type="text" id="searchCid" 
                            class="w-full px-4 py-3.5 text-lg border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-300 tracking-wider" 
-                           placeholder="กรอกรหัสผู้ต้องขัง (10 หลัก) หรือ เลขบัตรประชาชน (13 หลัก)" 
-                           maxlength="13"
-                           oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                           inputmode="numeric">
+                           placeholder="กรอกรหัสผู้ต้องขัง (10 หลัก), เลขบัตรประชาชน (13 หลัก) หรือชื่อผู้ต้องขัง">
                 </div>
 
                 <button onclick="checkStatus()" 
