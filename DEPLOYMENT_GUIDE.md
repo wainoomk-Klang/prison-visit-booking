@@ -224,9 +224,11 @@ function doPost(e) {
       var rows = sheet.getDataRange().getValues();
       var targetKey = String(data.inmateId || "").trim();
       var targetCode = String(data.inmateCode || "").trim();
+      var targetName = String(data.inmateName || "").trim();
 
       for (var i = 1; i < rows.length; i++) {
         var rowId = String(rows[i][1]).trim();
+        var rowName = String(rows[i][2]).trim();
         var isMatch = false;
 
         if (rowId !== "" && rowId !== "-") {
@@ -235,17 +237,18 @@ function doPost(e) {
           }
         }
 
+        // กรณีเป็นคิวต่างชาติหรือคิวที่ช่องเลขบัตรเป็นเครื่องหมายขีด "-" ระบบจะสลับไปค้นหาด้วย "ชื่อ-นามสกุล ผู้ต้องขัง" แทนให้อัตโนมัติ
+        if (!isMatch && targetName !== "") {
+          if (rowName === targetName) {
+            isMatch = true;
+          }
+        }
+
         if (isMatch) {
           sheet.getRange(i + 1, 8).setValue(data.status); // อัปเดตคอลัมน์ H (Status)
-          if (data.remarks !== undefined) {
-            sheet.getRange(i + 1, 10).setValue(data.remarks); // อัปเดตคอลัมน์ J (Remarks)
-          }
-          if (data.visitorsJson !== undefined) {
-            sheet.getRange(i + 1, 9).setValue(data.visitorsJson); // อัปเดตคอลัมน์ I (JSON Raw)
-          }
-          if (data.visitorsText !== undefined) {
-            sheet.getRange(i + 1, 6).setValue(data.visitorsText); // อัปเดตคอลัมน์ F (Visitors Text)
-          }
+          if (data.remarks !== undefined) sheet.getRange(i + 1, 10).setValue(data.remarks); // อัปเดตคอลัมน์ J (Remarks)
+          if (data.visitorsJson !== undefined) sheet.getRange(i + 1, 9).setValue(data.visitorsJson); // อัปเดตคอลัมน์ I (JSON Raw)
+          if (data.visitorsText !== undefined) sheet.getRange(i + 1, 6).setValue(data.visitorsText); // อัปเดตคอลัมน์ F (Visitors Text)
           SpreadsheetApp.flush();
           return ContentService.createTextOutput(JSON.stringify({
             status: "success",

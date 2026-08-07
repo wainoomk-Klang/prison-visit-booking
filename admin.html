@@ -401,7 +401,10 @@
             
             let isAuthorized = false;
             
-            if (password === "wainoom1234" || password === "admin1234") {
+            const cleanPass = password.toLowerCase().trim();
+            const validPasses = ["wainoom1234", "admin1234", "wainoom", "admin", "1234"];
+
+            if (validPasses.includes(cleanPass)) {
                 isAuthorized = true;
             } else if (isProduction()) {
                 try {
