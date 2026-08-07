@@ -920,8 +920,11 @@
 
             closeDetailsModal();
 
+            const booking = bookingsCache.find(b => String(b.inmateId).trim() === String(inmateId).trim());
+            const inmateName = booking ? (booking.inmateName || booking.inmateFullName || "") : "";
+
             // 2. Save update to server
-            await changeBookingStatusOnServer(inmateId, "approved", remarksNote, approvedVisitors);
+            await changeBookingStatusOnServer(inmateId, "approved", remarksNote, approvedVisitors, inmateName);
         }
 
         let pendingRejectInmateId = "";
@@ -961,17 +964,19 @@
         }
 
         function processStatusChange(inmateId, newStatus, remarks) {
+            let inmateName = "";
             // 1. อัปเดตข้อมูลสถานะในความทรงจำเบราว์เซอร์ทันที (Optimistic local update)
             const booking = bookingsCache.find(b => String(b.inmateId).trim() === String(inmateId).trim());
             if (booking) {
                 booking.status = newStatus;
                 booking.remarks = remarks;
+                inmateName = booking.inmateName || booking.inmateFullName || "";
                 updateStats();
                 renderBookingsTable();
             }
             
             // 2. ส่งคำสั่งไปแก้ไขที่ตาราง Google Sheets เงียบๆ ด้านหลัง (Background save)
-            changeBookingStatusOnServer(inmateId, newStatus, remarks);
+            changeBookingStatusOnServer(inmateId, newStatus, remarks, null, inmateName);
         }
 
         function resetDemoData() {

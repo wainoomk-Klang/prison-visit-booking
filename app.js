@@ -170,12 +170,13 @@ async function getSlots() {
 }
 
 // Save dynamic changes (simulated for LocalStorage, or executed via API)
-async function changeBookingStatusOnServer(inmateId, newStatus, remarks, updatedVisitors = null) {
+async function changeBookingStatusOnServer(inmateId, newStatus, remarks, updatedVisitors = null, inmateName = "") {
     if (isProduction()) {
         try {
             const body = {
                 action: "update_status",
                 inmateId: inmateId,
+                inmateName: inmateName || "",
                 status: newStatus,
                 remarks: remarks || ""
             };
