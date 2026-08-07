@@ -911,20 +911,19 @@
 
             const remarksNote = document.getElementById("modalRemarksInput").value.trim();
 
+            let inmateName = "";
             // 1. Optimistic update local memory
-            const booking = bookingsCache.find(b => String(b.inmateId).trim() === String(inmateId).trim());
-            if (booking) {
-                booking.status = "approved";
-                booking.remarks = remarksNote;
-                booking.visitors = approvedVisitors;
+            const bookingObj = bookingsCache.find(b => String(b.inmateId).trim() === String(inmateId).trim());
+            if (bookingObj) {
+                bookingObj.status = "approved";
+                bookingObj.remarks = remarksNote;
+                bookingObj.visitors = approvedVisitors;
+                inmateName = bookingObj.inmateName || bookingObj.inmateFullName || "";
                 updateStats();
                 renderBookingsTable();
             }
 
             closeDetailsModal();
-
-            const booking = bookingsCache.find(b => String(b.inmateId).trim() === String(inmateId).trim());
-            const inmateName = booking ? (booking.inmateName || booking.inmateFullName || "") : "";
 
             // 2. Save update to server
             await changeBookingStatusOnServer(inmateId, "approved", remarksNote, approvedVisitors, inmateName);
