@@ -147,9 +147,11 @@ function doGet(e) {
           }
         }
 
-        // กรณีที่คอลัมน์ B ในสเปรดชีตจองเป็นเครื่องหมายขีด "-" (ต่างชาติ) ระบบจะสลับไปค้นหาด้วย "ชื่อ-นามสกุล ผู้ต้องขัง" แทนให้อัตโนมัติ
+        // กรณีที่คอลัมน์ B ในสเปรดชีตจองเป็นเครื่องหมายขีด "-" (ต่างชาติ) ระบบจะสลับไปค้นหาด้วย "ชื่อ-นามสกุล ผู้ต้องขัง" แบบยืดหยุ่นแทนให้อัตโนมัติ
         if (!isMatch && targetName !== "") {
-          if (rowInmateName === targetName) {
+          var cleanRowName = rowInmateName.replace(/\s+/g, "").toLowerCase();
+          var cleanTargetName = targetName.replace(/\s+/g, "").toLowerCase();
+          if (cleanRowName.indexOf(cleanTargetName) > -1 || cleanTargetName.indexOf(cleanRowName) > -1) {
             isMatch = true;
           }
         }
