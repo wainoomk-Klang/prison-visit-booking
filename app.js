@@ -3,7 +3,7 @@
 
 // Paste your Google Apps Script Web App URL here after deploying:
 // Example: "https://script.google.com/macros/s/AKfycb.../exec"
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwRzhKmfFcD6n6amHaQOFd2M1aP8I2XUG81AVS7WSJ8pFSrO-sHx5iH0xhsyoc4tnIjzg/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyBUY2dwsZhMQiL2u7OoQdpwZ4KkHCY5P6jiZVJRRT4jMMxuFZ-cz4GlX2nvwvLtiO-BQ/exec";
 
 // Check if Apps Script is configured
 function isProduction() {
