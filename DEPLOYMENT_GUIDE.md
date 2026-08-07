@@ -68,7 +68,7 @@ function doGet(e) {
         })).setMimeType(ContentService.MimeType.JSON);
       }
       
-      var inmateData = inmateSheet.getDataRange().getValues();
+      var inmateData = inmateSheet.getDataRange().getDisplayValues();
       for (var i = 1; i < inmateData.length; i++) {
         var inmateCode = String(inmateData[i][0]).trim().replace(/\s+/g, "");
         var citizenId = String(inmateData[i][2]).trim().replace(/\s+/g, "");
@@ -118,7 +118,7 @@ function doGet(e) {
       var targetName = "";
       var inmateSheet = ss.getSheetByName("รายชื่อผู้ต้องขัง");
       if (inmateSheet) {
-        var inmateData = inmateSheet.getDataRange().getValues();
+        var inmateData = inmateSheet.getDataRange().getDisplayValues();
         for (var i = 1; i < inmateData.length; i++) {
           var inmateCode = String(inmateData[i][0]).trim().replace(/\s+/g, "");
           var citizenId = String(inmateData[i][2]).trim().replace(/\s+/g, "");
@@ -134,7 +134,7 @@ function doGet(e) {
       }
       
       var sheet = ss.getSheets()[0];
-      var data = sheet.getDataRange().getValues();
+      var data = sheet.getDataRange().getDisplayValues();
       
       for (var i = data.length - 1; i >= 1; i--) {
         var rowInmateId = String(data[i][1]).trim().replace(/\s+/g, "");
