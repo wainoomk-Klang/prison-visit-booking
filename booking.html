@@ -254,6 +254,12 @@
 
     <script src="app.js?v=1.2"></script>
     <script>
+        const IS_MAINTENANCE_MODE = true;
+        if (IS_MAINTENANCE_MODE) {
+            alert("🛠️ ขณะนี้ระบบเปิดลงทะเบียนจองสิทธิ์ปิดปรับปรุงชั่วคราว ขออภัยในความไม่สะดวกครับ");
+            window.location.href = "index.html";
+        }
+
         let currentStep = 1;
         let selectedSlot = "";
         let selectedSlotText = "";
