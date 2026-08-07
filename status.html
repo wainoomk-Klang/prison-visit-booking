@@ -505,7 +505,11 @@
             }
 
             // Ref IDs and updated date
-            document.getElementById("refId").innerText = String(booking.inmateId).slice(-6) || "REF-" + Math.floor(Math.random()*9000 + 1000);
+            let refIdStr = booking.inmateId;
+            if (!refIdStr || refIdStr === "-") {
+                refIdStr = booking.inmateCode || "VISIT-QUEUE";
+            }
+            document.getElementById("refId").innerText = String(refIdStr).slice(-6);
             
             let updatedDate = "-";
             if (booking.dateBooked) {

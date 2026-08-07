@@ -105,7 +105,7 @@ function doGet(e) {
     }
     
     // ค้นหาสถานะการจองคิวรายบุคคลสำหรับญาติสืบค้น
-    if (e.parameter.action === "check_booking") {
+    if (e.parameter && e.parameter.action === "check_booking") {
       var searchKey = String(e.parameter.key || "").trim().replace(/\s+/g, "");
       if (!searchKey || searchKey === "" || searchKey === "-" || searchKey === "undefined" || searchKey === "null") {
         return ContentService.createTextOutput(JSON.stringify({
@@ -115,14 +115,19 @@ function doGet(e) {
       }
       
       var targetId = searchKey;
+      var targetName = "";
       var inmateSheet = ss.getSheetByName("รายชื่อผู้ต้องขัง");
       if (inmateSheet) {
         var inmateData = inmateSheet.getDataRange().getValues();
         for (var i = 1; i < inmateData.length; i++) {
           var inmateCode = String(inmateData[i][0]).trim().replace(/\s+/g, "");
           var citizenId = String(inmateData[i][2]).trim().replace(/\s+/g, "");
-          if (inmateCode !== "" && inmateCode !== "-" && inmateCode === searchKey) {
+          var isCodeMatch = (inmateCode !== "" && inmateCode !== "-" && inmateCode === searchKey);
+          var isCidMatch = (citizenId !== "" && citizenId !== "-" && citizenId === searchKey);
+
+          if (isCodeMatch || isCidMatch) {
             targetId = (citizenId !== "" && citizenId !== "-") ? citizenId : inmateCode;
+            targetName = String(inmateData[i][1]).trim();
             break;
           }
         }
@@ -133,7 +138,23 @@ function doGet(e) {
       
       for (var i = data.length - 1; i >= 1; i--) {
         var rowInmateId = String(data[i][1]).trim().replace(/\s+/g, "");
-        if (rowInmateId !== "" && rowInmateId !== "-" && (rowInmateId === targetId || rowInmateId === searchKey)) {
+        var rowInmateName = String(data[i][2]).trim();
+
+        var isMatch = false;
+        if (rowInmateId !== "" && rowInmateId !== "-") {
+          if (rowInmateId === targetId || rowInmateId === searchKey) {
+            isMatch = true;
+          }
+        }
+
+        // กรณีที่คอลัมน์ B ในสเปรดชีตจองเป็นเครื่องหมายขีด "-" (ต่างชาติ) ระบบจะสลับไปค้นหาด้วย "ชื่อ-นามสกุล ผู้ต้องขัง" แทนให้อัตโนมัติ
+        if (!isMatch && targetName !== "") {
+          if (rowInmateName === targetName) {
+            isMatch = true;
+          }
+        }
+
+        if (isMatch) {
           var nameStr = String(data[i][2]);
           return ContentService.createTextOutput(JSON.stringify({
             status: "success",
