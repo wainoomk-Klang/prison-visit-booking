@@ -19,27 +19,36 @@
     </header>
 
     <main>
-        <!-- Maintenance Alert Card -->
-        <div class="card" style="text-align: center; border-left: 6px solid var(--danger); background-color: #fff5f5; border-radius: 16px; padding: 2.5rem 1.5rem; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.15);">
-            <div style="width: 80px; height: 80px; background-color: #fee2e2; color: var(--danger); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; font-size: 2.5rem;">
-                <i class="fa-solid fa-wrench"></i>
-            </div>
-            <h2 style="margin: 0 0 1rem 0; font-family: 'Prompt', sans-serif; font-size: 1.6rem; color: #991b1b; font-weight: 700;">
-                🛠️ ประกาศปิดปรับปรุงระบบชั่วคราว<br>
-                <span style="font-size: 1.1rem; font-weight: 500; opacity: 0.85;">(System Under Maintenance)</span>
+        <!-- Rules Alert Box -->
+        <div class="card alert alert-info">
+            <h2 style="margin-top: 0; font-family: 'Prompt', sans-serif; font-size: 1.2rem; color: #1e3a8a;">
+                <i class="fa-solid fa-circle-info"></i> ประกาศหลักเกณฑ์การเยี่ยมญาติใกล้ชิด / Visit Rules & Regulations
             </h2>
-            <p style="font-size: 1.05rem; color: #7f1d1d; line-height: 1.7; max-width: 600px; margin: 0 auto 1.5rem auto; font-weight: 500;">
-                ขณะนี้ระบบลงทะเบียนจองสิทธิ์เยี่ยมญาติใกล้ชิดออนไลน์ <strong>ทัณฑสถานวัยหนุ่มกลาง</strong> อยู่ระหว่างการปิดปรับปรุงระบบชั่วคราว เพื่อพัฒนาและเพิ่มประสิทธิภาพการให้บริการ<br>
-                <span style="color: #b91c1c; font-size: 0.95rem;">ขออภัยในความไม่สะดวกเป็นอย่างสูง หากเปิดระบบให้ลงทะเบียนตามปกติแล้วจะแจ้งให้ทราบอีกครั้งครับ</span>
-            </p>
-            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem;">
-                <span style="background-color: #fee2e2; color: #991b1b; border: 1.5px dashed #fca5a5; padding: 0.75rem 1.5rem; border-radius: 50px; font-weight: bold; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.5rem;">
-                    <i class="fa-solid fa-lock"></i> ปิดรับลงทะเบียนชั่วคราว
-                </span>
-                <a href="status.html" class="btn btn-primary" style="width: auto; padding: 0.75rem 1.5rem; border-radius: 50px; text-decoration: none; font-size: 0.95rem;">
-                    <i class="fa-solid fa-magnifying-glass"></i> ตรวจสอบสถานะการจองเดิม
-                </a>
+            <p>🗓️ <strong>ระยะเวลาเปิดจอง (Booking Period):</strong> 27 กรกฎาคม - 14 สิงหาคม 2569 / 27 Jul - 14 Aug 2026</p>
+            <p>🤝 <strong>กำหนดวันเข้าเยี่ยมใกล้ชิด (Visit Date):</strong> 24 - 28 สิงหาคม 2569 / 24 - 28 Aug 2026</p>
+            <div class="rules-container" style="margin-top: 1rem;">
+                <strong style="display: block; margin-bottom: 0.5rem;">⚠️ กฎระเบียบสำคัญและเอกสารที่ต้องจัดเตรียม / Required Documents:</strong>
+                <ul class="rules-list">
+                    <li><strong>หลักฐานที่ต้องอัปโหลดจอง (Documents to Upload):</strong> รูปถ่ายบัตรประชาชน/พาสปอร์ต และทะเบียนบ้าน/ใบเกิด (สูติบัตร) ของญาติที่จะเข้าเยี่ยม (สูงสุด 5 ท่าน) และเอกสารยืนยันความสัมพันธ์ตามกฎหมาย <br><span style="font-size:0.85rem; color:#475569;">*Photo of ID Card/Passport, House Reg./Birth Certificate, and Relationship Proof (Max 5 visitors per inmate).</span></li>
+                    <li><strong>การแต่งกายสุภาพในวันเข้าเยี่ยม (Dress Code):</strong> แต่งกายสุภาพเรียบร้อย <u>ห้ามสวมกางเกงขาสั้น, เสื้อแขนกุด, เสื้อกล้าม, เสื้อรัดรูป หรือกระโปรงสั้น และห้ามใส่หมวก, เข็มขัด และเครื่องประดับทุกชนิด</u> <br><span style="font-size:0.85rem; color:#475569;">*Polite dress required. Shorts, tank tops, hats, belts, and jewelry are prohibited.</span></li>
+                    <li><strong>สิ่งของต้องห้ามเด็ดขาด (Prohibited Items):</strong> <u>ห้ามนำโทรศัพท์มือถือ, เงินสด, สิ่งของผิดกฎหมาย และสิ่งของต้องห้ามทุกชนิด</u> เข้าพื้นที่เยี่ยมเด็ดขาด <br><span style="font-size:0.85rem; color:#475569;">*Mobile phones, cash, and weapons are strictly prohibited inside the visit area.</span></li>
+                </ul>
             </div>
+        </div>
+
+        <!-- Menu Action Selection -->
+        <div class="menu-grid">
+            <a href="booking.html" class="menu-button">
+                <i class="fa-solid fa-calendar-check"></i>
+                <h3>ลงทะเบียนจองสิทธิ์เยี่ยม<br><span style="font-size:0.9rem; font-weight:normal; opacity:0.85;">Register Booking</span></h3>
+                <p>ลงทะเบียนออนไลน์ กรอกข้อมูลผู้ต้องขัง ญาติ และอัปโหลดรูปภาพหลักฐาน<br><span style="font-size:0.8rem; opacity:0.8;">Online Registration & Document Upload</span></p>
+            </a>
+
+            <a href="status.html" class="menu-button">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <h3>ตรวจสอบสถานะการจอง<br><span style="font-size:0.9rem; font-weight:normal; opacity:0.85;">Check Status</span></h3>
+                <p>ติดตามผลการอนุมัติเอกสารและวันเวลานัดหมายเข้าเยี่ยม<br><span style="font-size:0.8rem; opacity:0.8;">Check Approval & Appointment Result</span></p>
+            </a>
         </div>
 
         <div class="card" style="text-align: center; padding: 1.5rem;">

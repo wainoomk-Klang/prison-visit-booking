@@ -222,8 +222,20 @@ function doPost(e) {
     // 1. อัปเดตสถานะคิวจอง (แอดมินอนุมัติ/ปฏิเสธ/ตัดสิทธิ์ญาติบางท่าน)
     if (data.action === "update_status") {
       var rows = sheet.getDataRange().getValues();
+      var targetKey = String(data.inmateId || "").trim();
+      var targetCode = String(data.inmateCode || "").trim();
+
       for (var i = 1; i < rows.length; i++) {
-        if (String(rows[i][1]).trim() === String(data.inmateId).trim()) {
+        var rowId = String(rows[i][1]).trim();
+        var isMatch = false;
+
+        if (rowId !== "" && rowId !== "-") {
+          if (rowId === targetKey || (targetCode !== "" && rowId === targetCode)) {
+            isMatch = true;
+          }
+        }
+
+        if (isMatch) {
           sheet.getRange(i + 1, 8).setValue(data.status); // อัปเดตคอลัมน์ H (Status)
           if (data.remarks !== undefined) {
             sheet.getRange(i + 1, 10).setValue(data.remarks); // อัปเดตคอลัมน์ J (Remarks)
@@ -243,7 +255,7 @@ function doPost(e) {
       }
       return ContentService.createTextOutput(JSON.stringify({
         status: "error",
-        message: "ไม่พบข้อมูลเลขบัตรประชาชนผู้ต้องขังในระบบ"
+        message: "ไม่พบข้อมูลเลขประจำตัวผู้ต้องขังในระบบ"
       })).setMimeType(ContentService.MimeType.JSON);
     }
     
@@ -393,7 +405,7 @@ function saveFileToDrive(folder, fileName, base64Data) {
   while (existingFiles.hasNext()) {
     existingFiles.next().setTrashed(true);
   }
-  var rawData = base64Data.split(",")[1];
+  var rawData = base64Data.indexOf(",") > -1 ? base64Data.split(",")[1] : base64Data;
   var decodedData = Utilities.base64Decode(rawData);
   var blob = Utilities.newBlob(decodedData, "image/jpeg", fileName);
   folder.createFile(blob);

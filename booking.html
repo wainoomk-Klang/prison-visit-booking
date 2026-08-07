@@ -254,7 +254,7 @@
 
     <script src="app.js?v=1.2"></script>
     <script>
-        const IS_MAINTENANCE_MODE = true;
+        const IS_MAINTENANCE_MODE = false;
         if (IS_MAINTENANCE_MODE) {
             alert("🛠️ ขณะนี้ระบบเปิดลงทะเบียนจองสิทธิ์ปิดปรับปรุงชั่วคราว ขออภัยในความไม่สะดวกครับ");
             window.location.href = "index.html";
@@ -850,7 +850,11 @@
         }
 
         async function submitBooking() {
-            const inmateCid = document.getElementById("inmateCid").value;
+            let inmateCid = document.getElementById("inmateCid").value.trim();
+            const inmateCode = document.getElementById("inmateCode").value.trim();
+            if (!inmateCid || inmateCid === "" || inmateCid === "-") {
+                inmateCid = inmateCode;
+            }
             const inmateFullName = document.getElementById("inmateFullName").value;
             const zone = document.getElementById("inmateZone").value;
             const grade = document.getElementById("inmateGrade").value;
