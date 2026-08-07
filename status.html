@@ -66,18 +66,18 @@
                 </div>
                 <div>
                     <h2 class="text-lg font-bold text-slate-800">ตรวจสอบสถานะการจองเยี่ยม</h2>
-                    <p class="text-xs text-slate-500">กรอกรหัสผู้ต้องขัง หรือ เลขบัตรประชาชน / Enter Inmate Code or ID</p>
+                    <p class="text-xs text-slate-500">กรอกรหัสผู้ต้องขัง, เลขบัตรประชาชน หรือ ชื่อผู้ต้องขัง / Code, ID, or Name</p>
                 </div>
             </div>
 
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-slate-600 mb-1" for="searchCid">
-                        รหัสผู้ต้องขัง หรือ เลขบัตรประชาชน (Inmate Code / Citizen ID)
+                        ค้นหาจาก: รหัสผู้ต้องขัง / เลขบัตรประชาชน / ชื่อผู้ต้องขัง
                     </label>
                     <input type="text" id="searchCid" 
-                           class="w-full px-4 py-3.5 text-lg border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-300 tracking-wider" 
-                           placeholder="กรอกรหัสผู้ต้องขัง (10 หลัก), เลขบัตรประชาชน (13 หลัก) หรือชื่อผู้ต้องขัง">
+                           class="w-full px-4 py-3.5 text-base border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-300 tracking-wide" 
+                           placeholder="พิมพ์รหัส 10 หลัก, เลขบัตร 13 หลัก หรือ ชื่อผู้ต้องขัง...">
                 </div>
 
                 <button onclick="checkStatus()" 
@@ -317,7 +317,7 @@
             document.getElementById("statusIconBg").className = "p-4 rounded-full bg-rose-100 text-danger";
             document.getElementById("statusIcon").setAttribute("data-lucide", "alert-circle");
             document.getElementById("statusTitle").innerText = "ไม่พบข้อมูลการลงทะเบียน";
-            document.getElementById("statusDesc").innerText = `ไม่พบรายการจองสิทธิ์เยี่ยมสำหรับเลขประจำตัวประชาชนนี้ กรุณาลงทะเบียนจองสิทธิ์ก่อน`;
+            document.getElementById("statusDesc").innerText = `ไม่พบรายการจองสิทธิ์เยี่ยมสำหรับคำค้นหานี้ กรุณาตรวจสอบข้อมูล หรือลงทะเบียนจองสิทธิ์ก่อน`;
 
             // Reset other info
             document.getElementById("inmateName").innerText = "-";
