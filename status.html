@@ -258,7 +258,7 @@
     </footer>
 
     <!-- App Engine Script -->
-    <script src="app.js"></script>
+    <script src="app.js?v=1.4"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
@@ -277,8 +277,8 @@
             const loadingIndicator = document.getElementById("loadingIndicator");
             const resultArea = document.getElementById("resultArea");
             
-            if (cid.length !== 10 && cid.length !== 13) {
-                alert("กรุณากรอกรหัสผู้ต้องขัง (10 หลัก) หรือ เลขบัตรประชาชน (13 หลัก) ให้ถูกต้อง");
+            if (cid.length < 2) {
+                alert("กรุณากรอกรหัสผู้ต้องขัง (10 หลัก), เลขบัตรประชาชน (13 หลัก) หรือชื่อผู้ต้องขัง");
                 return;
             }
 

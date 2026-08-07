@@ -95,8 +95,32 @@ async function searchInmateOnServer(searchKey) {
 async function checkBookingOnServer(inmateCid) {
     if (isProduction()) {
         try {
-            const response = await fetch(`${APPS_SCRIPT_URL}?action=check_booking&key=${encodeURIComponent(inmateCid)}`);
+            const timestamp = Date.now();
+            const response = await fetch(`${APPS_SCRIPT_URL}?action=check_booking&key=${encodeURIComponent(inmateCid)}&_t=${timestamp}`);
             const result = await response.json();
+            if (result.status === "success" && result.found) {
+                return result;
+            }
+
+            // Fallback: If check_booking backend returns false, fetch all bookings (same as admin) and search locally
+            const allBookings = await getBookings();
+            const cleanKey = inmateCid.trim().replace(/\s+/g, "").toLowerCase();
+
+            const found = allBookings.find(b => {
+                const bId = String(b.inmateId || "").trim().replace(/\s+/g, "").toLowerCase();
+                const bCode = String(b.inmateCode || "").trim().replace(/\s+/g, "").toLowerCase();
+                const bName = String(b.inmateName || "").trim().replace(/\s+/g, "").toLowerCase();
+
+                if (bId !== "" && bId !== "-" && bId === cleanKey) return true;
+                if (bCode !== "" && bCode !== "-" && bCode === cleanKey) return true;
+                if (cleanKey.length >= 2 && bName.indexOf(cleanKey) > -1) return true;
+                return false;
+            });
+
+            if (found) {
+                return { status: "success", found: true, data: found };
+            }
+
             return result;
         } catch (e) {
             console.error("Error checking booking on Sheets:", e);
