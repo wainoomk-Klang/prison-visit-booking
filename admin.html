@@ -695,10 +695,12 @@
                 inmateSeenCount[k] = (inmateSeenCount[k] || 0) + 1;
                 
                 let resubmitBadge = "";
-                const remarksStr = String(booking.remarks || "");
-                if (totalInmateCounts[k] > 1 || remarksStr.includes("แก้ไข") || remarksStr.includes("ยื่นใหม่")) {
+                const remarksStr = String(booking.remarks || "").toLowerCase();
+                const isResubmitted = totalInmateCounts[k] > 1 || remarksStr.indexOf("แก้ไข") > -1 || remarksStr.indexOf("ยื่น") > -1 || remarksStr.indexOf("resubmit") > -1 || remarksStr.indexOf("🔄") > -1;
+                
+                if (isResubmitted) {
                     if (inmateSeenCount[k] === 1) {
-                        resubmitBadge = `<br><span class="badge" style="background:#e0e7ff; color:#3730a3; border:1px solid #c7d2fe; font-size:0.7rem; margin-top:3px; display:inline-block;">🔄 แก้ไขส่งใหม่ (ฉบับล่าสุด)</span>`;
+                        resubmitBadge = `<br><span class="badge" style="background:#e0e7ff; color:#3730a3; border:1px solid #c7d2fe; font-size:0.75rem; margin-top:4px; display:inline-block; font-weight:600;"><i class="fa-solid fa-rotate"></i> 🔄 ยื่นเอกสารแก้ไขกลับมาแล้ว (ฉบับล่าสุด)</span>`;
                     } else {
                         resubmitBadge = `<br><span class="badge" style="background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1; font-size:0.7rem; margin-top:3px; display:inline-block;">📜 คิวเดิมก่อนแก้ไข</span>`;
                     }
