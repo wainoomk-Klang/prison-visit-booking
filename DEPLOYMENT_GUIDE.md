@@ -306,21 +306,48 @@ function doPost(e) {
     }
     
     // 2. จองใหม่ หรือยื่นเอกสารแก้ไข (Resubmit)
-    var inmateCid = String(data.inmateId).trim();
-    var rows = sheet.getDataRange().getValues();
+    var inmateCid = String(data.inmateId || "").trim();
+    var inmateCode = String(data.inmateCode || "").trim();
+    var inmateFullName = String(data.inmateFullName || "").trim();
+
+    var rows = sheet.getDataRange().getDisplayValues();
     var existingRowIndex = -1;
     var existingFolderUrl = "";
     
     for (var i = 1; i < rows.length; i++) {
-      if (String(rows[i][1]).trim() === inmateCid) {
-        if (rows[i][7] !== "rejected") {
+      var rowInmateId = String(rows[i][1]).trim();
+      var rowInmateName = String(rows[i][2]).trim();
+      var isMatch = false;
+
+      // 1. ค้นหาแมตช์ด้วย ID / Code
+      if (rowInmateId !== "" && rowInmateId !== "-") {
+        if (rowInmateId === inmateCid || (inmateCode !== "" && rowInmateId === inmateCode)) {
+          isMatch = true;
+        }
+      }
+
+      // 2. ค้นหาแมตช์ด้วย ชื่อผู้ต้องขัง (รองรับต่างชาติ หรือคิวที่ไม่มีเลขบัตร)
+      if (!isMatch && inmateFullName !== "") {
+        var cleanRowName = rowInmateName.replace(/\s+/g, "").toLowerCase();
+        var cleanTargetName = inmateFullName.replace(/\s+/g, "").toLowerCase();
+        if (cleanRowName.indexOf(cleanTargetName) > -1 || cleanTargetName.indexOf(cleanRowName) > -1) {
+          isMatch = true;
+        }
+      }
+
+      if (isMatch) {
+        var rowStatus = String(rows[i][7] || "").trim().toLowerCase();
+        var isRejected = (rowStatus === "rejected" || rowStatus.indexOf("ปฏิเสธ") > -1);
+
+        if (!isRejected) {
           return ContentService.createTextOutput(JSON.stringify({
             status: "error",
-            message: "ผู้ต้องขังรายนี้มีสิทธิ์การจองแล้วในระบบ ไม่สามารถจองซ้ำได้"
+            message: "ผู้ต้องขัง " + rows[i][2] + " ได้รับการลงทะเบียนจองสิทธิ์เข้าเยี่ยมไปแล้วในระบบ (จำกัด 1 สิทธิ์ต่อผู้ต้องขัง 1 ท่าน) ไม่สามารถจองคิวซ้ำซ้อนได้ หากเอกสารเดิมถูกปฏิเสธจึงจะสามารถลงคิวจองสิทธิ์ใหม่ได้ครับ"
           })).setMimeType(ContentService.MimeType.JSON);
         } else {
           existingRowIndex = i + 1;
           existingFolderUrl = String(rows[i][6]).trim();
+          break;
         }
       }
     }
@@ -406,8 +433,10 @@ function doPost(e) {
       sheet.getRange(existingRowIndex, 5).setValue(data.slotText);
       sheet.getRange(existingRowIndex, 6).setValue(visitorsText);
       sheet.getRange(existingRowIndex, 7).setValue(folderUrl);
-      sheet.getRange(existingRowIndex, 8).setValue("pending");
+      sheet.getRange(existingRowIndex, 8).setValue("pending"); // รีเซ็ตสถานะกลับเป็น "รอตรวจสอบ"
       sheet.getRange(existingRowIndex, 9).setValue(cleanVisitorsJson);
+      sheet.getRange(existingRowIndex, 10).setValue("🔄 ญาติยื่นเอกสารแก้ไขกลับมาแล้ว"); // บันทึกหมายเหตุให้แอดมินทราบ
+    }
       sheet.getRange(existingRowIndex, 10).setValue("");
     } else {
       sheet.appendRow([

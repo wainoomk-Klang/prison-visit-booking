@@ -275,45 +275,51 @@ function getBase64(file) {
             resolve("");
             return;
         }
-        // If not an image, resolve normally with original base64
-        if (!file.type.startsWith('image/')) {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = error => reject(error);
-            return;
-        }
 
         const reader = new FileReader();
-        reader.readAsDataURL(file);
         reader.onload = (event) => {
+            const resultData = event.target.result;
+            // If not an image (e.g. PDF file), resolve with raw base64 data directly
+            if (!file.type || !file.type.startsWith('image/')) {
+                resolve(resultData);
+                return;
+            }
+
+            // If it is an image, compress via Canvas
             const img = new Image();
-            img.src = event.target.result;
             img.onload = () => {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
+                try {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
 
-                // Max width of 1200px keeps texts very sharp and readable
-                const maxWidth = 1200;
-                if (width > maxWidth) {
-                    height = Math.round((height * maxWidth) / width);
-                    width = maxWidth;
+                    const maxWidth = 1200;
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    resolve(dataUrl);
+                } catch (e) {
+                    // Fallback to raw base64 if canvas processing fails
+                    resolve(resultData);
                 }
-
-                canvas.width = width;
-                canvas.height = height;
-
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-
-                // Export as compressed JPEG with 0.7 quality (shrinks file size by 90%+)
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
-                resolve(dataUrl);
             };
-            img.onerror = (err) => reject(err);
+            img.onerror = () => {
+                // Fallback to raw base64 if image loading fails (e.g. disguised PDF/HEIC)
+                resolve(resultData);
+            };
+            img.src = resultData;
         };
-        reader.onerror = (err) => reject(err);
+        reader.onerror = () => resolve("");
+        reader.readAsDataURL(file);
     });
 }
 
