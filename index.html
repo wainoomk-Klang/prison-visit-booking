@@ -76,7 +76,25 @@
             // ตรวจสอบเวลาเพื่อปิดรับจองสิทธิ์รอบใหม่ (14 สิงหาคม 2569 เวลา 12:00 น.)
             const CLOSE_TIME = new Date("2026-08-14T12:00:00+07:00").getTime();
             const now = new Date().getTime();
-            if (now >= CLOSE_TIME) {
+            
+            // ตรวจสอบ Config จาก Apps Script Web App
+            if (typeof APPS_SCRIPT_URL !== "undefined" && APPS_SCRIPT_URL) {
+                fetch(APPS_SCRIPT_URL + "?action=get_config")
+                    .then(r => r.json())
+                    .then(res => {
+                        const isClosed = res.booking_closed === true || res.booking_closed === "true" || (res.booking_closed !== false && res.booking_closed !== "false" && now >= CLOSE_TIME);
+                        if (isClosed) {
+                            applyClosedUI();
+                        }
+                    })
+                    .catch(() => {
+                        if (now >= CLOSE_TIME) applyClosedUI();
+                    });
+            } else {
+                if (now >= CLOSE_TIME) applyClosedUI();
+            }
+
+            function applyClosedUI() {
                 const bookingBtn = document.querySelector('a[href="booking.html"]');
                 if (bookingBtn) {
                     bookingBtn.removeAttribute('href');
@@ -84,7 +102,7 @@
                     bookingBtn.style.cursor = 'not-allowed';
                     bookingBtn.addEventListener('click', (e) => {
                         e.preventDefault();
-                        alert("⚠️ ระบบปิดรับการลงทะเบียนจองสิทธิ์ใหม่แล้ว (หมดเขต 14 ส.ค. 2569 เวลา 12:00 น.)\n\n*สำหรับญาติที่ระบบแจ้งให้แก้ไขเอกสารคิวเดิมที่ถูกปฏิเสธ สามารถกดที่ปุ่ม 'ตรวจสอบสถานะการจอง' เพื่อทำรายการยื่นแก้ไขได้ตามปกติครับ");
+                        alert("⚠️ ระบบปิดรับการลงทะเบียนจองสิทธิ์ใหม่แล้ว (หมดเขต 14 ส.ค. 2569 เวลา 12:00 น. หรือปิดโดยแอดมิน)\n\n*สำหรับญาติที่ระบบแจ้งให้แก้ไขเอกสารคิวเดิมที่ถูกปฏิเสธ สามารถกดที่ปุ่ม 'ตรวจสอบสถานะการจอง' เพื่อทำรายการยื่นแก้ไขได้ตามปกติครับ");
                     });
                     
                     const btnTitle = bookingBtn.querySelector('h3');
@@ -93,7 +111,7 @@
                     }
                     const btnDesc = bookingBtn.querySelector('p');
                     if (btnDesc) {
-                        btnDesc.innerHTML = 'หมดเขต 14 ส.ค. 2569 เวลา 12:00 น. (ผู้ยื่นแก้ไขคิวเดิมสามารถทำรายการต่อได้ผ่านปุ่มตรวจสอบสถานะ)';
+                        btnDesc.innerHTML = 'หมดเขต หรือ แอดมินปิดรับลงทะเบียนใหม่ (ผู้ยื่นแก้ไขคิวเดิมสามารถทำรายการต่อได้ผ่านปุ่มตรวจสอบสถานะ)';
                     }
                 }
             }

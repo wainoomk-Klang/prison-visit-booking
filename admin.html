@@ -227,6 +227,22 @@
             </div>
         </div>
 
+        <!-- Manual Opening/Closing Toggle Bar -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem; padding:0.75rem 1rem; background:linear-gradient(135deg, #0f172a, #1e1b4b); color:white; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.15);" class="no-print">
+            <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+                <span style="font-weight:bold; font-size:0.95rem; display:flex; align-items:center; gap:0.4rem; color:#f8fafc;">
+                    <i class="fa-solid fa-power-off" style="color:#818cf8; font-size:1.1rem;"></i> ตั้งค่าการเปิดรับลงทะเบียนจองสิทธิ์ใหม่
+                </span>
+                <span id="configBookingStatus" class="badge" style="background:#059669; color:white; font-size:0.75rem; padding:4px 10px; border-radius:12px; font-weight:bold;">🟢 เปิดรับจองปกติ</span>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                <button id="btnToggleBooking" onclick="toggleBookingOpenConfig()" class="btn" style="padding:0.45rem 1rem; font-size:0.85rem; background:#ef4444; color:white; border:none; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; font-family:'Prompt', sans-serif; font-weight:bold;">
+                    <i class="fa-solid fa-lock" id="bookingToggleIcon"></i> <span>เปลี่ยนเป็นปิดรับจองใหม่</span>
+                </button>
+            </div>
+        </div>
+
         <!-- report button bar -->
         <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;" class="no-print">
             <button class="btn btn-primary" onclick="showReportModal()" style="width:auto; padding:0.6rem 1.5rem; background-color: #0d9488; border-color: #0d9488; font-family:'Prompt', sans-serif; display:inline-flex; align-items:center; gap:0.5rem; font-weight:600; font-size:0.9rem; border-radius:6px; cursor:pointer;">
@@ -518,6 +534,84 @@
             }, 5000);
         }
 
+        let isBookingClosed = false;
+
+        async function syncBookingConfigUI() {
+            if (!isProduction()) return;
+            try {
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=get_config`);
+                const result = await response.json();
+                isBookingClosed = result.booking_closed === true || result.booking_closed === "true";
+                updateBookingConfigUI();
+            } catch(e) {
+                console.error("Failed to load booking config:", e);
+            }
+        }
+
+        function updateBookingConfigUI() {
+            const statusBadge = document.getElementById("configBookingStatus");
+            const toggleBtn = document.getElementById("btnToggleBooking");
+            
+            if (!statusBadge || !toggleBtn) return;
+            
+            if (isBookingClosed) {
+                statusBadge.innerHTML = "🔴 ปิดรับลงทะเบียนใหม่แล้ว";
+                statusBadge.style.background = "#ef4444";
+                
+                toggleBtn.innerHTML = '<i class="fa-solid fa-lock-open"></i> <span>เปิดระบบลงทะเบียนใหม่</span>';
+                toggleBtn.style.background = "#10b981";
+            } else {
+                statusBadge.innerHTML = "🟢 เปิดรับจองปกติ";
+                statusBadge.style.background = "#059669";
+                
+                toggleBtn.innerHTML = '<i class="fa-solid fa-lock"></i> <span>เปลี่ยนเป็นปิดรับจองใหม่</span>';
+                toggleBtn.style.background = "#ef4444";
+            }
+        }
+
+        async function toggleBookingOpenConfig() {
+            if (!isProduction()) {
+                alert("ระบบจำลอง (Demo Mode): ไม่สามารถสลับค่าบนสเปรดชีตจริงได้");
+                isBookingClosed = !isBookingClosed;
+                updateBookingConfigUI();
+                return;
+            }
+            
+            const confirmMsg = isBookingClosed 
+                ? "คุณต้องการเปิดระบบรับลงทะเบียนจองสิทธิ์รอบใหม่ ใช่หรือไม่?" 
+                : "คุณต้องการปิดระบบรับลงทะเบียนจองสิทธิ์รอบใหม่ ใช่หรือไม่? (สำหรับผู้ที่จะแก้ไขเอกสารจะยังคงสืบค้นและแก้ไขคิวเดิมได้ปกติ)";
+                
+            if (!confirm(confirmMsg)) return;
+            
+            const toggleBtn = document.getElementById("btnToggleBooking");
+            toggleBtn.disabled = true;
+            toggleBtn.querySelector('span').innerText = "กำลังอัปเดตสเปรดชีต...";
+            
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({
+                        action: "update_config",
+                        booking_closed: !isBookingClosed
+                    })
+                });
+                const result = await response.json();
+                if (result.status === "success") {
+                    isBookingClosed = result.booking_closed === true || result.booking_closed === "true";
+                    updateBookingConfigUI();
+                    showToastNotification(isBookingClosed ? "🔒 ปิดรับลงทะเบียนใหม่เรียบร้อยแล้ว!" : "🔓 เปิดรับลงทะเบียนใหม่เรียบร้อยแล้ว!");
+                } else {
+                    alert("เกิดข้อผิดพลาด: " + (result.message || "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้"));
+                }
+            } catch(e) {
+                console.error("Failed to update config:", e);
+                alert("ล้มเหลวในการส่งข้อมูล: " + e.message);
+            } finally {
+                toggleBtn.disabled = false;
+            }
+        }
+
         async function refreshData() {
             // Show loading indicators
             const tbody = document.getElementById("bookingsTableBody");
@@ -528,6 +622,7 @@
             
             updateStats();
             renderBookingsTable();
+            syncBookingConfigUI();
 
             startAutoRefreshPolling();
         }
@@ -547,6 +642,7 @@
                 bookingsCache = freshBookings;
                 updateStats();
                 renderBookingsTable();
+                syncBookingConfigUI();
             } catch(e) {
                 console.error("Silent background refresh failed:", e);
             }
