@@ -260,6 +260,16 @@
             window.location.href = "index.html";
         }
 
+        // ตรวจสอบเวลาเพื่อปิดรับจองสิทธิ์รอบใหม่ (14 สิงหาคม 2569 เวลา 12:00 น.)
+        const CLOSE_TIME = new Date("2026-08-14T12:00:00+07:00").getTime();
+        const now = new Date().getTime();
+        const urlParams = new URLSearchParams(window.location.search);
+        const editParam = urlParams.get('edit') === 'true';
+        if (now >= CLOSE_TIME && !editParam) {
+            alert("⚠️ ขณะนี้ระบบได้ปิดรับการลงทะเบียนจองสิทธิ์ใหม่รอบนี้แล้ว เมื่อเวลา 12:00 น. ของวันที่ 14 ส.ค. 2569\n\n*สำหรับญาติที่ระบบแจ้งให้แก้ไขเอกสารคิวเดิมที่ถูกปฏิเสธ ยังคงสามารถดำเนินการแก้ไขผ่านเมนูตรวจสอบสถานะได้ตามปกติครับ");
+            window.location.href = "index.html";
+        }
+
         let currentStep = 1;
         let selectedSlot = "";
         let selectedSlotText = "";
