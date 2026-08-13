@@ -436,8 +436,6 @@ function doPost(e) {
       sheet.getRange(existingRowIndex, 8).setValue("pending"); // รีเซ็ตสถานะกลับเป็น "รอตรวจสอบ"
       sheet.getRange(existingRowIndex, 9).setValue(cleanVisitorsJson);
       sheet.getRange(existingRowIndex, 10).setValue("🔄 ญาติยื่นเอกสารแก้ไขกลับมาแล้ว"); // บันทึกหมายเหตุให้แอดมินทราบ
-    }
-      sheet.getRange(existingRowIndex, 10).setValue("");
     } else {
       sheet.appendRow([
         new Date(),

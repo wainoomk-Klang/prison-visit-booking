@@ -391,7 +391,13 @@ async function uploadAndSaveBooking(bookingData, rawFiles) {
             return result;
         } catch (e) {
             console.error("Failed to upload to Production server:", e);
-            return { status: "error", message: "ระบบขัดข้องในการเชื่อมต่อระบบฐานข้อมูล Google: " + e.message };
+            let errMsg = e.message || "";
+            if (errMsg.includes("Load failed") || errMsg.includes("Failed to fetch") || errMsg.includes("NetworkError") || errMsg === "Load failed") {
+                errMsg = "ไฟล์เอกสารหรือรูปภาพมีขนาดใหญ่เกินไป หรือสัญญาณอินเทอร์เน็ตบนมือถือขัดข้องชั่วคราว<br><br>💡 <strong>คำแนะนำ:</strong> กรุณาใช้ไฟล์รูปถ่าย (JPG/PNG) โดยลองส่งรูปเข้า LINE แล้วเซฟกลับมาแนบส่งอีกครั้งครับ";
+            } else {
+                errMsg = "ระบบขัดข้องในการเชื่อมต่อระบบฐานข้อมูล Google: " + errMsg;
+            }
+            return { status: "error", message: errMsg };
         }
     } else {
         // Local storage demo mode
