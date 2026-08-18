@@ -258,10 +258,13 @@
 
         <!-- report button bar -->
         <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-bottom:1rem; flex-wrap:wrap;" class="no-print">
-            <button class="btn btn-primary" onclick="showReportModal()" style="width:auto; padding:0.6rem 1.5rem; background-color: #0d9488; border-color: #0d9488; font-family:'Prompt', sans-serif; display:inline-flex; align-items:center; gap:0.5rem; font-weight:600; font-size:0.9rem; border-radius:6px; cursor:pointer;">
+            <button class="btn btn-primary" onclick="exportApprovedVisitorsExcel()" style="width:auto; padding:0.6rem 1.3rem; background-color: #16a34a; border-color: #16a34a; font-family:'Prompt', sans-serif; display:inline-flex; align-items:center; gap:0.5rem; font-weight:600; font-size:0.9rem; border-radius:6px; cursor:pointer;">
+                <i class="fa-solid fa-file-excel"></i> ส่งออกไฟล์ Excel (เฉพาะญาติที่ผ่านการอนุมัติเข้าเยี่ยมจริง)
+            </button>
+            <button class="btn btn-primary" onclick="showReportModal()" style="width:auto; padding:0.6rem 1.3rem; background-color: #0d9488; border-color: #0d9488; font-family:'Prompt', sans-serif; display:inline-flex; align-items:center; gap:0.5rem; font-weight:600; font-size:0.9rem; border-radius:6px; cursor:pointer;">
                 <i class="fa-solid fa-chart-pie"></i> รายงานสรุปยอดจองเยี่ยม (รายวัน / รายแดน)
             </button>
-            <button class="btn btn-primary" onclick="showZonePrintModal()" style="width:auto; padding:0.6rem 1.5rem; background-color: #0284c7; border-color: #0284c7; font-family:'Prompt', sans-serif; display:inline-flex; align-items:center; gap:0.5rem; font-weight:600; font-size:0.9rem; border-radius:6px; cursor:pointer;">
+            <button class="btn btn-primary" onclick="showZonePrintModal()" style="width:auto; padding:0.6rem 1.3rem; background-color: #0284c7; border-color: #0284c7; font-family:'Prompt', sans-serif; display:inline-flex; align-items:center; gap:0.5rem; font-weight:600; font-size:0.9rem; border-radius:6px; cursor:pointer;">
                 <i class="fa-solid fa-print"></i> พิมพ์รายชื่อแยกตามแดน
             </button>
         </div>
@@ -734,6 +737,82 @@
             document.getElementById("approvedBookings").innerText = bookingsCache.filter(b => b.status === "approved").length;
             document.getElementById("rejectedBookings").innerText = bookingsCache.filter(b => b.status === "rejected").length;
             renderQuotaMonitor();
+        }
+
+        function exportApprovedVisitorsExcel() {
+            if (!bookingsCache || bookingsCache.length === 0) {
+                alert("ไม่พบข้อมูลการจองในระบบ");
+                return;
+            }
+
+            // กรองเฉพาะรายการที่อนุมัติแล้วเท่านั้น
+            const approvedBookings = bookingsCache.filter(b => b.status === "approved");
+
+            if (approvedBookings.length === 0) {
+                alert("ยังไม่มีรายการจองที่ได้รับการอนุมัติในขณะนี้");
+                return;
+            }
+
+            // UTF-8 BOM สำหรับเปิดบน Microsoft Excel ภาษาไทยไม่ต่างดาว
+            let csvContent = "\uFEFF";
+            csvContent += "ลำดับ,แดน,รอบเวลาเยี่ยม,เลขบัตรผู้ต้องขัง,ชื่อ-นามสกุล ผู้ต้องขัง,ลำดับญาติ,ชื่อ-นามสกุล ญาติผู้เข้าเยี่ยมจริง,ความสัมพันธ์,เบอร์โทรศัพท์ญาติ,เลขบัตรประชาชนญาติ,หมายเหตุการอนุมัติ/ตัดสิทธิ์\n";
+
+            let count = 1;
+
+            approvedBookings.forEach(booking => {
+                const zone = booking.zone || "-";
+                const slotText = (booking.slotText || "-").replace(/"/g, '""');
+                const inmateId = (booking.inmateId || "-").replace(/"/g, '""');
+                const inmateName = (booking.inmateFullName || `${booking.inmateTitle || ''}${booking.inmateName || ''} ${booking.inmateSurname || ''}`).trim().replace(/"/g, '""');
+                const remarks = (booking.remarks || "-").replace(/"/g, '""').replace(/\n/g, ' ');
+
+                const visitors = parseVisitorsData(booking.visitors);
+
+                if (visitors && visitors.length > 0) {
+                    visitors.forEach((v, idx) => {
+                        let visitorName = "-";
+                        let relation = "-";
+                        let tel = "-";
+                        let cid = "-";
+
+                        if (typeof v === "object") {
+                            if (v.name || v.surname) {
+                                visitorName = `${v.title || ""}${v.name || ""} ${v.surname || ""}`.trim();
+                                relation = v.relation || "-";
+                                tel = v.tel || "-";
+                                cid = v.cid || "-";
+                            } else if (v.rawText) {
+                                visitorName = v.rawText;
+                            }
+                        } else if (typeof v === "string") {
+                            visitorName = v;
+                        }
+
+                        visitorName = visitorName.replace(/"/g, '""');
+                        relation = relation.replace(/"/g, '""');
+                        tel = tel.replace(/"/g, '""');
+                        cid = cid.replace(/"/g, '""');
+
+                        csvContent += `"${count}","แดน ${zone}","${slotText}","'${inmateId}","${inmateName}","ญาติคนที่ ${idx + 1}","${visitorName}","${relation}","'${tel}","'${cid}","${remarks}"\n`;
+                        count++;
+                    });
+                } else {
+                    csvContent += `"${count}","แดน ${zone}","${slotText}","'${inmateId}","${inmateName}","-","ไม่พบรายละเอียดญาติ","-","-","-","${remarks}"\n`;
+                    count++;
+                }
+            });
+
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            const todayStr = new Date().toISOString().split('T')[0];
+            link.setAttribute("download", `รายชื่อญาติผู้ได้รับอนุมัติเข้าเยี่ยมจริง_${todayStr}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToastNotification(`📊 ส่งออกไฟล์ Excel สรุปรายชื่อญาติที่ได้รับอนุมัติเข้าเยี่ยมจริง ${count - 1} รายชื่อ เรียบร้อยแล้ว!`);
         }
 
         function parseVisitorsData(visitors) {
