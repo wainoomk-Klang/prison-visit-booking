@@ -805,7 +805,14 @@
                         tel = String(tel).replace(/"/g, '""');
                         cid = String(cid).replace(/"/g, '""');
 
-                        csvContent += `"${count}","แดน ${zone}","${slotText}","'${inmateId}","${inmateName}","ญาติคนที่ ${idx + 1}","${visitorName}","${relation}","'${tel}","'${cid}","${remarks}"\n`;
+                        // แสดงข้อมูลผู้ต้องขัง แดน และรอบเยี่ยม เฉพาะบรรทัดแรก (ญาติคนที่ 1) ไม่ต้องแสดงซ้ำในบรรทัดถัดไป
+                        const displayZone = (idx === 0) ? `แดน ${zone}` : "";
+                        const displaySlot = (idx === 0) ? slotText : "";
+                        const displayInmateId = (idx === 0) ? `'${inmateId}` : "";
+                        const displayInmateName = (idx === 0) ? inmateName : "";
+                        const displayRemarks = (idx === 0) ? remarks : "";
+
+                        csvContent += `"${count}","${displayZone}","${displaySlot}","${displayInmateId}","${displayInmateName}","ญาติคนที่ ${idx + 1}","${visitorName}","${relation}","'${tel}","'${cid}","${displayRemarks}"\n`;
                         count++;
                     });
                 } else {
