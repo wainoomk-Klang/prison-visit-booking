@@ -120,6 +120,21 @@
     <!-- Main Container -->
     <main class="flex-grow max-w-md w-full mx-auto px-4 py-8 relative z-10">
         
+        <!-- Closed System Alert Banner (Hidden by default) -->
+        <div id="statusClosedBanner" class="hidden bg-rose-50 border-2 border-rose-300 rounded-card p-6 mb-6 shadow-xl text-center">
+            <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl font-bold border border-rose-200 shadow-sm">
+                🔒
+            </div>
+            <h3 class="text-lg font-extrabold text-rose-800 mb-2">ปิดบริการตรวจสอบสถานะ & ยื่นแก้ไขเอกสาร</h3>
+            <p class="text-sm text-rose-700 leading-relaxed font-medium">
+                ขณะนี้ระบบได้ปิดการสืบค้นข้อมูลและยื่นเอกสารแก้ไขเรียบร้อยแล้ว<br>
+                ขอขอบคุณญาติผู้เข้าเยี่ยมทุกท่านที่ร่วมมือในการลงทะเบียนเยี่ยมญาติใกล้ชิด ประจำปี 2569 ครับ
+            </p>
+            <a href="index.html" class="inline-flex items-center gap-2 mt-4 px-5 py-2.5 bg-slate-800 text-white rounded-xl text-xs font-bold shadow-md hover:bg-slate-900 transition-all">
+                <i class="fa-solid fa-house"></i> กลับสู่หน้าหลักพอร์ทัล
+            </a>
+        </div>
+
         <!-- Search Card -->
         <div id="searchCard" class="bg-white/90 backdrop-blur-md rounded-card shadow-xl border border-blue-100/80 p-6 transition-all duration-300 hover:shadow-2xl">
             <div class="flex items-center gap-3 mb-5 pb-3 border-b border-slate-100">
@@ -340,8 +355,28 @@
     <!-- App Engine Script -->
     <script src="app.js?v=1.4"></script>
     <script>
+        let isStatusSystemClosed = false;
+
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
+
+            if (typeof APPS_SCRIPT_URL !== "undefined" && APPS_SCRIPT_URL) {
+                fetch(APPS_SCRIPT_URL + "?action=get_config")
+                    .then(r => r.json())
+                    .then(res => {
+                        if (res.status_closed === true || res.status_closed === "true") {
+                            isStatusSystemClosed = true;
+                            const closedBanner = document.getElementById("statusClosedBanner");
+                            if (closedBanner) closedBanner.classList.remove("hidden");
+                            const searchCard = document.getElementById("searchCard");
+                            if (searchCard) {
+                                searchCard.style.opacity = "0.4";
+                                searchCard.style.pointerEvents = "none";
+                            }
+                        }
+                    })
+                    .catch(() => {});
+            }
         });
 
         function resetSearch() {
@@ -352,6 +387,11 @@
         }
 
         async function checkStatus() {
+            if (isStatusSystemClosed) {
+                alert("⚠️ ขณะนี้ระบบตรวจสอบสถานะและยื่นเอกสารแก้ไข ได้ปิดให้บริการแล้ว ขออภัยในความไม่สะดวกครับ");
+                return;
+            }
+
             const cid = document.getElementById("searchCid").value.trim();
             const searchCard = document.getElementById("searchCard");
             const loadingIndicator = document.getElementById("loadingIndicator");
@@ -616,6 +656,10 @@
         }
 
         function goToResubmit() {
+            if (isStatusSystemClosed) {
+                alert("⚠️ ขณะนี้ระบบยื่นเอกสารแก้ไข ได้ปิดให้บริการลงแล้ว ขออภัยในความไม่สะดวกครับ");
+                return;
+            }
             const container = document.getElementById("resubmitActionContainer");
             const inmateId = container.getAttribute("data-inmate-id");
             if (inmateId) {

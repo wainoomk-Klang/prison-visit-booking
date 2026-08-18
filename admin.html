@@ -227,18 +227,31 @@
             </div>
         </div>
 
-        <!-- Manual Opening/Closing Toggle Bar -->
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem; padding:0.75rem 1rem; background:linear-gradient(135deg, #0f172a, #1e1b4b); color:white; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.15);" class="no-print">
-            <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
-                <span style="font-weight:bold; font-size:0.95rem; display:flex; align-items:center; gap:0.4rem; color:#f8fafc;">
-                    <i class="fa-solid fa-power-off" style="color:#818cf8; font-size:1.1rem;"></i> ตั้งค่าการเปิดรับลงทะเบียนจองสิทธิ์ใหม่
-                </span>
-                <span id="configBookingStatus" class="badge" style="background:#059669; color:white; font-size:0.75rem; padding:4px 10px; border-radius:12px; font-weight:bold;">🟢 เปิดรับจองปกติ</span>
+        <!-- Admin Master Control Panel: Toggle Switches -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:0.75rem; margin-bottom:1rem;" class="no-print">
+            <!-- Toggle 1: New Booking System -->
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:linear-gradient(135deg, #0f172a, #1e1b4b); color:white; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+                <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                    <span style="font-weight:bold; font-size:0.9rem; display:flex; align-items:center; gap:0.4rem; color:#f8fafc;">
+                        <i class="fa-solid fa-power-off" style="color:#818cf8; font-size:1rem;"></i> 1. ระบบจองสิทธิ์ใหม่:
+                    </span>
+                    <span id="configBookingStatus" class="badge" style="background:#059669; color:white; font-size:0.75rem; padding:3px 8px; border-radius:10px; font-weight:bold;">🟢 เปิดรับจอง</span>
+                </div>
+                <button id="btnToggleBooking" onclick="toggleBookingOpenConfig()" class="btn" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:#ef4444; color:white; border:none; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:0.3rem; font-family:'Prompt', sans-serif; font-weight:bold;">
+                    <i class="fa-solid fa-lock" id="bookingToggleIcon"></i> <span>ปิดรับจองใหม่</span>
+                </button>
             </div>
 
-            <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-                <button id="btnToggleBooking" onclick="toggleBookingOpenConfig()" class="btn" style="padding:0.45rem 1rem; font-size:0.85rem; background:#ef4444; color:white; border:none; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:0.4rem; font-family:'Prompt', sans-serif; font-weight:bold;">
-                    <i class="fa-solid fa-lock" id="bookingToggleIcon"></i> <span>เปลี่ยนเป็นปิดรับจองใหม่</span>
+            <!-- Toggle 2: Check Status & Edit Resubmission System -->
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; background:linear-gradient(135deg, #0f172a, #311b92); color:white; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+                <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                    <span style="font-weight:bold; font-size:0.9rem; display:flex; align-items:center; gap:0.4rem; color:#f8fafc;">
+                        <i class="fa-solid fa-magnifying-glass" style="color:#a5b4fc; font-size:1rem;"></i> 2. ตรวจสอบสถานะ/แก้ไข:
+                    </span>
+                    <span id="configStatusPageStatus" class="badge" style="background:#059669; color:white; font-size:0.75rem; padding:3px 8px; border-radius:10px; font-weight:bold;">🟢 เปิดให้บริการ</span>
+                </div>
+                <button id="btnToggleStatusPage" onclick="toggleStatusPageOpenConfig()" class="btn" style="padding:0.4rem 0.8rem; font-size:0.8rem; background:#ef4444; color:white; border:none; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:0.3rem; font-family:'Prompt', sans-serif; font-weight:bold;">
+                    <i class="fa-solid fa-lock" id="statusPageToggleIcon"></i> <span>ปิดช่องสืบค้น/แก้ไข</span>
                 </button>
             </div>
         </div>
@@ -535,6 +548,7 @@
         }
 
         let isBookingClosed = false;
+        let isStatusPageClosed = false;
 
         async function syncBookingConfigUI() {
             if (!isProduction()) return;
@@ -542,7 +556,9 @@
                 const response = await fetch(`${APPS_SCRIPT_URL}?action=get_config`);
                 const result = await response.json();
                 isBookingClosed = result.booking_closed === true || result.booking_closed === "true";
+                isStatusPageClosed = result.status_closed === true || result.status_closed === "true";
                 updateBookingConfigUI();
+                updateStatusPageConfigUI();
             } catch(e) {
                 console.error("Failed to load booking config:", e);
             }
@@ -555,17 +571,81 @@
             if (!statusBadge || !toggleBtn) return;
             
             if (isBookingClosed) {
-                statusBadge.innerHTML = "🔴 ปิดรับลงทะเบียนใหม่แล้ว";
+                statusBadge.innerHTML = "🔴 ปิดรับจองใหม่แล้ว";
                 statusBadge.style.background = "#ef4444";
                 
-                toggleBtn.innerHTML = '<i class="fa-solid fa-lock-open"></i> <span>เปิดระบบลงทะเบียนใหม่</span>';
+                toggleBtn.innerHTML = '<i class="fa-solid fa-lock-open"></i> <span>เปิดรับจองใหม่</span>';
                 toggleBtn.style.background = "#10b981";
             } else {
                 statusBadge.innerHTML = "🟢 เปิดรับจองปกติ";
                 statusBadge.style.background = "#059669";
                 
-                toggleBtn.innerHTML = '<i class="fa-solid fa-lock"></i> <span>เปลี่ยนเป็นปิดรับจองใหม่</span>';
+                toggleBtn.innerHTML = '<i class="fa-solid fa-lock"></i> <span>ปิดรับจองใหม่</span>';
                 toggleBtn.style.background = "#ef4444";
+            }
+        }
+
+        function updateStatusPageConfigUI() {
+            const statusBadge = document.getElementById("configStatusPageStatus");
+            const toggleBtn = document.getElementById("btnToggleStatusPage");
+            
+            if (!statusBadge || !toggleBtn) return;
+            
+            if (isStatusPageClosed) {
+                statusBadge.innerHTML = "🔴 ปิดสืบค้น/แก้ไขแล้ว";
+                statusBadge.style.background = "#ef4444";
+                
+                toggleBtn.innerHTML = '<i class="fa-solid fa-lock-open"></i> <span>เปิดช่องสืบค้น/แก้ไข</span>';
+                toggleBtn.style.background = "#10b981";
+            } else {
+                statusBadge.innerHTML = "🟢 เปิดให้บริการ";
+                statusBadge.style.background = "#059669";
+                
+                toggleBtn.innerHTML = '<i class="fa-solid fa-lock"></i> <span>ปิดช่องสืบค้น/แก้ไข</span>';
+                toggleBtn.style.background = "#ef4444";
+            }
+        }
+
+        async function toggleStatusPageOpenConfig() {
+            if (!isProduction()) {
+                alert("ระบบจำลอง (Demo Mode): ไม่สามารถสลับค่าบนสเปรดชีตจริงได้");
+                isStatusPageClosed = !isStatusPageClosed;
+                updateStatusPageConfigUI();
+                return;
+            }
+            
+            const confirmMsg = isStatusPageClosed 
+                ? "คุณต้องการเปิดระบบตรวจสอบสถานะและการยื่นแก้ไขเอกสาร ใช่หรือไม่?" 
+                : "คุณต้องการปิดระบบตรวจสอบสถานะและการยื่นแก้ไขเอกสาร ทั้งหมด ใช่หรือไม่?";
+                
+            if (!confirm(confirmMsg)) return;
+            
+            const toggleBtn = document.getElementById("btnToggleStatusPage");
+            toggleBtn.disabled = true;
+            toggleBtn.querySelector('span').innerText = "กำลังอัปเดตสเปรดชีต...";
+            
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({
+                        action: "update_config",
+                        status_closed: !isStatusPageClosed
+                    })
+                });
+                const result = await response.json();
+                if (result.status === "success") {
+                    isStatusPageClosed = result.status_closed === true || result.status_closed === "true";
+                    updateStatusPageConfigUI();
+                    showToastNotification(isStatusPageClosed ? "🔒 ปิดช่องตรวจสอบสถานะและยื่นแก้ไขเรียบร้อยแล้ว!" : "🔓 เปิดช่องตรวจสอบสถานะและยื่นแก้ไขเรียบร้อยแล้ว!");
+                } else {
+                    alert("เกิดข้อผิดพลาด: " + (result.message || "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้"));
+                }
+            } catch(e) {
+                console.error("Failed to update status page config:", e);
+                alert("ล้มเหลวในการส่งข้อมูล: " + e.message);
+            } finally {
+                toggleBtn.disabled = false;
             }
         }
 

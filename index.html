@@ -44,7 +44,7 @@
                 <p>ลงทะเบียนออนไลน์ กรอกข้อมูลผู้ต้องขัง ญาติ และอัปโหลดรูปภาพหลักฐาน<br><span style="font-size:0.8rem; opacity:0.8;">Online Registration & Document Upload</span></p>
             </a>
 
-            <a href="status.html" class="menu-button">
+            <a href="status.html" id="statusBtnCard" class="menu-button">
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <h3>ตรวจสอบสถานะการจอง<br><span style="font-size:0.9rem; font-weight:normal; opacity:0.85;">Check Status</span></h3>
                 <p>ติดตามผลการอนุมัติเอกสารและวันเวลานัดหมายเข้าเยี่ยม<br><span style="font-size:0.8rem; opacity:0.8;">Check Approval & Appointment Result</span></p>
@@ -52,7 +52,7 @@
         </div>
 
         <script>
-            // ปิดปุ่มทันทีในระดับ 0 มิลลิวินาที (0ms Delay) ก่อนที่เบราว์เซอร์จะวาดปุ่มบนหน้าจอ
+            // ปิดปุ่มลงทะเบียนใหม่ทันทีในระดับ 0 มิลลิวินาที (0ms Delay) ก่อนที่เบราว์เซอร์จะวาดปุ่มบนหน้าจอ
             if (new Date().getTime() >= new Date("2026-08-14T12:00:00+07:00").getTime()) {
                 document.write('<style>#bookingBtnCard { opacity: 0.6 !important; cursor: not-allowed !important; pointer-events: none !important; }</style>');
             }
@@ -88,7 +88,7 @@
                 applyClosedUI();
             }
 
-            // เช็คสถานะการเปิด-ปิดจากเซิร์ฟเวอร์แบบเบื้องหลัง (เพื่อรองรับกรณีแอดมินสั่งเปิดใหม่ย้อนหลัง)
+            // เช็คสถานะการเปิด-ปิดจากเซิร์ฟเวอร์แบบเบื้องหลัง
             if (typeof APPS_SCRIPT_URL !== "undefined" && APPS_SCRIPT_URL) {
                 fetch(APPS_SCRIPT_URL + "?action=get_config")
                     .then(r => r.json())
@@ -100,6 +100,13 @@
                             applyClosedUI();
                         } else if (isForcedOpen) {
                             applyOpenUI();
+                        }
+
+                        const isStatusClosed = res.status_closed === true || res.status_closed === "true";
+                        if (isStatusClosed) {
+                            applyStatusClosedUI();
+                        } else {
+                            applyStatusOpenUI();
                         }
                     })
                     .catch(() => {});
@@ -139,6 +146,44 @@
                     const btnDesc = bookingBtn.querySelector('p');
                     if (btnDesc) {
                         btnDesc.innerHTML = 'ลงทะเบียนออนไลน์ กรอกข้อมูลผู้ต้องขัง ญาติ และอัปโหลดรูปภาพหลักฐาน<br><span style="font-size:0.8rem; opacity:0.8;">Online Registration & Document Upload</span>';
+                    }
+                }
+            }
+
+            function applyStatusClosedUI() {
+                const statusBtn = document.getElementById('statusBtnCard');
+                if (statusBtn) {
+                    statusBtn.removeAttribute('href');
+                    statusBtn.style.opacity = '0.6';
+                    statusBtn.style.cursor = 'not-allowed';
+                    statusBtn.style.pointerEvents = 'none';
+                    
+                    const btnTitle = statusBtn.querySelector('h3');
+                    if (btnTitle) {
+                        btnTitle.innerHTML = 'ปิดบริการตรวจสอบสถานะ & ยื่นแก้ไข<br><span style="font-size:0.9rem; font-weight:normal; opacity:0.85;">Status & Edit Closed</span>';
+                    }
+                    const btnDesc = statusBtn.querySelector('p');
+                    if (btnDesc) {
+                        btnDesc.innerHTML = 'ปิดระบบการสืบค้นและยื่นเอกสารแก้ไขเรียบร้อยแล้ว ขอขอบคุณญาติทุกท่านที่ใช้บริการ';
+                    }
+                }
+            }
+
+            function applyStatusOpenUI() {
+                const statusBtn = document.getElementById('statusBtnCard');
+                if (statusBtn) {
+                    statusBtn.setAttribute('href', 'status.html');
+                    statusBtn.style.opacity = '1';
+                    statusBtn.style.cursor = 'pointer';
+                    statusBtn.style.pointerEvents = 'auto';
+                    
+                    const btnTitle = statusBtn.querySelector('h3');
+                    if (btnTitle) {
+                        btnTitle.innerHTML = 'ตรวจสอบสถานะการจอง<br><span style="font-size:0.9rem; font-weight:normal; opacity:0.85;">Check Status</span>';
+                    }
+                    const btnDesc = statusBtn.querySelector('p');
+                    if (btnDesc) {
+                        btnDesc.innerHTML = 'ติดตามผลการอนุมัติเอกสารและวันเวลานัดหมายเข้าเยี่ยม<br><span style="font-size:0.8rem; opacity:0.8;">Check Approval & Appointment Result</span>';
                     }
                 }
             }
