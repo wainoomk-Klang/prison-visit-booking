@@ -760,11 +760,12 @@
             let count = 1;
 
             approvedBookings.forEach(booking => {
-                const zone = booking.zone || "-";
-                const slotText = (booking.slotText || "-").replace(/"/g, '""');
-                const inmateId = (booking.inmateId || "-").replace(/"/g, '""');
-                const inmateName = (booking.inmateFullName || `${booking.inmateTitle || ''}${booking.inmateName || ''} ${booking.inmateSurname || ''}`).trim().replace(/"/g, '""');
-                const remarks = (booking.remarks || "-").replace(/"/g, '""').replace(/\n/g, ' ');
+                const zone = String(booking.zone || "-");
+                const slotText = String(booking.slotText || "-").replace(/"/g, '""');
+                const inmateId = String(booking.inmateId || "-").replace(/"/g, '""');
+                const rawName = booking.inmateFullName || `${booking.inmateTitle || ''}${booking.inmateName || ''} ${booking.inmateSurname || ''}`;
+                const inmateName = String(rawName).trim().replace(/"/g, '""');
+                const remarks = String(booking.remarks || "-").replace(/"/g, '""').replace(/\n/g, ' ');
 
                 const visitors = parseVisitorsData(booking.visitors);
 
@@ -775,7 +776,7 @@
                         let tel = "-";
                         let cid = "-";
 
-                        if (typeof v === "object") {
+                        if (typeof v === "object" && v !== null) {
                             if (v.name || v.surname) {
                                 visitorName = `${v.title || ""}${v.name || ""} ${v.surname || ""}`.trim();
                                 relation = v.relation || "-";
@@ -784,14 +785,14 @@
                             } else if (v.rawText) {
                                 visitorName = v.rawText;
                             }
-                        } else if (typeof v === "string") {
-                            visitorName = v;
+                        } else if (v !== undefined && v !== null) {
+                            visitorName = String(v);
                         }
 
-                        visitorName = visitorName.replace(/"/g, '""');
-                        relation = relation.replace(/"/g, '""');
-                        tel = tel.replace(/"/g, '""');
-                        cid = cid.replace(/"/g, '""');
+                        visitorName = String(visitorName).replace(/"/g, '""');
+                        relation = String(relation).replace(/"/g, '""');
+                        tel = String(tel).replace(/"/g, '""');
+                        cid = String(cid).replace(/"/g, '""');
 
                         csvContent += `"${count}","แดน ${zone}","${slotText}","'${inmateId}","${inmateName}","ญาติคนที่ ${idx + 1}","${visitorName}","${relation}","'${tel}","'${cid}","${remarks}"\n`;
                         count++;
