@@ -625,14 +625,7 @@
             toggleBtn.querySelector('span').innerText = "กำลังอัปเดตสเปรดชีต...";
             
             try {
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({
-                        action: "update_config",
-                        status_closed: !isStatusPageClosed
-                    })
-                });
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=update_config&status_closed=${!isStatusPageClosed}`);
                 const result = await response.json();
                 if (result.status === "success") {
                     isStatusPageClosed = result.status_closed === true || result.status_closed === "true";
@@ -640,11 +633,7 @@
                     showToastNotification(isStatusPageClosed ? "🔒 ปิดช่องตรวจสอบสถานะและยื่นแก้ไขเรียบร้อยแล้ว!" : "🔓 เปิดช่องตรวจสอบสถานะและยื่นแก้ไขเรียบร้อยแล้ว!");
                 } else {
                     const errText = result.message || "";
-                    if (errText.includes("ลงทะเบียน") || errText.includes("ซ้ำซ้อน") || errText.includes("ได้รับการลงทะเบียน")) {
-                        alert("⚠️ ต้องอัปเดตโค้ด Apps Script หลังบ้านก่อนครับ!\n\nสาเหตุ: ฝั่ง Google Apps Script ในสเปรดชีตยังเป็นเวอร์ชันเดิมที่ยังไม่รู้จักคำสั่งสวิตช์ปุ่มกด\n\nวิธีแก้: ก๊อปปี้โค้ด Apps Script ล่าสุดไปวางทับใน Google Sheets (ส่วนขยาย -> Apps Script) แล้วกด 'ทำให้ใช้งานได้ (Deploy)' -> เลือก 'เวอร์ชันใหม่' 1 ครั้งครับ");
-                    } else {
-                        alert("เกิดข้อผิดพลาด: " + errText);
-                    }
+                    alert("เกิดข้อผิดพลาดในการบันทึกค่า: " + errText);
                 }
             } catch(e) {
                 console.error("Failed to update status page config:", e);
@@ -673,14 +662,7 @@
             toggleBtn.querySelector('span').innerText = "กำลังอัปเดตสเปรดชีต...";
             
             try {
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
-                    body: JSON.stringify({
-                        action: "update_config",
-                        booking_closed: !isBookingClosed
-                    })
-                });
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=update_config&booking_closed=${!isBookingClosed}`);
                 const result = await response.json();
                 if (result.status === "success") {
                     isBookingClosed = result.booking_closed === true || result.booking_closed === "true";
@@ -688,11 +670,7 @@
                     showToastNotification(isBookingClosed ? "🔒 ปิดรับลงทะเบียนใหม่เรียบร้อยแล้ว!" : "🔓 เปิดรับลงทะเบียนใหม่เรียบร้อยแล้ว!");
                 } else {
                     const errText = result.message || "";
-                    if (errText.includes("ลงทะเบียน") || errText.includes("ซ้ำซ้อน") || errText.includes("ได้รับการลงทะเบียน")) {
-                        alert("⚠️ ต้องอัปเดตโค้ด Apps Script หลังบ้านก่อนครับ!\n\nสาเหตุ: ฝั่ง Google Apps Script ในสเปรดชีตยังเป็นเวอร์ชันเดิมที่ยังไม่รู้จักคำสั่งสวิตช์ปุ่มกด\n\nวิธีแก้: ก๊อปปี้โค้ด Apps Script ล่าสุดไปวางทับใน Google Sheets (ส่วนขยาย -> Apps Script) แล้วกด 'ทำให้ใช้งานได้ (Deploy)' -> เลือก 'เวอร์ชันใหม่' 1 ครั้งครับ");
-                    } else {
-                        alert("เกิดข้อผิดพลาด: " + errText);
-                    }
+                    alert("เกิดข้อผิดพลาดในการบันทึกค่า: " + errText);
                 }
             } catch(e) {
                 console.error("Failed to update config:", e);
