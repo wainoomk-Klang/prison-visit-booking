@@ -557,12 +557,26 @@
         }
 
         async function syncBookingConfigUI() {
+            // ดึงค่าจาก localStorage ก่อนทันทีเพื่อการตอบสนอง 0ms
+            const localBooking = localStorage.getItem("prison_booking_closed");
+            const localStatus = localStorage.getItem("prison_status_closed");
+            if (localBooking !== null) isBookingClosed = localBooking === "true";
+            if (localStatus !== null) isStatusPageClosed = localStatus === "true";
+            updateBookingConfigUI();
+            updateStatusPageConfigUI();
+
             if (!isProduction()) return;
             try {
                 const response = await fetch(`${APPS_SCRIPT_URL}?action=get_config`);
                 const result = await response.json();
-                isBookingClosed = checkBool(result.booking_closed);
-                isStatusPageClosed = checkBool(result.status_closed);
+                if (result.booking_closed !== undefined) {
+                    isBookingClosed = checkBool(result.booking_closed);
+                    localStorage.setItem("prison_booking_closed", String(isBookingClosed));
+                }
+                if (result.status_closed !== undefined) {
+                    isStatusPageClosed = checkBool(result.status_closed);
+                    localStorage.setItem("prison_status_closed", String(isStatusPageClosed));
+                }
                 updateBookingConfigUI();
                 updateStatusPageConfigUI();
             } catch(e) {
@@ -613,13 +627,6 @@
         }
 
         async function toggleStatusPageOpenConfig() {
-            if (!isProduction()) {
-                alert("ระบบจำลอง (Demo Mode): ไม่สามารถสลับค่าบนสเปรดชีตจริงได้");
-                isStatusPageClosed = !isStatusPageClosed;
-                updateStatusPageConfigUI();
-                return;
-            }
-            
             const nextVal = !isStatusPageClosed;
             const confirmMsg = nextVal 
                 ? "คุณต้องการปิดระบบตรวจสอบสถานะและการยื่นแก้ไขเอกสาร ทั้งหมด ใช่หรือไม่?"
@@ -627,37 +634,29 @@
                 
             if (!confirm(confirmMsg)) return;
             
-            const toggleBtn = document.getElementById("btnToggleStatusPage");
-            toggleBtn.disabled = true;
-            toggleBtn.querySelector('span').innerText = "กำลังอัปเดตสเปรดชีต...";
-            
+            // เปลี่ยนสถานะและ UI ทันทีในระดับ 0ms!
+            isStatusPageClosed = nextVal;
+            localStorage.setItem("prison_status_closed", String(isStatusPageClosed));
+            updateStatusPageConfigUI();
+            showToastNotification(isStatusPageClosed ? "🔒 ปิดช่องตรวจสอบสถานะและยื่นแก้ไขเรียบร้อยแล้ว!" : "🔓 เปิดช่องตรวจสอบสถานะและยื่นแก้ไขเรียบร้อยแล้ว!");
+
+            if (!isProduction()) return;
+
+            // ซิงค์ไปยัง Google Sheets เบื้องหลัง
             try {
                 const response = await fetch(`${APPS_SCRIPT_URL}?action=update_config&status_closed=${nextVal}`);
                 const result = await response.json();
-                if (result.status === "success") {
+                if (result.status === "success" && result.status_closed !== undefined) {
                     isStatusPageClosed = checkBool(result.status_closed);
+                    localStorage.setItem("prison_status_closed", String(isStatusPageClosed));
                     updateStatusPageConfigUI();
-                    showToastNotification(isStatusPageClosed ? "🔒 ปิดช่องตรวจสอบสถานะและยื่นแก้ไขเรียบร้อยแล้ว!" : "🔓 เปิดช่องตรวจสอบสถานะและยื่นแก้ไขเรียบร้อยแล้ว!");
-                } else {
-                    const errText = result.message || "";
-                    alert("เกิดข้อผิดพลาดในการบันทึกค่า: " + errText);
                 }
             } catch(e) {
-                console.error("Failed to update status page config:", e);
-                alert("ล้มเหลวในการส่งข้อมูล: " + e.message);
-            } finally {
-                toggleBtn.disabled = false;
+                console.error("Failed to update status page config on server:", e);
             }
         }
 
         async function toggleBookingOpenConfig() {
-            if (!isProduction()) {
-                alert("ระบบจำลอง (Demo Mode): ไม่สามารถสลับค่าบนสเปรดชีตจริงได้");
-                isBookingClosed = !isBookingClosed;
-                updateBookingConfigUI();
-                return;
-            }
-            
             const nextVal = !isBookingClosed;
             const confirmMsg = nextVal 
                 ? "คุณต้องการปิดระบบรับลงทะเบียนจองสิทธิ์รอบใหม่ ใช่หรือไม่?"
@@ -665,26 +664,25 @@
                 
             if (!confirm(confirmMsg)) return;
             
-            const toggleBtn = document.getElementById("btnToggleBooking");
-            toggleBtn.disabled = true;
-            toggleBtn.querySelector('span').innerText = "กำลังอัปเดตสเปรดชีต...";
-            
+            // เปลี่ยนสถานะและ UI ทันทีในระดับ 0ms!
+            isBookingClosed = nextVal;
+            localStorage.setItem("prison_booking_closed", String(isBookingClosed));
+            updateBookingConfigUI();
+            showToastNotification(isBookingClosed ? "🔒 ปิดรับลงทะเบียนใหม่เรียบร้อยแล้ว!" : "🔓 เปิดรับลงทะเบียนใหม่เรียบร้อยแล้ว!");
+
+            if (!isProduction()) return;
+
+            // ซิงค์ไปยัง Google Sheets เบื้องหลัง
             try {
                 const response = await fetch(`${APPS_SCRIPT_URL}?action=update_config&booking_closed=${nextVal}`);
                 const result = await response.json();
-                if (result.status === "success") {
+                if (result.status === "success" && result.booking_closed !== undefined) {
                     isBookingClosed = checkBool(result.booking_closed);
+                    localStorage.setItem("prison_booking_closed", String(isBookingClosed));
                     updateBookingConfigUI();
-                    showToastNotification(isBookingClosed ? "🔒 ปิดรับลงทะเบียนใหม่เรียบร้อยแล้ว!" : "🔓 เปิดรับลงทะเบียนใหม่เรียบร้อยแล้ว!");
-                } else {
-                    const errText = result.message || "";
-                    alert("เกิดข้อผิดพลาดในการบันทึกค่า: " + errText);
                 }
             } catch(e) {
-                console.error("Failed to update config:", e);
-                alert("ล้มเหลวในการส่งข้อมูล: " + e.message);
-            } finally {
-                toggleBtn.disabled = false;
+                console.error("Failed to update booking config on server:", e);
             }
         }
 

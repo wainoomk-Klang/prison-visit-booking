@@ -360,25 +360,45 @@
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
 
+            function checkBool(v) {
+                if (v === true) return true;
+                if (v === false || v === null || v === undefined) return false;
+                return String(v).toUpperCase().trim() === "TRUE";
+            }
+
+            function applyStatusClosedState(closed) {
+                isStatusSystemClosed = closed;
+                const closedBanner = document.getElementById("statusClosedBanner");
+                const searchCard = document.getElementById("searchCard");
+                if (closed) {
+                    if (closedBanner) closedBanner.classList.remove("hidden");
+                    if (searchCard) {
+                        searchCard.style.opacity = "0.4";
+                        searchCard.style.pointerEvents = "none";
+                    }
+                } else {
+                    if (closedBanner) closedBanner.classList.add("hidden");
+                    if (searchCard) {
+                        searchCard.style.opacity = "1";
+                        searchCard.style.pointerEvents = "auto";
+                    }
+                }
+            }
+
+            // เช็คค่าจาก localStorage ทันที 0ms
+            const localStatus = localStorage.getItem("prison_status_closed");
+            if (localStatus !== null) {
+                applyStatusClosedState(localStatus === "true");
+            }
+
             if (typeof APPS_SCRIPT_URL !== "undefined" && APPS_SCRIPT_URL) {
                 fetch(APPS_SCRIPT_URL + "?action=get_config")
                     .then(r => r.json())
                     .then(res => {
-                        function checkBool(v) {
-                            if (v === true) return true;
-                            if (v === false || v === null || v === undefined) return false;
-                            return String(v).toUpperCase().trim() === "TRUE";
-                        }
-
-                        if (checkBool(res.status_closed)) {
-                            isStatusSystemClosed = true;
-                            const closedBanner = document.getElementById("statusClosedBanner");
-                            if (closedBanner) closedBanner.classList.remove("hidden");
-                            const searchCard = document.getElementById("searchCard");
-                            if (searchCard) {
-                                searchCard.style.opacity = "0.4";
-                                searchCard.style.pointerEvents = "none";
-                            }
+                        if (res.status_closed !== undefined) {
+                            const closed = checkBool(res.status_closed);
+                            localStorage.setItem("prison_status_closed", String(closed));
+                            applyStatusClosedState(closed);
                         }
                     })
                     .catch(() => {});

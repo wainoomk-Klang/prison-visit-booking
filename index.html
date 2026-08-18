@@ -83,9 +83,23 @@
             const CLOSE_TIME = new Date("2026-08-14T12:00:00+07:00").getTime();
             const now = new Date().getTime();
             
-            // ปรับการแสดงผลข้อความในปุ่มทันที
-            if (now >= CLOSE_TIME) {
+            function checkBool(v) {
+                if (v === true) return true;
+                if (v === false || v === null || v === undefined) return false;
+                return String(v).toUpperCase().trim() === "TRUE";
+            }
+
+            // เช็คค่าจาก localStorage ทันที 0ms
+            const localBooking = localStorage.getItem("prison_booking_closed");
+            const localStatus = localStorage.getItem("prison_status_closed");
+            if (localBooking !== null) {
+                if (localBooking === "true") applyClosedUI(); else applyOpenUI();
+            } else if (now >= CLOSE_TIME) {
                 applyClosedUI();
+            }
+
+            if (localStatus !== null) {
+                if (localStatus === "true") applyStatusClosedUI(); else applyStatusOpenUI();
             }
 
             // เช็คสถานะการเปิด-ปิดจากเซิร์ฟเวอร์แบบเบื้องหลัง
@@ -93,24 +107,16 @@
                 fetch(APPS_SCRIPT_URL + "?action=get_config")
                     .then(r => r.json())
                     .then(res => {
-                        function checkBool(v) {
-                            if (v === true) return true;
-                            if (v === false || v === null || v === undefined) return false;
-                            return String(v).toUpperCase().trim() === "TRUE";
+                        if (res.booking_closed !== undefined) {
+                            const isClosed = checkBool(res.booking_closed);
+                            localStorage.setItem("prison_booking_closed", String(isClosed));
+                            if (isClosed) applyClosedUI(); else applyOpenUI();
                         }
 
-                        const isClosed = checkBool(res.booking_closed);
-                        if (isClosed) {
-                            applyClosedUI();
-                        } else {
-                            applyOpenUI();
-                        }
-
-                        const isStatusClosed = checkBool(res.status_closed);
-                        if (isStatusClosed) {
-                            applyStatusClosedUI();
-                        } else {
-                            applyStatusOpenUI();
+                        if (res.status_closed !== undefined) {
+                            const isStatusClosed = checkBool(res.status_closed);
+                            localStorage.setItem("prison_status_closed", String(isStatusClosed));
+                            if (isStatusClosed) applyStatusClosedUI(); else applyStatusOpenUI();
                         }
                     })
                     .catch(() => {});
