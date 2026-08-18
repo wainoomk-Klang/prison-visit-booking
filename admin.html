@@ -302,11 +302,11 @@
                         <option value="8">แดน 8</option>
                     </select>
 
-                    <select id="filterStatus" class="form-control" style="width:160px; padding:0.5rem;" onchange="renderBookingsTable()">
+                    <select id="filterStatus" class="form-control" style="width:195px; padding:0.5rem;" onchange="renderBookingsTable()">
                         <option value="">สถานะทั้งหมด</option>
-                        <option value="pending">รอการตรวจสอบ</option>
-                        <option value="approved">อนุมัติแล้ว</option>
-                        <option value="rejected">ปฏิเสธการจอง</option>
+                        <option value="pending">🟡 รอการตรวจสอบ (ยังไม่อนุมัติ)</option>
+                        <option value="approved">🟢 อนุมัติแล้ว</option>
+                        <option value="rejected">🔴 ปฏิเสธการจอง</option>
                     </select>
 
                     <button class="btn btn-primary" onclick="refreshData()" style="width:auto; padding:0.5rem 1rem; background-color: var(--primary-color); border-color: var(--primary-color); display:inline-flex; align-items:center; gap:0.5rem; color:white; border-radius:6px; cursor:pointer; font-weight:600;">
@@ -919,7 +919,7 @@
             });
 
             if (zoneFilter) {
-                filtered = filtered.filter(b => b.zone === zoneFilter);
+                filtered = filtered.filter(b => String(b.zone).trim() === String(zoneFilter).trim());
             }
             if (statusFilter) {
                 if (statusFilter === "resubmitted") {
@@ -929,8 +929,16 @@
                         return totalInmateCounts[k] > 1 || remarks.includes("แก้ไข") || remarks.includes("ยื่นใหม่") || remarks.includes("resubmit");
                     });
                 } else {
-                    filtered = filtered.filter(b => b.status === statusFilter);
+                    filtered = filtered.filter(b => String(b.status).trim() === String(statusFilter).trim());
                 }
+            } else {
+                // จัดกลุ่มเรียงคิวให้อัตโนมัติ: 🟡 รอตรวจสอบ (ยังไม่อนุมัติ) อยู่บนสุด -> 🟢 อนุมัติแล้ว -> 🔴 ปฏิเสธแล้ว
+                filtered.sort((a, b) => {
+                    const statusOrder = { "pending": 1, "approved": 2, "rejected": 3 };
+                    const orderA = statusOrder[a.status] || 99;
+                    const orderB = statusOrder[b.status] || 99;
+                    return orderA - orderB;
+                });
             }
 
             if (filtered.length === 0) {
