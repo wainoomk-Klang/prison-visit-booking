@@ -753,7 +753,7 @@
                 return;
             }
 
-            // เรียงลำดับตามแดน 1 -> 8 (และเรียงตามรอบเวลาเยี่ยม)
+            // เรียงลำดับตามแดน 1 -> 8 และเรียง รอบเช้า ขึ้นก่อน รอบบ่าย
             approvedBookings.sort((a, b) => {
                 const zoneA = parseInt(String(a.zone || "999").replace(/\D/g, ""), 10) || 999;
                 const zoneB = parseInt(String(b.zone || "999").replace(/\D/g, ""), 10) || 999;
@@ -761,18 +761,24 @@
 
                 const slotA = String(a.slotText || "");
                 const slotB = String(b.slotText || "");
+                const isPmA = slotA.indexOf("บ่าย") > -1 ? 2 : 1;
+                const isPmB = slotB.indexOf("บ่าย") > -1 ? 2 : 1;
+                if (isPmA !== isPmB) return isPmA - isPmB;
+
                 return slotA.localeCompare(slotB, 'th');
             });
 
             // UTF-8 BOM สำหรับเปิดบน Microsoft Excel ภาษาไทยไม่ต่างดาว
             let csvContent = "\uFEFF";
-            csvContent += "ลำดับ,แดน,รอบเวลาเยี่ยม,เลขบัตรผู้ต้องขัง,ชื่อ-นามสกุล ผู้ต้องขัง,ลำดับญาติ,ชื่อ-นามสกุล ญาติผู้เข้าเยี่ยมจริง,ความสัมพันธ์,เบอร์โทรศัพท์ญาติ,เลขบัตรประชาชนญาติ,หมายเหตุการอนุมัติ/ตัดสิทธิ์\n";
+            csvContent += "ลำดับ,แดน,ช่วงเวลา,รอบเวลาเยี่ยม,เลขบัตรผู้ต้องขัง,ชื่อ-นามสกุล ผู้ต้องขัง,ลำดับญาติ,ชื่อ-นามสกุล ญาติผู้เข้าเยี่ยมจริง,ความสัมพันธ์,เบอร์โทรศัพท์ญาติ,เลขบัตรประชาชนญาติ,หมายเหตุการอนุมัติ/ตัดสิทธิ์\n";
 
             let count = 1;
 
             approvedBookings.forEach(booking => {
                 const zone = String(booking.zone || "-");
                 const slotText = String(booking.slotText || "-").replace(/"/g, '""');
+                const isPm = slotText.indexOf("บ่าย") > -1;
+                const shiftText = isPm ? "รอบบ่าย (12.30-15.00 น.)" : "รอบเช้า (08.30-11.00 น.)";
                 const inmateId = String(booking.inmateId || "-").replace(/"/g, '""');
                 const rawName = booking.inmateFullName || `${booking.inmateTitle || ''}${booking.inmateName || ''} ${booking.inmateSurname || ''}`;
                 const inmateName = String(rawName).trim().replace(/"/g, '""');
@@ -807,16 +813,17 @@
 
                         // แสดงข้อมูลผู้ต้องขัง แดน และรอบเยี่ยม เฉพาะบรรทัดแรก (ญาติคนที่ 1) ไม่ต้องแสดงซ้ำในบรรทัดถัดไป
                         const displayZone = (idx === 0) ? `แดน ${zone}` : "";
+                        const displayShift = (idx === 0) ? shiftText : "";
                         const displaySlot = (idx === 0) ? slotText : "";
                         const displayInmateId = (idx === 0) ? `'${inmateId}` : "";
                         const displayInmateName = (idx === 0) ? inmateName : "";
                         const displayRemarks = (idx === 0) ? remarks : "";
 
-                        csvContent += `"${count}","${displayZone}","${displaySlot}","${displayInmateId}","${displayInmateName}","ญาติคนที่ ${idx + 1}","${visitorName}","${relation}","'${tel}","'${cid}","${displayRemarks}"\n`;
+                        csvContent += `"${count}","${displayZone}","${displayShift}","${displaySlot}","${displayInmateId}","${displayInmateName}","ญาติคนที่ ${idx + 1}","${visitorName}","${relation}","'${tel}","'${cid}","${displayRemarks}"\n`;
                         count++;
                     });
                 } else {
-                    csvContent += `"${count}","แดน ${zone}","${slotText}","'${inmateId}","${inmateName}","-","ไม่พบรายละเอียดญาติ","-","-","-","${remarks}"\n`;
+                    csvContent += `"${count}","แดน ${zone}","${shiftText}","${slotText}","'${inmateId}","${inmateName}","-","ไม่พบรายละเอียดญาติ","-","-","-","${remarks}"\n`;
                     count++;
                 }
             });
