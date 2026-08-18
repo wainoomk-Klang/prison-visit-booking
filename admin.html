@@ -753,6 +753,17 @@
                 return;
             }
 
+            // เรียงลำดับตามแดน 1 -> 8 (และเรียงตามรอบเวลาเยี่ยม)
+            approvedBookings.sort((a, b) => {
+                const zoneA = parseInt(String(a.zone || "999").replace(/\D/g, ""), 10) || 999;
+                const zoneB = parseInt(String(b.zone || "999").replace(/\D/g, ""), 10) || 999;
+                if (zoneA !== zoneB) return zoneA - zoneB;
+
+                const slotA = String(a.slotText || "");
+                const slotB = String(b.slotText || "");
+                return slotA.localeCompare(slotB, 'th');
+            });
+
             // UTF-8 BOM สำหรับเปิดบน Microsoft Excel ภาษาไทยไม่ต่างดาว
             let csvContent = "\uFEFF";
             csvContent += "ลำดับ,แดน,รอบเวลาเยี่ยม,เลขบัตรผู้ต้องขัง,ชื่อ-นามสกุล ผู้ต้องขัง,ลำดับญาติ,ชื่อ-นามสกุล ญาติผู้เข้าเยี่ยมจริง,ความสัมพันธ์,เบอร์โทรศัพท์ญาติ,เลขบัตรประชาชนญาติ,หมายเหตุการอนุมัติ/ตัดสิทธิ์\n";
