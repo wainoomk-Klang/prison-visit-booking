@@ -639,7 +639,12 @@
                     updateStatusPageConfigUI();
                     showToastNotification(isStatusPageClosed ? "🔒 ปิดช่องตรวจสอบสถานะและยื่นแก้ไขเรียบร้อยแล้ว!" : "🔓 เปิดช่องตรวจสอบสถานะและยื่นแก้ไขเรียบร้อยแล้ว!");
                 } else {
-                    alert("เกิดข้อผิดพลาด: " + (result.message || "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้"));
+                    const errText = result.message || "";
+                    if (errText.includes("ลงทะเบียน") || errText.includes("ซ้ำซ้อน") || errText.includes("ได้รับการลงทะเบียน")) {
+                        alert("⚠️ ต้องอัปเดตโค้ด Apps Script หลังบ้านก่อนครับ!\n\nสาเหตุ: ฝั่ง Google Apps Script ในสเปรดชีตยังเป็นเวอร์ชันเดิมที่ยังไม่รู้จักคำสั่งสวิตช์ปุ่มกด\n\nวิธีแก้: ก๊อปปี้โค้ด Apps Script ล่าสุดไปวางทับใน Google Sheets (ส่วนขยาย -> Apps Script) แล้วกด 'ทำให้ใช้งานได้ (Deploy)' -> เลือก 'เวอร์ชันใหม่' 1 ครั้งครับ");
+                    } else {
+                        alert("เกิดข้อผิดพลาด: " + errText);
+                    }
                 }
             } catch(e) {
                 console.error("Failed to update status page config:", e);
@@ -682,7 +687,12 @@
                     updateBookingConfigUI();
                     showToastNotification(isBookingClosed ? "🔒 ปิดรับลงทะเบียนใหม่เรียบร้อยแล้ว!" : "🔓 เปิดรับลงทะเบียนใหม่เรียบร้อยแล้ว!");
                 } else {
-                    alert("เกิดข้อผิดพลาด: " + (result.message || "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้"));
+                    const errText = result.message || "";
+                    if (errText.includes("ลงทะเบียน") || errText.includes("ซ้ำซ้อน") || errText.includes("ได้รับการลงทะเบียน")) {
+                        alert("⚠️ ต้องอัปเดตโค้ด Apps Script หลังบ้านก่อนครับ!\n\nสาเหตุ: ฝั่ง Google Apps Script ในสเปรดชีตยังเป็นเวอร์ชันเดิมที่ยังไม่รู้จักคำสั่งสวิตช์ปุ่มกด\n\nวิธีแก้: ก๊อปปี้โค้ด Apps Script ล่าสุดไปวางทับใน Google Sheets (ส่วนขยาย -> Apps Script) แล้วกด 'ทำให้ใช้งานได้ (Deploy)' -> เลือก 'เวอร์ชันใหม่' 1 ครั้งครับ");
+                    } else {
+                        alert("เกิดข้อผิดพลาด: " + errText);
+                    }
                 }
             } catch(e) {
                 console.error("Failed to update config:", e);
