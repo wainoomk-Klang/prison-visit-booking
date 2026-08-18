@@ -550,13 +550,19 @@
         let isBookingClosed = false;
         let isStatusPageClosed = false;
 
+        function checkBool(v) {
+            if (v === true) return true;
+            if (v === false || v === null || v === undefined) return false;
+            return String(v).toUpperCase().trim() === "TRUE";
+        }
+
         async function syncBookingConfigUI() {
             if (!isProduction()) return;
             try {
                 const response = await fetch(`${APPS_SCRIPT_URL}?action=get_config`);
                 const result = await response.json();
-                isBookingClosed = result.booking_closed === true || result.booking_closed === "true";
-                isStatusPageClosed = result.status_closed === true || result.status_closed === "true";
+                isBookingClosed = checkBool(result.booking_closed);
+                isStatusPageClosed = checkBool(result.status_closed);
                 updateBookingConfigUI();
                 updateStatusPageConfigUI();
             } catch(e) {
@@ -614,9 +620,10 @@
                 return;
             }
             
-            const confirmMsg = isStatusPageClosed 
-                ? "คุณต้องการเปิดระบบตรวจสอบสถานะและการยื่นแก้ไขเอกสาร ใช่หรือไม่?" 
-                : "คุณต้องการปิดระบบตรวจสอบสถานะและการยื่นแก้ไขเอกสาร ทั้งหมด ใช่หรือไม่?";
+            const nextVal = !isStatusPageClosed;
+            const confirmMsg = nextVal 
+                ? "คุณต้องการปิดระบบตรวจสอบสถานะและการยื่นแก้ไขเอกสาร ทั้งหมด ใช่หรือไม่?"
+                : "คุณต้องการเปิดระบบตรวจสอบสถานะและการยื่นแก้ไขเอกสาร ใช่หรือไม่?";
                 
             if (!confirm(confirmMsg)) return;
             
@@ -625,10 +632,10 @@
             toggleBtn.querySelector('span').innerText = "กำลังอัปเดตสเปรดชีต...";
             
             try {
-                const response = await fetch(`${APPS_SCRIPT_URL}?action=update_config&status_closed=${!isStatusPageClosed}`);
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=update_config&status_closed=${nextVal}`);
                 const result = await response.json();
                 if (result.status === "success") {
-                    isStatusPageClosed = result.status_closed === true || result.status_closed === "true";
+                    isStatusPageClosed = checkBool(result.status_closed);
                     updateStatusPageConfigUI();
                     showToastNotification(isStatusPageClosed ? "🔒 ปิดช่องตรวจสอบสถานะและยื่นแก้ไขเรียบร้อยแล้ว!" : "🔓 เปิดช่องตรวจสอบสถานะและยื่นแก้ไขเรียบร้อยแล้ว!");
                 } else {
@@ -651,9 +658,10 @@
                 return;
             }
             
-            const confirmMsg = isBookingClosed 
-                ? "คุณต้องการเปิดระบบรับลงทะเบียนจองสิทธิ์รอบใหม่ ใช่หรือไม่?" 
-                : "คุณต้องการปิดระบบรับลงทะเบียนจองสิทธิ์รอบใหม่ ใช่หรือไม่? (สำหรับผู้ที่จะแก้ไขเอกสารจะยังคงสืบค้นและแก้ไขคิวเดิมได้ปกติ)";
+            const nextVal = !isBookingClosed;
+            const confirmMsg = nextVal 
+                ? "คุณต้องการปิดระบบรับลงทะเบียนจองสิทธิ์รอบใหม่ ใช่หรือไม่?"
+                : "คุณต้องการเปิดระบบรับลงทะเบียนจองสิทธิ์รอบใหม่ ใช่หรือไม่?";
                 
             if (!confirm(confirmMsg)) return;
             
@@ -662,10 +670,10 @@
             toggleBtn.querySelector('span').innerText = "กำลังอัปเดตสเปรดชีต...";
             
             try {
-                const response = await fetch(`${APPS_SCRIPT_URL}?action=update_config&booking_closed=${!isBookingClosed}`);
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=update_config&booking_closed=${nextVal}`);
                 const result = await response.json();
                 if (result.status === "success") {
-                    isBookingClosed = result.booking_closed === true || result.booking_closed === "true";
+                    isBookingClosed = checkBool(result.booking_closed);
                     updateBookingConfigUI();
                     showToastNotification(isBookingClosed ? "🔒 ปิดรับลงทะเบียนใหม่เรียบร้อยแล้ว!" : "🔓 เปิดรับลงทะเบียนใหม่เรียบร้อยแล้ว!");
                 } else {

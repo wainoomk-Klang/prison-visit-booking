@@ -93,16 +93,20 @@
                 fetch(APPS_SCRIPT_URL + "?action=get_config")
                     .then(r => r.json())
                     .then(res => {
-                        const isClosed = res.booking_closed === true || res.booking_closed === "true";
-                        const isForcedOpen = res.booking_closed === false || res.booking_closed === "false";
-                        
+                        function checkBool(v) {
+                            if (v === true) return true;
+                            if (v === false || v === null || v === undefined) return false;
+                            return String(v).toUpperCase().trim() === "TRUE";
+                        }
+
+                        const isClosed = checkBool(res.booking_closed);
                         if (isClosed) {
                             applyClosedUI();
-                        } else if (isForcedOpen) {
+                        } else {
                             applyOpenUI();
                         }
 
-                        const isStatusClosed = res.status_closed === true || res.status_closed === "true";
+                        const isStatusClosed = checkBool(res.status_closed);
                         if (isStatusClosed) {
                             applyStatusClosedUI();
                         } else {
