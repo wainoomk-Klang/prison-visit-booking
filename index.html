@@ -38,7 +38,7 @@
 
         <!-- Menu Action Selection -->
         <div class="menu-grid">
-            <a href="booking.html" class="menu-button">
+            <a href="booking.html" id="bookingBtnCard" class="menu-button">
                 <i class="fa-solid fa-calendar-check"></i>
                 <h3>ลงทะเบียนจองสิทธิ์เยี่ยมใกล้ชิด<br><span style="font-size:0.9rem; font-weight:normal; opacity:0.85;">Register Booking</span></h3>
                 <p>ลงทะเบียนออนไลน์ กรอกข้อมูลผู้ต้องขัง ญาติ และอัปโหลดรูปภาพหลักฐาน<br><span style="font-size:0.8rem; opacity:0.8;">Online Registration & Document Upload</span></p>
@@ -50,6 +50,13 @@
                 <p>ติดตามผลการอนุมัติเอกสารและวันเวลานัดหมายเข้าเยี่ยม<br><span style="font-size:0.8rem; opacity:0.8;">Check Approval & Appointment Result</span></p>
             </a>
         </div>
+
+        <script>
+            // ปิดปุ่มทันทีในระดับ 0 มิลลิวินาที (0ms Delay) ก่อนที่เบราว์เซอร์จะวาดปุ่มบนหน้าจอ
+            if (new Date().getTime() >= new Date("2026-08-14T12:00:00+07:00").getTime()) {
+                document.write('<style>#bookingBtnCard { opacity: 0.6 !important; cursor: not-allowed !important; pointer-events: none !important; }</style>');
+            }
+        </script>
 
         <div class="card" style="text-align: center; padding: 1.5rem;">
             <p style="margin: 0 0 0.75rem 0; font-size: 0.95rem; color: var(--text-light);">
@@ -73,37 +80,38 @@
         document.addEventListener("DOMContentLoaded", () => {
             initTheme();
 
-            // ตรวจสอบเวลาเพื่อปิดรับจองสิทธิ์รอบใหม่ (14 สิงหาคม 2569 เวลา 12:00 น.)
             const CLOSE_TIME = new Date("2026-08-14T12:00:00+07:00").getTime();
             const now = new Date().getTime();
             
-            // ตรวจสอบ Config จาก Apps Script Web App
+            // ปรับการแสดงผลข้อความในปุ่มทันที
+            if (now >= CLOSE_TIME) {
+                applyClosedUI();
+            }
+
+            // เช็คสถานะการเปิด-ปิดจากเซิร์ฟเวอร์แบบเบื้องหลัง (เพื่อรองรับกรณีแอดมินสั่งเปิดใหม่ย้อนหลัง)
             if (typeof APPS_SCRIPT_URL !== "undefined" && APPS_SCRIPT_URL) {
                 fetch(APPS_SCRIPT_URL + "?action=get_config")
                     .then(r => r.json())
                     .then(res => {
-                        const isClosed = res.booking_closed === true || res.booking_closed === "true" || (res.booking_closed !== false && res.booking_closed !== "false" && now >= CLOSE_TIME);
+                        const isClosed = res.booking_closed === true || res.booking_closed === "true";
+                        const isForcedOpen = res.booking_closed === false || res.booking_closed === "false";
+                        
                         if (isClosed) {
                             applyClosedUI();
+                        } else if (isForcedOpen) {
+                            applyOpenUI();
                         }
                     })
-                    .catch(() => {
-                        if (now >= CLOSE_TIME) applyClosedUI();
-                    });
-            } else {
-                if (now >= CLOSE_TIME) applyClosedUI();
+                    .catch(() => {});
             }
 
             function applyClosedUI() {
-                const bookingBtn = document.querySelector('a[href="booking.html"]');
+                const bookingBtn = document.getElementById('bookingBtnCard');
                 if (bookingBtn) {
                     bookingBtn.removeAttribute('href');
                     bookingBtn.style.opacity = '0.6';
                     bookingBtn.style.cursor = 'not-allowed';
-                    bookingBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        alert("⚠️ ระบบปิดรับการลงทะเบียนจองสิทธิ์ใหม่แล้ว (หมดเขต 14 ส.ค. 2569 เวลา 12:00 น. หรือปิดโดยแอดมิน)\n\n*สำหรับญาติที่ระบบแจ้งให้แก้ไขเอกสารคิวเดิมที่ถูกปฏิเสธ สามารถกดที่ปุ่ม 'ตรวจสอบสถานะการจอง' เพื่อทำรายการยื่นแก้ไขได้ตามปกติครับ");
-                    });
+                    bookingBtn.style.pointerEvents = 'none'; // ปิดการคลิก 100%
                     
                     const btnTitle = bookingBtn.querySelector('h3');
                     if (btnTitle) {
@@ -111,7 +119,26 @@
                     }
                     const btnDesc = bookingBtn.querySelector('p');
                     if (btnDesc) {
-                        btnDesc.innerHTML = 'หมดเขต หรือ แอดมินปิดรับลงทะเบียนใหม่ (ผู้ยื่นแก้ไขคิวเดิมสามารถทำรายการต่อได้ผ่านปุ่มตรวจสอบสถานะ)';
+                        btnDesc.innerHTML = 'หมดเขตเมื่อ 14 ส.ค. 2569 เวลา 12:00 น. (ผู้ยื่นแก้ไขคิวเดิมสามารถทำรายการต่อได้ผ่านปุ่มตรวจสอบสถานะ)';
+                    }
+                }
+            }
+
+            function applyOpenUI() {
+                const bookingBtn = document.getElementById('bookingBtnCard');
+                if (bookingBtn) {
+                    bookingBtn.setAttribute('href', 'booking.html');
+                    bookingBtn.style.opacity = '1';
+                    bookingBtn.style.cursor = 'pointer';
+                    bookingBtn.style.pointerEvents = 'auto';
+                    
+                    const btnTitle = bookingBtn.querySelector('h3');
+                    if (btnTitle) {
+                        btnTitle.innerHTML = 'ลงทะเบียนจองสิทธิ์เยี่ยมใกล้ชิด<br><span style="font-size:0.9rem; font-weight:normal; opacity:0.85;">Register Booking</span>';
+                    }
+                    const btnDesc = bookingBtn.querySelector('p');
+                    if (btnDesc) {
+                        btnDesc.innerHTML = 'ลงทะเบียนออนไลน์ กรอกข้อมูลผู้ต้องขัง ญาติ และอัปโหลดรูปภาพหลักฐาน<br><span style="font-size:0.8rem; opacity:0.8;">Online Registration & Document Upload</span>';
                     }
                 }
             }
