@@ -1359,11 +1359,12 @@
             const slotsCount = {};
 
             for (let z = 1; z <= 8; z++) {
-                zoneStats[z] = { bookings: 0, visitors: 0 };
+                zoneStats[z] = { approvedBookings: 0, approvedVisitors: 0, totalBookings: 0, totalVisitors: 0 };
             }
             
             let totalVisitors = 0;
             let approvedCount = 0;
+            let approvedTotalVisitors = 0;
             let pendingCount = 0;
             let rejectedCount = 0;
 
@@ -1376,33 +1377,25 @@
                     } catch(e) {}
                 }
                 
-                if (b.status === "approved") approvedCount++;
-                else if (b.status === "pending") pendingCount++;
-                else if (b.status === "rejected") rejectedCount++;
+                // Multi-format visitor counter!
+                const parsedV = parseVisitorsData(b.visitors);
+                const vCount = parsedV.length;
+                totalVisitors += vCount;
+
+                const isApproved = b.status === "approved";
+
+                if (isApproved) {
+                    approvedCount++;
+                    approvedTotalVisitors += vCount;
+                } else if (b.status === "pending") {
+                    pendingCount++;
+                } else if (b.status === "rejected") {
+                    rejectedCount++;
+                }
 
                 if (b.status !== "rejected" && b.slot) {
                     slotsCount[b.slot] = (slotsCount[b.slot] || 0) + 1;
                 }
-                
-                // Robust multi-format visitor counter!
-                let vCount = 0;
-                let visitors = b.visitors;
-                if (typeof visitors === 'string') {
-                    const trimmed = visitors.trim();
-                    if (trimmed.startsWith('[')) {
-                        try {
-                            const parsed = JSON.parse(trimmed);
-                            vCount = Array.isArray(parsed) ? parsed.length : 0;
-                        } catch(e) { vCount = 0; }
-                    } else if (trimmed.length > 0) {
-                        const lines = trimmed.split('\n').filter(l => l.trim().length > 0);
-                        vCount = lines.length;
-                    }
-                } else if (Array.isArray(visitors)) {
-                    vCount = visitors.length;
-                }
-
-                totalVisitors += vCount;
 
                 if (!dateStats[dateStr]) {
                     dateStats[dateStr] = { totalBookings: 0, totalVisitors: 0, zones: {} };
@@ -1410,10 +1403,17 @@
                 }
                 dateStats[dateStr].totalBookings++;
                 dateStats[dateStr].totalVisitors += vCount;
-                if (b.zone && b.zone >= 1 && b.zone <= 8) {
-                    dateStats[dateStr].zones[b.zone]++;
-                    zoneStats[b.zone].bookings++;
-                    zoneStats[b.zone].visitors += vCount;
+
+                const zNum = parseInt(String(b.zone).replace(/\D/g, ""), 10);
+                if (zNum >= 1 && zNum <= 8) {
+                    dateStats[dateStr].zones[zNum]++;
+                    zoneStats[zNum].totalBookings++;
+                    zoneStats[zNum].totalVisitors += vCount;
+
+                    if (isApproved) {
+                        zoneStats[zNum].approvedBookings++;
+                        zoneStats[zNum].approvedVisitors += vCount;
+                    }
                 }
             });
 
@@ -1444,8 +1444,8 @@
                 zoneRowsHtml += `
                     <tr>
                         <td style="padding:0.75rem; border-bottom:1px solid var(--border-light); text-align:center; font-weight:bold;">แดน ${z}</td>
-                        <td style="padding:0.75rem; border-bottom:1px solid var(--border-light); text-align:center;">${s.bookings} คิว</td>
-                        <td style="padding:0.75rem; border-bottom:1px solid var(--border-light); text-align:center;">${s.visitors} คน</td>
+                        <td style="padding:0.75rem; border-bottom:1px solid var(--border-light); text-align:center; font-weight:bold; color:var(--success);">${s.approvedBookings} คิว</td>
+                        <td style="padding:0.75rem; border-bottom:1px solid var(--border-light); text-align:center; font-weight:bold; color:var(--secondary-color);">${s.approvedVisitors} คน</td>
                     </tr>
                 `;
             }
@@ -1497,8 +1497,8 @@
                             <p style="margin:0.5rem 0 0 0; font-size:1.5rem; font-weight:bold; color:var(--secondary-color);">${totalVisitors} คน</p>
                         </div>
                         <div class="card" style="padding:1rem; text-align:center; background-color:rgba(0,0,0,0.02); box-shadow:none; border:1px solid var(--border-light);">
-                            <h5 style="margin:0; font-size:0.85rem; color:var(--text-muted-light);">อนุมัติแล้ว</h5>
-                            <p style="margin:0.5rem 0 0 0; font-size:1.5rem; font-weight:bold; color:var(--success);">${approvedCount} คิว</p>
+                            <h5 style="margin:0; font-size:0.85rem; color:var(--text-muted-light);">อนุมัติแล้ว (คิว / ญาติ)</h5>
+                            <p style="margin:0.5rem 0 0 0; font-size:1.4rem; font-weight:bold; color:var(--success);">${approvedCount} คิว (${approvedTotalVisitors} คน)</p>
                         </div>
                         <div class="card" style="padding:1rem; text-align:center; background-color:rgba(0,0,0,0.02); box-shadow:none; border:1px solid var(--border-light);">
                             <h5 style="margin:0; font-size:0.85rem; color:var(--text-muted-light);">รอตรวจสอบ / ปฏิเสธ</h5>
@@ -1521,13 +1521,13 @@
                         </tbody>
                     </table>
 
-                    <h4 style="border-bottom:2px solid var(--primary-color); padding-bottom:0.4rem; color:var(--primary-color); font-family:'Prompt', sans-serif;">2. สรุปสะสมยอดรวมตามแดนคุมขัง</h4>
+                    <h4 style="border-bottom:2px solid var(--primary-color); padding-bottom:0.4rem; color:var(--primary-color); font-family:'Prompt', sans-serif;">2. สรุปสะสมยอดรวมตามแดนคุมขัง (เฉพาะคิวและญาติที่ได้รับอนุมัติแล้ว)</h4>
                     <table style="width:100%; border-collapse:collapse; margin-bottom:2rem; font-size:0.9rem;">
                         <thead>
                             <tr style="background-color:rgba(0,0,0,0.05);">
                                 <th style="padding:0.75rem; text-align:center; width:120px;">แดนคุมขัง</th>
-                                <th style="padding:0.75rem; text-align:center;">จำนวนคิวการจอง</th>
-                                <th style="padding:0.75rem; text-align:center;">จำนวนญาติที่จะเข้าเยี่ยม</th>
+                                <th style="padding:0.75rem; text-align:center;">จำนวนคิวที่ได้รับอนุมัติ</th>
+                                <th style="padding:0.75rem; text-align:center;">จำนวนญาติที่ได้รับอนุมัติเข้าเยี่ยม</th>
                             </tr>
                         </thead>
                         <tbody>
