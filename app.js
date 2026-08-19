@@ -185,7 +185,7 @@ async function getBookings() {
     if (isProduction()) {
         try {
             const timestamp = Date.now();
-            const response = await fetch(`${APPS_SCRIPT_URL}?action=read&_t=${timestamp}`, { cache: "no-store" });
+            const response = await fetch(`${APPS_SCRIPT_URL}?action=read&_t=${timestamp}`);
             const result = await response.json();
             if (result.status === "success" && Array.isArray(result.data)) {
                 return result.data;
