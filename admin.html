@@ -109,6 +109,16 @@
             thead {
                 display: table-header-group !important;
             }
+            .official-form-page {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                page-break-after: always !important;
+                break-after: page !important;
+            }
             .print-only {
                 display: flex !important;
             }
@@ -1703,7 +1713,6 @@
                 visitMonth = dateMatch[2];
                 visitYear = dateMatch[3];
             } else {
-                // Fallback from ADMIN_ZONE_DATA if zone match
                 const zNum = parseInt(String(zone).replace(/\D/g, ""), 10);
                 if (zNum >= 1 && zNum <= 8 && typeof ADMIN_ZONE_DATA !== "undefined" && ADMIN_ZONE_DATA[zNum]) {
                     const zDate = ADMIN_ZONE_DATA[zNum].date || "";
@@ -1723,17 +1732,17 @@
             for (let i = 0; i < 5; i++) {
                 const v = visitorsList[i];
                 if (v) {
-                    let vName = "-";
-                    let relation = "-";
-                    let tel = "-";
-                    let cid = "-";
+                    let vName = "";
+                    let relation = "";
+                    let tel = "";
+                    let cid = "";
 
                     if (typeof v === "object" && v !== null) {
                         if (v.name || v.surname) {
                             vName = `${v.title || ''}${v.name || ''} ${v.surname || ''}`.trim();
-                            relation = v.relation || "-";
-                            tel = v.tel || "-";
-                            cid = v.cid || "-";
+                            relation = v.relation || "";
+                            tel = v.tel || "";
+                            cid = v.cid || "";
                         } else if (v.rawText) {
                             vName = v.rawText;
                         }
@@ -1754,27 +1763,27 @@
                     }
 
                     visitorRows.push(`
-                        <div style="margin-bottom:0.35rem; font-size:14pt; line-height:1.5;">
-                            <div style="display:flex; justify-content:space-between;">
-                                <span style="flex:1.3;"><strong>${i + 1}. ${vName}</strong></span>
-                                <span style="flex:1;">บัตรประจำตัวประชาชน เลขที่ <span style="font-family:'Courier New', monospace; font-weight:bold; letter-spacing:0.5px; text-decoration:underline;">${formattedCid}</span></span>
+                        <div style="margin-bottom:0.25rem; font-size:14pt; line-height:1.4; font-family:'Sarabun', 'TH Sarabun New', 'TH Sarabun PSK', sans-serif;">
+                            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                                <span style="width:52%; font-weight:bold;">${i + 1}. ${vName}</span>
+                                <span style="width:48%; text-align:left;">บัตรประจำตัวประชาชน เลขที่ <span style="font-family:'Courier New', monospace; font-size:13pt; text-decoration:underline;">${formattedCid}</span></span>
                             </div>
-                            <div style="display:flex; justify-content:space-between; padding-left:1.5rem;">
-                                <span style="flex:1.3;">มีความสัมพันธ์กับผู้ต้องขังโดยเป็น <strong style="text-decoration:underline;">${relation}</strong></span>
-                                <span style="flex:1;">เบอร์โทร <span style="font-family:'Courier New', monospace; font-weight:bold; text-decoration:underline;">${formattedTel}</span></span>
+                            <div style="display:flex; justify-content:space-between; align-items:baseline; padding-left:1.2rem;">
+                                <span style="width:52%;">มีความสัมพันธ์กับผู้ต้องขังโดยเป็น <span style="text-decoration:underline; font-weight:bold;">${relation}</span></span>
+                                <span style="width:48%; text-align:left;">เบอร์โทร <span style="font-family:'Courier New', monospace; font-size:13pt; text-decoration:underline;">${formattedTel}</span></span>
                             </div>
                         </div>
                     `);
                 } else {
                     visitorRows.push(`
-                        <div style="margin-bottom:0.35rem; font-size:14pt; line-height:1.5; opacity:0.85;">
-                            <div style="display:flex; justify-content:space-between;">
-                                <span style="flex:1.3;">${i + 1}. ........................................................</span>
-                                <span style="flex:1;">บัตรประจำตัวประชาชน เลขที่ ....................................</span>
+                        <div style="margin-bottom:0.25rem; font-size:14pt; line-height:1.4; font-family:'Sarabun', 'TH Sarabun New', 'TH Sarabun PSK', sans-serif;">
+                            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                                <span style="width:52%;">${i + 1}.</span>
+                                <span style="width:48%; text-align:left;">บัตรประจำตัวประชาชน เลขที่</span>
                             </div>
-                            <div style="display:flex; justify-content:space-between; padding-left:1.5rem;">
-                                <span style="flex:1.3;">มีความสัมพันธ์กับผู้ต้องขังโดยเป็น .....................</span>
-                                <span style="flex:1;">เบอร์โทร ....................................</span>
+                            <div style="display:flex; justify-content:space-between; align-items:baseline; padding-left:1.2rem;">
+                                <span style="width:52%;">มีความสัมพันธ์กับผู้ต้องขังโดยเป็น</span>
+                                <span style="width:48%; text-align:left;">เบอร์โทร</span>
                             </div>
                         </div>
                     `);
@@ -1782,53 +1791,53 @@
             }
 
             return `
-                <div class="official-form-page" style="width:100%; max-width:210mm; padding:1cm 1.5cm; margin:0 auto 1.5rem auto; background:#fff; color:#000; font-family:'TH Sarabun PSK', 'Sarabun', 'TH Sarabun New', sans-serif; box-sizing:border-box; page-break-after:always; break-after:page; border:1px solid #ddd; border-radius:6px;">
+                <div class="official-form-page" style="width:100%; max-width:210mm; margin:0 auto; padding:0.4cm 0.8cm; background:#fff; color:#000; font-family:'Sarabun', 'TH Sarabun New', 'TH Sarabun PSK', sans-serif; box-sizing:border-box; page-break-after:always; break-after:page;">
                     
                     <!-- Emblem Logo -->
-                    <div style="text-align:center; margin-bottom:0.5rem;">
-                        <img src="logo.png" alt="ตรากรมราชทัณฑ์" style="width:70px; height:70px; object-fit:contain;" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Seal_of_the_Department_of_Corrections_Thailand.svg/240px-Seal_of_the_Department_of_Corrections_Thailand.svg.png'">
+                    <div style="text-align:center; margin-bottom:0.3rem;">
+                        <img src="logo.png" alt="ตรากรมราชทัณฑ์" style="width:60px; height:60px; object-fit:contain;" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Seal_of_the_Department_of_Corrections_Thailand.svg/240px-Seal_of_the_Department_of_Corrections_Thailand.svg.png'">
                     </div>
 
                     <!-- Header Title -->
-                    <div style="text-align:center; margin-bottom:1.2rem;">
-                        <h3 style="margin:0; font-size:15pt; font-weight:bold; color:#000; line-height:1.3;">แบบกรอกข้อความขอเยี่ยมในกรณีพิเศษ งานวันพบญาติ พ.ศ. ${visitYear}</h3>
-                        <h3 style="margin:0; font-size:15pt; font-weight:bold; color:#000; line-height:1.3;">ทัณฑสถานวัยหนุ่มกลาง</h3>
+                    <div style="text-align:center; margin-bottom:0.8rem;">
+                        <h3 style="margin:0; font-size:15pt; font-weight:bold; color:#000; line-height:1.25;">แบบกรอกข้อความขอเยี่ยมในกรณีพิเศษ งานวันพบญาติ พ.ศ. ${visitYear}</h3>
+                        <h3 style="margin:0; font-size:15pt; font-weight:bold; color:#000; line-height:1.25;">ทัณฑสถานวัยหนุ่มกลาง</h3>
                     </div>
 
                     <!-- Visitors List -->
-                    <div style="margin-bottom:1.2rem;">
+                    <div style="margin-bottom:0.6rem;">
                         ${visitorRows.join('')}
                     </div>
 
                     <!-- Statement Paragraph -->
-                    <div style="font-size:14pt; line-height:1.6; text-align:justify; margin-bottom:1rem;">
-                        <p style="margin:0 0 0.6rem 0; text-indent:2.5rem;">
-                            ข้าพเจ้ามีความประสงค์จะขอเข้าเยี่ยม <strong style="text-decoration:underline; font-size:15pt; color:#b91c1c;">${inmateDisplayName}</strong> แดน <strong>${zone}</strong> ในวันที่ <strong>${visitDay}</strong> เดือน <strong>${visitMonth}</strong> พ.ศ. <strong>${visitYear}</strong> ทั้งนี้ ข้าพเจ้าได้ทราบระเบียบ วิธีปฏิบัติในการเข้าเยี่ยมญาติภายในทัณฑสถานวัยหนุ่มกลาง โดยละเอียดแล้ว และจะถือปฏิบัติโดยเคร่งครัด
+                    <div style="font-size:14pt; line-height:1.5; text-align:justify; margin-bottom:0.6rem;">
+                        <p style="margin:0 0 0.4rem 0; text-indent:2.2rem;">
+                            ข้าพเจ้ามีความประสงค์จะขอเข้าเยี่ยม <span style="text-decoration:underline; font-weight:bold; color:#b91c1c;">${inmateDisplayName}</span> แดน <strong>${zone}</strong> ในวันที่ <strong>${visitDay}</strong> เดือน <strong>${visitMonth}</strong> พ.ศ. <strong>${visitYear}</strong> ทั้งนี้ ข้าพเจ้าได้ทราบระเบียบ วิธีปฏิบัติในการเข้าเยี่ยมญาติภายในทัณฑสถานวัยหนุ่มกลาง โดยละเอียดแล้ว และจะถือปฏิบัติโดยเคร่งครัด
                         </p>
-                        <p style="margin:0; text-indent:2.5rem;">
+                        <p style="margin:0; text-indent:2.2rem;">
                             หากข้าพเจ้า <strong>ไม่ปฏิบัติตามระเบียบ</strong> ของทัณฑสถานฯ ข้าพเจ้ายินยอม <strong>ให้ตัดสิทธิ์ในการเยี่ยม ครั้งนี้ ทุกประการ</strong>
                         </p>
                     </div>
 
                     <!-- Signatures Area -->
-                    <div style="margin-top:2rem; font-size:14pt; line-height:1.5;">
+                    <div style="margin-top:1rem; font-size:14pt; line-height:1.4;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                             
                             <!-- Left Counters -->
-                            <div style="line-height:2.2; width:35%;">
-                                <div>ชาย ................ คน</div>
-                                <div>หญิง ................ คน</div>
-                                <div><strong>รวม ................ คน</strong></div>
+                            <div style="line-height:2.1; width:32%;">
+                                <div>ชาย ............. คน</div>
+                                <div>หญิง ............. คน</div>
+                                <div><strong>รวม ............. คน</strong></div>
                             </div>
 
                             <!-- Right Signatures -->
-                            <div style="text-align:center; width:60%;">
-                                <div style="margin-bottom:0.3rem;">ลงชื่อ........................................................ผู้ขอเยี่ยม</div>
-                                <div style="margin-bottom:1.5rem; font-size:13pt;">วันที่ <strong>${visitDay}</strong> เดือน <strong>${visitMonth}</strong> พ.ศ. <strong>${visitYear}</strong></div>
+                            <div style="text-align:center; width:62%;">
+                                <div style="margin-bottom:0.2rem;">ลงชื่อ........................................................ผู้ขอเยี่ยม</div>
+                                <div style="margin-bottom:1.1rem; font-size:13pt;">วันที่ <strong>${visitDay}</strong> เดือน <strong>${visitMonth}</strong> พ.ศ. <strong>${visitYear}</strong></div>
 
-                                <div style="margin-bottom:1.8rem;">ลงชื่อ........................................................ผู้ตรวจสอบ</div>
+                                <div style="margin-bottom:1.3rem;">ลงชื่อ........................................................ผู้ตรวจสอบ</div>
 
-                                <div style="margin-bottom:0.2rem;">ลงชื่อ........................................................ผู้อนุมัติ</div>
+                                <div style="margin-bottom:0.15rem;">ลงชื่อ........................................................ผู้อนุมัติ</div>
                                 <div style="font-weight:bold;">(นายวชิระ นพเก้า)</div>
                                 <div style="font-size:13pt;">นักทัณฑวิทยาชำนาญการ ปฏิบัติราชการแทน</div>
                                 <div style="font-size:13pt;">ผู้อำนวยการส่วนทัณฑ์ปฏิบัติ</div>
