@@ -36,27 +36,21 @@
             </div>
         </div>
 
-        <!-- Menu Action Selection -->
-        <div class="menu-grid">
-            <a href="booking.html" id="bookingBtnCard" class="menu-button">
-                <i class="fa-solid fa-calendar-check"></i>
-                <h3>ลงทะเบียนจองสิทธิ์เยี่ยมใกล้ชิด<br><span style="font-size:0.9rem; font-weight:normal; opacity:0.85;">Register Booking</span></h3>
-                <p>ลงทะเบียนออนไลน์ กรอกข้อมูลผู้ต้องขัง ญาติ และอัปโหลดรูปภาพหลักฐาน<br><span style="font-size:0.8rem; opacity:0.8;">Online Registration & Document Upload</span></p>
-            </a>
-
-            <a href="status.html" id="statusBtnCard" class="menu-button">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <h3>ตรวจสอบสถานะการจอง<br><span style="font-size:0.9rem; font-weight:normal; opacity:0.85;">Check Status</span></h3>
-                <p>ติดตามผลการอนุมัติเอกสารและวันเวลานัดหมายเข้าเยี่ยม<br><span style="font-size:0.8rem; opacity:0.8;">Check Approval & Appointment Result</span></p>
-            </a>
+        <!-- System Closed Banner -->
+        <div class="card" style="text-align: center; padding: 2.5rem 1.5rem; background: #fff; border-top: 6px solid var(--danger); box-shadow: 0 10px 25px rgba(0,0,0,0.06); border-radius: 12px; margin-bottom: 2rem;">
+            <div style="font-size: 3.5rem; color: var(--danger); margin-bottom: 1rem;">
+                <i class="fa-solid fa-circle-xmark"></i>
+            </div>
+            <h2 style="margin: 0 0 0.75rem 0; font-family: 'Prompt', sans-serif; font-size: 1.6rem; color: #1e293b; font-weight: 700;">
+                ปิดรับลงทะเบียนและตรวจสอบแก้ไขข้อมูลแล้ว
+            </h2>
+            <p style="margin: 0 auto 1.25rem auto; font-size: 1.05rem; color: #64748b; max-width: 600px; line-height: 1.6;">
+                ระบบได้ <strong>ปิดรับการลงทะเบียนจองสิทธิ์ใหม่</strong> และ <strong>ปิดบริการตรวจสอบสถานะ / ยื่นเอกสารแก้ไข</strong> เรียบร้อยแล้วตามกำหนดเวลา เจ้าหน้าที่กำลังดำเนินการจัดเตรียมสถานที่และขั้นตอนการเข้าเยี่ยม
+            </p>
+            <div style="display: inline-block; background: #f1f5f9; padding: 0.75rem 1.5rem; border-radius: 8px; font-size: 0.95rem; color: #334155; font-weight: 600;">
+                🤝 ขอขอบคุณญาติทุกท่านที่ให้ความร่วมมือในการลงทะเบียน
+            </div>
         </div>
-
-        <script>
-            // ปิดปุ่มลงทะเบียนใหม่ทันทีในระดับ 0 มิลลิวินาที (0ms Delay) ก่อนที่เบราว์เซอร์จะวาดปุ่มบนหน้าจอ
-            if (new Date().getTime() >= new Date("2026-08-14T12:00:00+07:00").getTime()) {
-                document.write('<style>#bookingBtnCard { opacity: 0.6 !important; cursor: not-allowed !important; pointer-events: none !important; }</style>');
-            }
-        </script>
 
         <div class="card" style="text-align: center; padding: 1.5rem;">
             <p style="margin: 0 0 0.75rem 0; font-size: 0.95rem; color: var(--text-light);">
@@ -79,124 +73,6 @@
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             initTheme();
-
-            const CLOSE_TIME = new Date("2026-08-14T12:00:00+07:00").getTime();
-            const now = new Date().getTime();
-            
-            function checkBool(v) {
-                if (v === true) return true;
-                if (v === false || v === null || v === undefined) return false;
-                return String(v).toUpperCase().trim() === "TRUE";
-            }
-
-            // เช็คค่าจาก localStorage ทันที 0ms
-            const localBooking = localStorage.getItem("prison_booking_closed");
-            const localStatus = localStorage.getItem("prison_status_closed");
-            if (localBooking !== null) {
-                if (localBooking === "true") applyClosedUI(); else applyOpenUI();
-            } else if (now >= CLOSE_TIME) {
-                applyClosedUI();
-            }
-
-            if (localStatus !== null) {
-                if (localStatus === "true") applyStatusClosedUI(); else applyStatusOpenUI();
-            }
-
-            // เช็คสถานะการเปิด-ปิดจากเซิร์ฟเวอร์แบบเบื้องหลัง
-            if (typeof APPS_SCRIPT_URL !== "undefined" && APPS_SCRIPT_URL) {
-                fetch(APPS_SCRIPT_URL + "?action=get_config")
-                    .then(r => r.json())
-                    .then(res => {
-                        if (res.booking_closed !== undefined) {
-                            const isClosed = checkBool(res.booking_closed);
-                            localStorage.setItem("prison_booking_closed", String(isClosed));
-                            if (isClosed) applyClosedUI(); else applyOpenUI();
-                        }
-
-                        if (res.status_closed !== undefined) {
-                            const isStatusClosed = checkBool(res.status_closed);
-                            localStorage.setItem("prison_status_closed", String(isStatusClosed));
-                            if (isStatusClosed) applyStatusClosedUI(); else applyStatusOpenUI();
-                        }
-                    })
-                    .catch(() => {});
-            }
-
-            function applyClosedUI() {
-                const bookingBtn = document.getElementById('bookingBtnCard');
-                if (bookingBtn) {
-                    bookingBtn.removeAttribute('href');
-                    bookingBtn.style.opacity = '0.6';
-                    bookingBtn.style.cursor = 'not-allowed';
-                    bookingBtn.style.pointerEvents = 'none'; // ปิดการคลิก 100%
-                    
-                    const btnTitle = bookingBtn.querySelector('h3');
-                    if (btnTitle) {
-                        btnTitle.innerHTML = 'ปิดรับลงทะเบียนจองสิทธิ์ใหม่<br><span style="font-size:0.9rem; font-weight:normal; opacity:0.85;">New Booking Closed</span>';
-                    }
-                    const btnDesc = bookingBtn.querySelector('p');
-                    if (btnDesc) {
-                        btnDesc.innerHTML = 'หมดเขตเมื่อ 14 ส.ค. 2569 เวลา 12:00 น. (ผู้ยื่นแก้ไขคิวเดิมสามารถทำรายการต่อได้ผ่านปุ่มตรวจสอบสถานะ)';
-                    }
-                }
-            }
-
-            function applyOpenUI() {
-                const bookingBtn = document.getElementById('bookingBtnCard');
-                if (bookingBtn) {
-                    bookingBtn.setAttribute('href', 'booking.html');
-                    bookingBtn.style.opacity = '1';
-                    bookingBtn.style.cursor = 'pointer';
-                    bookingBtn.style.pointerEvents = 'auto';
-                    
-                    const btnTitle = bookingBtn.querySelector('h3');
-                    if (btnTitle) {
-                        btnTitle.innerHTML = 'ลงทะเบียนจองสิทธิ์เยี่ยมใกล้ชิด<br><span style="font-size:0.9rem; font-weight:normal; opacity:0.85;">Register Booking</span>';
-                    }
-                    const btnDesc = bookingBtn.querySelector('p');
-                    if (btnDesc) {
-                        btnDesc.innerHTML = 'ลงทะเบียนออนไลน์ กรอกข้อมูลผู้ต้องขัง ญาติ และอัปโหลดรูปภาพหลักฐาน<br><span style="font-size:0.8rem; opacity:0.8;">Online Registration & Document Upload</span>';
-                    }
-                }
-            }
-
-            function applyStatusClosedUI() {
-                const statusBtn = document.getElementById('statusBtnCard');
-                if (statusBtn) {
-                    statusBtn.removeAttribute('href');
-                    statusBtn.style.opacity = '0.6';
-                    statusBtn.style.cursor = 'not-allowed';
-                    statusBtn.style.pointerEvents = 'none';
-                    
-                    const btnTitle = statusBtn.querySelector('h3');
-                    if (btnTitle) {
-                        btnTitle.innerHTML = 'ปิดบริการตรวจสอบสถานะ & ยื่นแก้ไข<br><span style="font-size:0.9rem; font-weight:normal; opacity:0.85;">Status & Edit Closed</span>';
-                    }
-                    const btnDesc = statusBtn.querySelector('p');
-                    if (btnDesc) {
-                        btnDesc.innerHTML = 'ปิดระบบการสืบค้นและยื่นเอกสารแก้ไขเรียบร้อยแล้ว ขอขอบคุณญาติทุกท่านที่ใช้บริการ';
-                    }
-                }
-            }
-
-            function applyStatusOpenUI() {
-                const statusBtn = document.getElementById('statusBtnCard');
-                if (statusBtn) {
-                    statusBtn.setAttribute('href', 'status.html');
-                    statusBtn.style.opacity = '1';
-                    statusBtn.style.cursor = 'pointer';
-                    statusBtn.style.pointerEvents = 'auto';
-                    
-                    const btnTitle = statusBtn.querySelector('h3');
-                    if (btnTitle) {
-                        btnTitle.innerHTML = 'ตรวจสอบสถานะการจอง<br><span style="font-size:0.9rem; font-weight:normal; opacity:0.85;">Check Status</span>';
-                    }
-                    const btnDesc = statusBtn.querySelector('p');
-                    if (btnDesc) {
-                        btnDesc.innerHTML = 'ติดตามผลการอนุมัติเอกสารและวันเวลานัดหมายเข้าเยี่ยม<br><span style="font-size:0.8rem; opacity:0.8;">Check Approval & Appointment Result</span>';
-                    }
-                }
-            }
         });
     </script>
 </body>
