@@ -770,107 +770,7 @@
             renderQuotaMonitor();
         }
 
-        function exportApprovedVisitorsExcel() {
-            if (!bookingsCache || bookingsCache.length === 0) {
-                alert("ไม่พบข้อมูลการจองในระบบ");
-                return;
-            }
 
-            // กรองเฉพาะรายการที่อนุมัติแล้วเท่านั้น
-            const approvedBookings = bookingsCache.filter(b => b.status === "approved");
-
-            if (approvedBookings.length === 0) {
-                alert("ยังไม่มีรายการจองที่ได้รับการอนุมัติในขณะนี้");
-                return;
-            }
-
-            // เรียงลำดับตามแดน 1 -> 8 และเรียง รอบเช้า ขึ้นก่อน รอบบ่าย
-            approvedBookings.sort((a, b) => {
-                const zoneA = parseInt(String(a.zone || "999").replace(/\D/g, ""), 10) || 999;
-                const zoneB = parseInt(String(b.zone || "999").replace(/\D/g, ""), 10) || 999;
-                if (zoneA !== zoneB) return zoneA - zoneB;
-
-                const slotA = String(a.slotText || "");
-                const slotB = String(b.slotText || "");
-                const isPmA = slotA.indexOf("บ่าย") > -1 ? 2 : 1;
-                const isPmB = slotB.indexOf("บ่าย") > -1 ? 2 : 1;
-                if (isPmA !== isPmB) return isPmA - isPmB;
-
-                return slotA.localeCompare(slotB, 'th');
-            });
-
-            // UTF-8 BOM สำหรับเปิดบน Microsoft Excel ภาษาไทยไม่ต่างดาว
-            let csvContent = "\uFEFF";
-            csvContent += "ลำดับ,แดน,ช่วงเวลา,รอบเวลาเยี่ยม,เลขบัตรผู้ต้องขัง,ชื่อ-นามสกุล ผู้ต้องขัง,ลำดับญาติ,ชื่อ-นามสกุล ญาติผู้เข้าเยี่ยมจริง,ความสัมพันธ์,เบอร์โทรศัพท์ญาติ,เลขบัตรประชาชนญาติ,หมายเหตุการอนุมัติ/ตัดสิทธิ์\n";
-
-            let count = 1;
-
-            approvedBookings.forEach(booking => {
-                const zone = String(booking.zone || "-");
-                const slotText = String(booking.slotText || "-").replace(/"/g, '""');
-                const isPm = slotText.indexOf("บ่าย") > -1;
-                const shiftText = isPm ? "รอบบ่าย (12.30-15.00 น.)" : "รอบเช้า (08.30-11.00 น.)";
-                const inmateId = String(booking.inmateId || "-").replace(/"/g, '""');
-                const rawName = booking.inmateFullName || `${booking.inmateTitle || ''}${booking.inmateName || ''} ${booking.inmateSurname || ''}`;
-                const inmateName = String(rawName).trim().replace(/"/g, '""');
-                const remarks = String(booking.remarks || "-").replace(/"/g, '""').replace(/\n/g, ' ');
-
-                const visitors = parseVisitorsData(booking.visitors);
-
-                if (visitors && visitors.length > 0) {
-                    visitors.forEach((v, idx) => {
-                        let visitorName = "-";
-                        let relation = "-";
-                        let tel = "-";
-                        let cid = "-";
-
-                        if (typeof v === "object" && v !== null) {
-                            if (v.name || v.surname) {
-                                visitorName = `${v.title || ""}${v.name || ""} ${v.surname || ""}`.trim();
-                                relation = v.relation || "-";
-                                tel = v.tel || "-";
-                                cid = v.cid || "-";
-                            } else if (v.rawText) {
-                                visitorName = v.rawText;
-                            }
-                        } else if (v !== undefined && v !== null) {
-                            visitorName = String(v);
-                        }
-
-                        visitorName = String(visitorName).replace(/"/g, '""');
-                        relation = String(relation).replace(/"/g, '""');
-                        tel = String(tel).replace(/"/g, '""');
-                        cid = String(cid).replace(/"/g, '""');
-
-                        // แสดงข้อมูลผู้ต้องขัง แดน และรอบเยี่ยม เฉพาะบรรทัดแรก (ญาติคนที่ 1) ไม่ต้องแสดงซ้ำในบรรทัดถัดไป
-                        const displayZone = (idx === 0) ? `แดน ${zone}` : "";
-                        const displayShift = (idx === 0) ? shiftText : "";
-                        const displaySlot = (idx === 0) ? slotText : "";
-                        const displayInmateId = (idx === 0) ? `'${inmateId}` : "";
-                        const displayInmateName = (idx === 0) ? inmateName : "";
-                        const displayRemarks = (idx === 0) ? remarks : "";
-
-                        csvContent += `"${count}","${displayZone}","${displayShift}","${displaySlot}","${displayInmateId}","${displayInmateName}","ญาติคนที่ ${idx + 1}","${visitorName}","${relation}","'${tel}","'${cid}","${displayRemarks}"\n`;
-                        count++;
-                    });
-                } else {
-                    csvContent += `"${count}","แดน ${zone}","${shiftText}","${slotText}","'${inmateId}","${inmateName}","-","ไม่พบรายละเอียดญาติ","-","-","-","${remarks}"\n`;
-                    count++;
-                }
-            });
-
-            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            const todayStr = new Date().toISOString().split('T')[0];
-            link.setAttribute("download", `รายชื่อญาติผู้ได้รับอนุมัติเข้าเยี่ยมจริง_${todayStr}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            showToastNotification(`📊 ส่งออกไฟล์ Excel สรุปรายชื่อญาติที่ได้รับอนุมัติเข้าเยี่ยมจริง ${count - 1} รายชื่อ เรียบร้อยแล้ว!`);
-        }
 
         function parseVisitorsData(visitors) {
             if (typeof visitors === 'string') {
@@ -1729,7 +1629,7 @@
             const roundKey = isPm ? "บ่าย" : "เช้า";
             const roundLabel = isPm ? "รอบบ่าย" : "รอบเช้า";
 
-            // Filter approved bookings in same zone and same round
+            // Filter approved bookings in same zone and same round in exact order they appear in Sheet (allBookings order)
             const sameGroupBookings = allBookings.filter(b => {
                 if (b.status !== "approved") return false;
                 if (String(b.zone).trim() !== z) return false;
@@ -1737,14 +1637,6 @@
                 const bIsPm = bSlotText.includes("บ่าย") || bSlotText.includes("pm") || (b.slot && b.slot.endsWith("pm")) || String(b.zone).trim() === "7" || String(b.zone).trim() === "8";
                 const bRoundKey = bIsPm ? "บ่าย" : "เช้า";
                 return bRoundKey === roundKey;
-            });
-
-            // Sort consistently by dateBooked (or inmateName)
-            sameGroupBookings.sort((a, b) => {
-                const dateA = new Date(a.dateBooked || 0).getTime();
-                const dateB = new Date(b.dateBooked || 0).getTime();
-                if (dateA !== dateB) return dateA - dateB;
-                return (a.inmateName || "").localeCompare(b.inmateName || "");
             });
 
             const targetId = String(targetBooking.inmateId).trim();
