@@ -1796,18 +1796,18 @@
 
                     visitorTableRows += `
                         <tr>
-                            <td style="padding:1px 0; vertical-align:bottom; font-size:16pt; width:45%; white-space:nowrap;">
+                            <td style="padding:1px 0; vertical-align:bottom; font-size:16pt; width:42%; white-space:nowrap;">
                                 ${i + 1}. ${vName}
                             </td>
-                            <td style="padding:1px 0; vertical-align:bottom; font-size:16pt; width:55%; white-space:nowrap;">
+                            <td style="padding:1px 0; vertical-align:bottom; font-size:16pt; width:58%; white-space:nowrap;">
                                 บัตรประจำตัวประชาชน เลขที่ <span style="text-decoration:underline;">${formattedCid}</span>
                             </td>
                         </tr>
                         <tr>
-                            <td style="padding:1px 0 4px 1.5rem; vertical-align:bottom; font-size:16pt; white-space:nowrap;">
+                            <td style="padding:1px 0 4px 1.5rem; vertical-align:bottom; font-size:16pt; width:42%; white-space:nowrap;">
                                 มีความสัมพันธ์กับผู้ต้องขังโดยเป็น <span style="text-decoration:underline;">${relation}</span>
                             </td>
-                            <td style="padding:1px 0 4px 0; vertical-align:bottom; font-size:16pt; white-space:nowrap;">
+                            <td style="padding:1px 0 4px 0; vertical-align:bottom; font-size:16pt; width:58%; white-space:nowrap;">
                                 เบอร์โทร <span style="text-decoration:underline;">${formattedTel}</span>
                             </td>
                         </tr>
@@ -1815,18 +1815,18 @@
                 } else {
                     visitorTableRows += `
                         <tr>
-                            <td style="padding:1px 0; vertical-align:bottom; font-size:16pt; width:45%; white-space:nowrap;">
+                            <td style="padding:1px 0; vertical-align:bottom; font-size:16pt; width:42%; white-space:nowrap;">
                                 ${i + 1}.
                             </td>
-                            <td style="padding:1px 0; vertical-align:bottom; font-size:16pt; width:55%; white-space:nowrap;">
+                            <td style="padding:1px 0; vertical-align:bottom; font-size:16pt; width:58%; white-space:nowrap;">
                                 บัตรประจำตัวประชาชน เลขที่
                             </td>
                         </tr>
                         <tr>
-                            <td style="padding:1px 0 4px 1.5rem; vertical-align:bottom; font-size:16pt; white-space:nowrap;">
+                            <td style="padding:1px 0 4px 1.5rem; vertical-align:bottom; font-size:16pt; width:42%; white-space:nowrap;">
                                 มีความสัมพันธ์กับผู้ต้องขังโดยเป็น
                             </td>
-                            <td style="padding:1px 0 4px 0; vertical-align:bottom; font-size:16pt; white-space:nowrap;">
+                            <td style="padding:1px 0 4px 0; vertical-align:bottom; font-size:16pt; width:58%; white-space:nowrap;">
                                 เบอร์โทร
                             </td>
                         </tr>
@@ -1849,7 +1849,7 @@
                     </div>
 
                     <!-- Visitors Table -->
-                    <table style="width:100%; border-collapse:collapse; border:none; margin-bottom:1rem; font-size:16pt; line-height:1.35;">
+                    <table style="width:100%; table-layout:fixed; border-collapse:collapse; border:none; margin-bottom:1rem; font-size:16pt; line-height:1.35;">
                         <tbody>
                             ${visitorTableRows}
                         </tbody>
@@ -1867,23 +1867,23 @@
 
                     <!-- Signatures Area -->
                     <div style="margin-top:auto; padding-top:1.5rem; font-size:16pt; line-height:1.35;">
-                        <table style="width:100%; border-collapse:collapse; border:none;">
+                        <table style="width:100%; table-layout:fixed; border-collapse:collapse; border:none;">
                             <tr>
-                                <td style="width:30%; vertical-align:top; line-height:2.4; font-size:16pt;">
+                                <td style="width:28%; vertical-align:top; line-height:2.4; font-size:16pt; white-space:nowrap;">
                                     <div>ชาย ............. คน</div>
                                     <div>หญิง ............. คน</div>
                                     <div><strong>รวม ............. คน</strong></div>
                                 </td>
-                                <td style="width:70%; vertical-align:top; text-align:center; font-size:16pt;">
-                                    <div style="margin-bottom:0.25rem;">ลงชื่อ........................................................ผู้ขอเยี่ยม</div>
-                                    <div style="margin-bottom:2rem; font-size:16pt;">วันที่ ${visitDay} เดือน ${visitMonth} พ.ศ.${visitYear}</div>
+                                <td style="width:72%; vertical-align:top; text-align:center; font-size:16pt;">
+                                    <div style="margin-bottom:0.25rem; white-space:nowrap;">ลงชื่อ........................................................ผู้ขอเยี่ยม</div>
+                                    <div style="margin-bottom:2rem; font-size:16pt; white-space:nowrap;">วันที่ ${visitDay} เดือน ${visitMonth} พ.ศ.${visitYear}</div>
 
-                                    <div style="margin-bottom:4.5rem;">ลงชื่อ........................................................ผู้ตรวจสอบ</div>
+                                    <div style="margin-bottom:4.5rem; white-space:nowrap;">ลงชื่อ........................................................ผู้ตรวจสอบ</div>
 
-                                    <div style="margin-bottom:0.3rem;">ลงชื่อ........................................................ผู้อนุมัติ</div>
-                                    <div>(นายวชิระ นพเก้า)</div>
-                                    <div>นักทัณฑวิทยาชำนาญการ ปฏิบัติราชการแทน</div>
-                                    <div>ผู้อำนวยการส่วนทัณฑ์ปฏิบัติ</div>
+                                    <div style="margin-bottom:0.3rem; white-space:nowrap;">ลงชื่อ........................................................ผู้อนุมัติ</div>
+                                    <div style="white-space:nowrap;">(นายวชิระ นพเก้า)</div>
+                                    <div style="white-space:nowrap;">นักทัณฑวิทยาชำนาญการ ปฏิบัติราชการแทน</div>
+                                    <div style="white-space:nowrap;">ผู้อำนวยการส่วนทัณฑ์ปฏิบัติ</div>
                                 </td>
                             </tr>
                         </table>
