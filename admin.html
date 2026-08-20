@@ -1707,9 +1707,9 @@
         function generateOfficialFormHtml(booking) {
             const inmateNameRaw = booking.inmateFullName || `${booking.inmateTitle || ''}${booking.inmateName || ''} ${booking.inmateSurname || ''}`.trim();
             let inmateDisplayName = inmateNameRaw;
-            if (!inmateDisplayName.startsWith("น.ข.") && !inmateDisplayName.startsWith("นข.")) {
-                inmateDisplayName = "น.ข." + inmateDisplayName;
-            }
+            // Ensure prefix is น.ช.
+            inmateDisplayName = inmateDisplayName.replace(/^(น\.ข\.|นข\.|น\.ช\.|นช\.)\s*/, '');
+            inmateDisplayName = "น.ช." + inmateDisplayName;
 
             const zone = booking.zone || "-";
             const zNum = parseInt(String(zone).replace(/\D/g, ""), 10);
@@ -1856,14 +1856,11 @@
                     </table>
 
                     <!-- Statement Paragraph -->
-                    <div style="font-size:16pt; line-height:1.4; margin-bottom:0.8rem;">
-                        <div style="text-indent:2rem; white-space:nowrap; margin-bottom:0.2rem;">
-                            ข้าพเจ้ามีความประสงค์จะขอเข้าเยี่ยม <span style="text-decoration:underline; color:#b91c1c;">${inmateDisplayName}</span> แดน ${zone} ${roundText ? '(' + roundText + ') ' : ''}วันที่ ${visitDay} เดือน ${visitMonth} พ.ศ.${visitYear}
+                    <div style="font-size:16pt; line-height:1.45; text-align:justify; margin-bottom:0.8rem;">
+                        <div style="text-indent:2.5rem; text-align:justify; text-justify:distribute; margin-bottom:0.3rem;">
+                            ข้าพเจ้ามีความประสงค์จะขอเข้าเยี่ยม <span style="text-decoration:underline; color:#b91c1c;">${inmateDisplayName}</span> แดน ${zone} ${roundText ? '(' + roundText + ') ' : ''}วันที่ ${visitDay} เดือน ${visitMonth} พ.ศ. ${visitYear} ทั้งนี้ ข้าพเจ้าได้ทราบระเบียบ วิธีปฏิบัติในการเข้าเยี่ยมญาติภายในทัณฑสถานวัยหนุ่มกลาง โดยละเอียดแล้ว และจะถือปฏิบัติโดยเคร่งครัด
                         </div>
-                        <div style="margin-bottom:0.4rem; text-align:justify;">
-                            ทั้งนี้ ข้าพเจ้าได้ทราบระเบียบ วิธีปฏิบัติในการเข้าเยี่ยมญาติภายในทัณฑสถานวัยหนุ่มกลาง โดยละเอียดแล้ว และจะถือปฏิบัติโดยเคร่งครัด
-                        </div>
-                        <div style="text-indent:2rem;">
+                        <div style="text-indent:2.5rem; text-align:justify;">
                             หากข้าพเจ้า <strong>ไม่ปฏิบัติตามระเบียบ</strong> ของทัณฑสถานฯ ข้าพเจ้ายินยอม <strong>ให้ตัดสิทธิ์ในการเยี่ยม ครั้งนี้ ทุกประการ</strong>
                         </div>
                     </div>
