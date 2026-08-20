@@ -1712,29 +1712,49 @@
             }
 
             const zone = booking.zone || "-";
+            const zNum = parseInt(String(zone).replace(/\D/g, ""), 10);
             
-            // Parse date from slotText or dateBooked
-            let visitDay = "27";
-            let visitMonth = "มกราคม";
-            let visitYear = "2569";
+            // Map zone to actual scheduled visit date in August 2569
+            const ZONE_SCHEDULE_MAP = {
+                1: { day: "24", month: "สิงหาคม", year: "2569" },
+                2: { day: "25", month: "สิงหาคม", year: "2569" },
+                3: { day: "26", month: "สิงหาคม", year: "2569" },
+                4: { day: "27", month: "สิงหาคม", year: "2569" },
+                5: { day: "28", month: "สิงหาคม", year: "2569" },
+                6: { day: "28", month: "สิงหาคม", year: "2569" },
+                7: { day: "28", month: "สิงหาคม", year: "2569" },
+                8: { day: "28", month: "สิงหาคม", year: "2569" }
+            };
+
+            let visitDay = (ZONE_SCHEDULE_MAP[zNum] && ZONE_SCHEDULE_MAP[zNum].day) || "24";
+            let visitMonth = (ZONE_SCHEDULE_MAP[zNum] && ZONE_SCHEDULE_MAP[zNum].month) || "สิงหาคม";
+            let visitYear = (ZONE_SCHEDULE_MAP[zNum] && ZONE_SCHEDULE_MAP[zNum].year) || "2569";
 
             const slotText = booking.slotText || "";
-            const dateMatch = slotText.match(/(\d{1,2})\s+([ก-ฮa-zA-Z]+)\s+(\d{4})/);
-            if (dateMatch) {
-                visitDay = dateMatch[1];
-                visitMonth = dateMatch[2];
-                visitYear = dateMatch[3];
-            } else {
-                const zNum = parseInt(String(zone).replace(/\D/g, ""), 10);
-                if (zNum >= 1 && zNum <= 8 && typeof ADMIN_ZONE_DATA !== "undefined" && ADMIN_ZONE_DATA[zNum]) {
-                    const zDate = ADMIN_ZONE_DATA[zNum].date || "";
-                    const zMatch = zDate.match(/(\d{1,2})\s+([ก-ฮa-zA-Z]+)\s+(\d{4})/);
-                    if (zMatch) {
-                        visitDay = zMatch[1];
-                        visitMonth = zMatch[2];
-                        visitYear = zMatch[3];
-                    }
-                }
+            
+            // Parse day if present in slotText
+            const dayMatch = slotText.match(/(?:วันที่\s*|ที่\s*)(\d{1,2})/);
+            if (dayMatch) {
+                visitDay = dayMatch[1];
+            }
+            if (slotText.includes("สิงหาคม") || slotText.includes("ส.ค.")) {
+                visitMonth = "สิงหาคม";
+            }
+            const yearMatch = slotText.match(/(25\d{2})/);
+            if (yearMatch) {
+                visitYear = yearMatch[1];
+            }
+
+            // Determine Round / Time Slot (รอบเช้า / รอบบ่าย)
+            let roundText = "";
+            if (slotText.includes("เช้า") || slotText.includes("am") || (booking.slot && booking.slot.endsWith("am"))) {
+                roundText = "รอบเช้า";
+            } else if (slotText.includes("บ่าย") || slotText.includes("pm") || (booking.slot && booking.slot.endsWith("pm"))) {
+                roundText = "รอบบ่าย";
+            } else if (zNum >= 1 && zNum <= 6) {
+                roundText = "รอบเช้า";
+            } else if (zNum === 7 || zNum === 8) {
+                roundText = "รอบบ่าย";
             }
 
             // Parse visitors (up to 5)
@@ -1817,9 +1837,9 @@
             return `
                 <div class="official-form-page" style="width:100%; max-width:210mm; margin:0 auto; padding:1.2cm 1.5cm 0.8cm 1.5cm; background:#fff; color:#000; font-family:'TH Sarabun PSK', 'TH Sarabun New', 'Sarabun', sans-serif; box-sizing:border-box; page-break-after:always; break-after:page;">
                     
-                    <!-- Emblem Logo -->
+                    <!-- Emblem Logo (Bigger) -->
                     <div style="text-align:center; margin-bottom:0.5rem;">
-                        <img src="logo.png" alt="ตรากรมราชทัณฑ์" style="width:70px; height:70px; object-fit:contain;" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Seal_of_the_Department_of_Corrections_Thailand.svg/240px-Seal_of_the_Department_of_Corrections_Thailand.svg.png'">
+                        <img src="logo.png" alt="ตรากรมราชทัณฑ์" style="width:85px; height:85px; object-fit:contain;" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Seal_of_the_Department_of_Corrections_Thailand.svg/240px-Seal_of_the_Department_of_Corrections_Thailand.svg.png'">
                     </div>
 
                     <!-- Header Title -->
@@ -1838,7 +1858,7 @@
                     <!-- Statement Paragraph -->
                     <div style="font-size:16pt; line-height:1.45; text-align:justify; margin-bottom:0.8rem;">
                         <p style="margin:0 0 0.5rem 0; text-indent:2.5rem;">
-                            ข้าพเจ้ามีความประสงค์จะขอเข้าเยี่ยม <span style="text-decoration:underline; color:#b91c1c;">${inmateDisplayName}</span> แดน ${zone} ในวันที่ ${visitDay} เดือน ${visitMonth} พ.ศ. ${visitYear} ทั้งนี้ ข้าพเจ้าได้ทราบระเบียบ วิธีปฏิบัติในการเข้าเยี่ยมญาติภายในทัณฑสถานวัยหนุ่มกลาง โดยละเอียดแล้ว และจะถือปฏิบัติโดยเคร่งครัด
+                            ข้าพเจ้ามีความประสงค์จะขอเข้าเยี่ยม <span style="text-decoration:underline; color:#b91c1c;">${inmateDisplayName}</span> แดน ${zone} ${roundText ? '(' + roundText + ') ' : ''}ในวันที่ ${visitDay} เดือน ${visitMonth} พ.ศ. ${visitYear} ทั้งนี้ ข้าพเจ้าได้ทราบระเบียบ วิธีปฏิบัติในการเข้าเยี่ยมญาติภายในทัณฑสถานวัยหนุ่มกลาง โดยละเอียดแล้ว และจะถือปฏิบัติโดยเคร่งครัด
                         </p>
                         <p style="margin:0; text-indent:2.5rem;">
                             หากข้าพเจ้า <strong>ไม่ปฏิบัติตามระเบียบ</strong> ของทัณฑสถานฯ ข้าพเจ้ายินยอม <strong>ให้ตัดสิทธิ์ในการเยี่ยม ครั้งนี้ ทุกประการ</strong>
