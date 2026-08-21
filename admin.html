@@ -582,6 +582,58 @@
             return String(v).toUpperCase().trim() === "TRUE";
         }
 
+        const PRINTED_MAP_KEY = "wainoom_printed_forms_map";
+        let printedFormsMap = {};
+
+        function loadLocalPrintedMap() {
+            try {
+                printedFormsMap = JSON.parse(localStorage.getItem(PRINTED_MAP_KEY) || "{}");
+            } catch(e) {
+                printedFormsMap = {};
+            }
+            return printedFormsMap;
+        }
+
+        async function syncPrintedStatusFromServer() {
+            loadLocalPrintedMap();
+            if (!isProduction()) return;
+            try {
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=get_config&_t=${Date.now()}`);
+                const result = await response.json();
+                if (result.printed_forms) {
+                    let serverMap = {};
+                    if (typeof result.printed_forms === 'string') {
+                        try { serverMap = JSON.parse(result.printed_forms); } catch(e) {}
+                    } else if (typeof result.printed_forms === 'object' && result.printed_forms !== null) {
+                        serverMap = result.printed_forms;
+                    }
+                    // Merge server and local maps
+                    printedFormsMap = Object.assign({}, printedFormsMap, serverMap);
+                    localStorage.setItem(PRINTED_MAP_KEY, JSON.stringify(printedFormsMap));
+                    renderBookingsTable();
+                }
+            } catch(e) {
+                console.error("Failed to sync printed forms from server:", e);
+            }
+        }
+
+        async function savePrintedStatusToServer(inmateIds) {
+            loadLocalPrintedMap();
+            const ids = Array.isArray(inmateIds) ? inmateIds : [inmateIds];
+            ids.forEach(id => {
+                if (id) printedFormsMap[String(id).trim()] = new Date().toISOString();
+            });
+            localStorage.setItem(PRINTED_MAP_KEY, JSON.stringify(printedFormsMap));
+            renderBookingsTable();
+
+            if (!isProduction()) return;
+            try {
+                await fetch(`${APPS_SCRIPT_URL}?action=update_config&printed_forms=${encodeURIComponent(JSON.stringify(printedFormsMap))}`);
+            } catch(e) {
+                console.error("Failed to save printed forms to server:", e);
+            }
+        }
+
         async function syncBookingConfigUI() {
             // ดึงค่าจาก localStorage ก่อนทันทีเพื่อการตอบสนอง 0ms
             const localBooking = localStorage.getItem("prison_booking_closed");
@@ -593,7 +645,7 @@
 
             if (!isProduction()) return;
             try {
-                const response = await fetch(`${APPS_SCRIPT_URL}?action=get_config`);
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=get_config&_t=${Date.now()}`);
                 const result = await response.json();
                 if (result.booking_closed !== undefined) {
                     isBookingClosed = checkBool(result.booking_closed);
@@ -602,6 +654,16 @@
                 if (result.status_closed !== undefined) {
                     isStatusPageClosed = checkBool(result.status_closed);
                     localStorage.setItem("prison_status_closed", String(isStatusPageClosed));
+                }
+                if (result.printed_forms) {
+                    let serverMap = {};
+                    if (typeof result.printed_forms === 'string') {
+                        try { serverMap = JSON.parse(result.printed_forms); } catch(e) {}
+                    } else if (typeof result.printed_forms === 'object' && result.printed_forms !== null) {
+                        serverMap = result.printed_forms;
+                    }
+                    printedFormsMap = Object.assign({}, loadLocalPrintedMap(), serverMap);
+                    localStorage.setItem(PRINTED_MAP_KEY, JSON.stringify(printedFormsMap));
                 }
                 updateBookingConfigUI();
                 updateStatusPageConfigUI();
@@ -722,6 +784,7 @@
                 bookingsCache = await getBookings();
                 previousBookingCount = bookingsCache.length;
                 
+                await syncPrintedStatusFromServer();
                 updateStats();
                 renderBookingsTable();
                 syncBookingConfigUI();
@@ -748,6 +811,7 @@
                 }
                 previousBookingCount = freshBookings.length;
                 bookingsCache = freshBookings;
+                await syncPrintedStatusFromServer();
                 updateStats();
                 renderBookingsTable();
                 syncBookingConfigUI();
@@ -852,11 +916,7 @@
             if (zoneFilter) {
                 filtered = filtered.filter(b => String(b.zone).trim() === String(zoneFilter).trim());
             }
-            const PRINTED_MAP_KEY = "wainoom_printed_forms_map";
-            let printedMap = {};
-            try {
-                printedMap = JSON.parse(localStorage.getItem(PRINTED_MAP_KEY) || "{}");
-            } catch(e) {}
+            const printedMap = printedFormsMap || loadLocalPrintedMap();
 
             if (statusFilter) {
                 if (statusFilter === "resubmitted") {
@@ -1853,18 +1913,7 @@
         }
 
         function markAsPrinted(inmateIds) {
-            const PRINTED_MAP_KEY = "wainoom_printed_forms_map";
-            let map = {};
-            try {
-                map = JSON.parse(localStorage.getItem(PRINTED_MAP_KEY) || "{}");
-            } catch(e) {}
-            
-            const ids = Array.isArray(inmateIds) ? inmateIds : [inmateIds];
-            ids.forEach(id => {
-                if (id) map[String(id).trim()] = new Date().toISOString();
-            });
-            localStorage.setItem(PRINTED_MAP_KEY, JSON.stringify(map));
-            renderBookingsTable();
+            savePrintedStatusToServer(inmateIds);
         }
 
         async function printOfficialFormSingle(inmateId) {
