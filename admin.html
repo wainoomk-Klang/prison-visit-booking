@@ -591,11 +591,33 @@
             } catch(e) {
                 printedFormsMap = {};
             }
+            // Also collect from booking records if any has isPrinted / printed
+            if (Array.isArray(bookingsCache)) {
+                bookingsCache.forEach(b => {
+                    const k = String(b.inmateId || "").trim();
+                    const remarks = String(b.remarks || "");
+                    if (b.isPrinted || b.printed || remarks.includes("🖨️พิมพ์แล้ว") || remarks.includes("[PRINTED]")) {
+                        printedFormsMap[k] = true;
+                    }
+                });
+            }
             return printedFormsMap;
         }
 
         async function syncPrintedStatusFromServer() {
             loadLocalPrintedMap();
+            // Scan bookingsCache for printed flags from Sheet
+            if (Array.isArray(bookingsCache)) {
+                bookingsCache.forEach(b => {
+                    const k = String(b.inmateId || "").trim();
+                    const remarks = String(b.remarks || "");
+                    if (b.isPrinted || b.printed || remarks.includes("🖨️พิมพ์แล้ว") || remarks.includes("[PRINTED]")) {
+                        printedFormsMap[k] = true;
+                    }
+                });
+                localStorage.setItem(PRINTED_MAP_KEY, JSON.stringify(printedFormsMap));
+            }
+
             if (!isProduction()) return;
             try {
                 const response = await fetch(`${APPS_SCRIPT_URL}?action=get_config&_t=${Date.now()}`);
@@ -607,7 +629,6 @@
                     } else if (typeof result.printed_forms === 'object' && result.printed_forms !== null) {
                         serverMap = result.printed_forms;
                     }
-                    // Merge server and local maps
                     printedFormsMap = Object.assign({}, printedFormsMap, serverMap);
                     localStorage.setItem(PRINTED_MAP_KEY, JSON.stringify(printedFormsMap));
                     renderBookingsTable();
@@ -621,7 +642,21 @@
             loadLocalPrintedMap();
             const ids = Array.isArray(inmateIds) ? inmateIds : [inmateIds];
             ids.forEach(id => {
-                if (id) printedFormsMap[String(id).trim()] = new Date().toISOString();
+                const k = String(id || "").trim();
+                if (k) {
+                    printedFormsMap[k] = new Date().toISOString();
+                    // Mark in local bookingsCache
+                    const foundBooking = bookingsCache.find(b => String(b.inmateId || "").trim() === k);
+                    if (foundBooking) {
+                        foundBooking.isPrinted = true;
+                        if (!foundBooking.remarks) foundBooking.remarks = "🖨️พิมพ์แล้ว";
+                        else if (!foundBooking.remarks.includes("🖨️พิมพ์แล้ว") && !foundBooking.remarks.includes("[PRINTED]")) {
+                            foundBooking.remarks += " (🖨️พิมพ์แล้ว)";
+                        }
+                        // Also persist status to Sheet row
+                        changeBookingStatusOnServer(k, foundBooking.status || "approved", foundBooking.remarks, null, foundBooking.inmateName || foundBooking.inmateFullName || "");
+                    }
+                }
             });
             localStorage.setItem(PRINTED_MAP_KEY, JSON.stringify(printedFormsMap));
             renderBookingsTable();
