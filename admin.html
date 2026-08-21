@@ -649,12 +649,6 @@
                     const foundBooking = bookingsCache.find(b => String(b.inmateId || "").trim() === k);
                     if (foundBooking) {
                         foundBooking.isPrinted = true;
-                        if (!foundBooking.remarks) foundBooking.remarks = "🖨️พิมพ์แล้ว";
-                        else if (!foundBooking.remarks.includes("🖨️พิมพ์แล้ว") && !foundBooking.remarks.includes("[PRINTED]")) {
-                            foundBooking.remarks += " (🖨️พิมพ์แล้ว)";
-                        }
-                        // Also persist status to Sheet row
-                        changeBookingStatusOnServer(k, foundBooking.status || "approved", foundBooking.remarks, null, foundBooking.inmateName || foundBooking.inmateFullName || "");
                     }
                 }
             });
@@ -1057,7 +1051,7 @@
                         <td>
                             <span class="badge ${badgeClass}">${badgeText}</span>
                             ${printStatusBadge}
-                            ${booking.remarks ? `<br><small style="color:var(--danger); display:block; margin-top:4px; max-width:180px; white-space:normal; line-height:1.2;">เหตุผล: ${booking.remarks}</small>` : ''}
+                            ${cleanRemarksText(booking.remarks) ? `<br><small style="color:var(--danger); display:block; margin-top:4px; max-width:180px; white-space:normal; line-height:1.2;">เหตุผล: ${cleanRemarksText(booking.remarks)}</small>` : ''}
                         </td>
                         <td>
                             <div style="display:flex; gap:0.25rem; flex-wrap:wrap;">
@@ -2075,6 +2069,15 @@
             `;
         }
 
+        function cleanRemarksText(rawRemarks) {
+            if (!rawRemarks) return "";
+            return String(rawRemarks)
+                .replace(/🖨️\s*พิมพ์แล้ว/g, "")
+                .replace(/\[PRINTED\]/gi, "")
+                .replace(/\(\s*\)/g, "")
+                .trim();
+        }
+
         async function exportApprovedVisitorsExcel() {
             const bookings = await getBookings();
             const approvedBookings = bookings.filter(b => b.status === "approved");
@@ -2124,6 +2127,8 @@
                     return `${i + 1}.${v}`;
                 }).join("; ");
 
+                const cleanRemarks = cleanRemarksText(b.remarks || "");
+
                 return [
                     qInfo.queueNumber,
                     `แดน ${b.zone}`,
@@ -2133,7 +2138,7 @@
                     cleanInmateName,
                     visitorsList.length,
                     `"${visitorNames.replace(/"/g, '""')}"`,
-                    `"${(b.remarks || '').replace(/"/g, '""')}"`
+                    `"${cleanRemarks.replace(/"/g, '""')}"`
                 ];
             });
 
