@@ -186,13 +186,31 @@ async function getBookings() {
         try {
             const timestamp = Date.now();
             const response = await fetch(`${APPS_SCRIPT_URL}?action=read&_t=${timestamp}`);
-            const result = await response.json();
-            if (result.status === "success" && Array.isArray(result.data)) {
-                return result.data;
+            if (!response.ok) {
+                console.warn(`Server responded with status ${response.status}`);
+            } else {
+                const text = await response.text();
+                if (text && text.trim().startsWith("{")) {
+                    const result = JSON.parse(text);
+                    if (result.status === "success" && Array.isArray(result.data)) {
+                        // Cache successful data
+                        try { localStorage.setItem("cached_bookings_backup", JSON.stringify(result.data)); } catch(e) {}
+                        return result.data;
+                    }
+                } else {
+                    console.warn("Unexpected response format from Google Server:", text.substring(0, 100));
+                }
             }
         } catch (e) {
             console.error("Error fetching bookings from Sheet:", e);
         }
+        // Fallback to last successful cloud cache if available
+        try {
+            const cloudBackup = JSON.parse(localStorage.getItem("cached_bookings_backup") || "null");
+            if (Array.isArray(cloudBackup) && cloudBackup.length > 0) {
+                return cloudBackup;
+            }
+        } catch(e) {}
     }
     return JSON.parse(localStorage.getItem(STORAGE_BOOKINGS_KEY)) || [];
 }
