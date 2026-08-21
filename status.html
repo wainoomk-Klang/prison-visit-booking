@@ -358,17 +358,17 @@
     <!-- App Engine Script -->
     <script src="app.js?v=1.4"></script>
     <script>
-        let isStatusSystemClosed = true;
+        let isStatusSystemClosed = false;
 
         document.addEventListener("DOMContentLoaded", () => {
             lucide.createIcons();
 
             const closedBanner = document.getElementById("statusClosedBanner");
             const searchCard = document.getElementById("searchCard");
-            if (closedBanner) closedBanner.classList.remove("hidden");
+            if (closedBanner) closedBanner.classList.add("hidden");
             if (searchCard) {
-                searchCard.style.opacity = "0.4";
-                searchCard.style.pointerEvents = "none";
+                searchCard.style.opacity = "1";
+                searchCard.style.pointerEvents = "auto";
             }
         });
 
@@ -635,29 +635,18 @@
             // Set Timeline Active state
             updateTimeline(step, statusColor);
             
-            // Toggle resubmit action button container based on status
+            // Do not show resubmit button (View/Check only mode enabled by officer)
             const resubmitContainer = document.getElementById("resubmitActionContainer");
-            if (status === 'rejected') {
-                resubmitContainer.classList.remove("hidden");
-                resubmitContainer.setAttribute("data-inmate-id", booking.inmateId);
-            } else {
+            if (resubmitContainer) {
                 resubmitContainer.classList.add("hidden");
             }
             
-            // Refresh lucide icons to display the edit-3 icon
+            // Refresh lucide icons
             lucide.createIcons();
         }
 
         function goToResubmit() {
-            if (isStatusSystemClosed) {
-                alert("⚠️ ขณะนี้ระบบยื่นเอกสารแก้ไข ได้ปิดให้บริการลงแล้ว ขออภัยในความไม่สะดวกครับ");
-                return;
-            }
-            const container = document.getElementById("resubmitActionContainer");
-            const inmateId = container.getAttribute("data-inmate-id");
-            if (inmateId) {
-                window.location.href = `booking.html?edit=true&inmateId=${encodeURIComponent(inmateId)}`;
-            }
+            alert("⚠️ ขณะนี้ระบบปิดรับการแก้ไขข้อมูลและยื่นเอกสารเพิ่มเติมแล้ว (เปิดให้บริการเฉพาะตรวจสอบผลการจองเท่านั้น)");
         }
 
         function updateTimeline(activeStep, statusColor) {
