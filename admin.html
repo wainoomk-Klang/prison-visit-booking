@@ -1713,19 +1713,40 @@
 
         function getBookingQueueInfo(targetBooking, allBookings) {
             const z = String(targetBooking.zone || "").trim();
+            const zNum = parseInt(z.replace(/\D/g, ""), 10) || 1;
             const slotText = String(targetBooking.slotText || "");
             const isPm = slotText.includes("บ่าย") || slotText.includes("pm") || (targetBooking.slot && targetBooking.slot.endsWith("pm")) || z === "7" || z === "8";
             const roundKey = isPm ? "บ่าย" : "เช้า";
             const roundLabel = isPm ? "รอบบ่าย" : "รอบเช้า";
 
-            // Filter approved bookings in same zone and same round in exact order they appear in Sheet (allBookings order)
+            // Determine zone group for shared sessions (e.g. Friday Day 5: Zone 5 & 6 share morning round; Zone 7 & 8 share afternoon round)
+            let sessionZones = [z];
+            let sessionDayLabel = `แดน ${z}`;
+            if (zNum === 5 || zNum === 6) {
+                sessionZones = ["5", "6"];
+                sessionDayLabel = "แดน 5-6";
+            } else if (zNum === 7 || zNum === 8) {
+                sessionZones = ["7", "8"];
+                sessionDayLabel = "แดน 7-8";
+            }
+
+            // Filter approved bookings in same session group and same round
             const sameGroupBookings = allBookings.filter(b => {
                 if (b.status !== "approved") return false;
-                if (String(b.zone).trim() !== z) return false;
+                const bZone = String(b.zone || "").trim();
+                if (!sessionZones.includes(bZone)) return false;
                 const bSlotText = String(b.slotText || "");
-                const bIsPm = bSlotText.includes("บ่าย") || bSlotText.includes("pm") || (b.slot && b.slot.endsWith("pm")) || String(b.zone).trim() === "7" || String(b.zone).trim() === "8";
+                const bIsPm = bSlotText.includes("บ่าย") || bSlotText.includes("pm") || (b.slot && b.slot.endsWith("pm")) || bZone === "7" || bZone === "8";
                 const bRoundKey = bIsPm ? "บ่าย" : "เช้า";
                 return bRoundKey === roundKey;
+            });
+
+            // Sort zone 5 before zone 6, and zone 7 before zone 8, while preserving sheet order within each zone
+            sameGroupBookings.sort((a, b) => {
+                const zA = parseInt(String(a.zone || "").replace(/\D/g, ""), 10) || 0;
+                const zB = parseInt(String(b.zone || "").replace(/\D/g, ""), 10) || 0;
+                if (zA !== zB) return zA - zB;
+                return 0; // preserve original Sheet appearance order
             });
 
             const targetId = String(targetBooking.inmateId).trim();
@@ -1737,7 +1758,8 @@
                 queueNumber,
                 totalInRound,
                 roundLabel,
-                zone: z
+                zone: z,
+                sessionDayLabel
             };
         }
 
@@ -2038,14 +2060,21 @@
                 return;
             }
 
-            // Group & sort by zone, round, and queue number
+            // Group & sort by day session and queue number
             targets.sort((a, b) => {
-                const zA = Number(a.zone) || 0;
-                const zB = Number(b.zone) || 0;
-                if (zA !== zB) return zA - zB;
-                
                 const qA = getBookingQueueInfo(a, bookings);
                 const qB = getBookingQueueInfo(b, bookings);
+                
+                // Sort by visit date/zone group
+                const zA = Number(a.zone) || 0;
+                const zB = Number(b.zone) || 0;
+                if (zA !== zB) {
+                    // Group 5 & 6 together, 7 & 8 together
+                    const groupA = (zA === 5 || zA === 6) ? 5 : ((zA === 7 || zA === 8) ? 7 : zA);
+                    const groupB = (zB === 5 || zB === 6) ? 5 : ((zB === 7 || zB === 8) ? 7 : zB);
+                    if (groupA !== groupB) return groupA - groupB;
+                }
+                
                 if (qA.roundLabel !== qB.roundLabel) return qA.roundLabel.localeCompare(qB.roundLabel);
                 return qA.queueNumber - qB.queueNumber;
             });
